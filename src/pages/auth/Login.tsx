@@ -19,50 +19,54 @@ const GoogleIcon = () => (
 
 const Login = () => {
   const navigate = useNavigate();
-  const { t, loginWithEmail, loginWithGoogle, auth } = useApp();
+  const { t, loginWithEmail, loginWithGoogle, resetPassword } = useApp();
   const [tab, setTab] = useState<"client" | "creator">("client");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  // Secret admin: triple-click on the "N" logo activates admin mode
+  const [showReset, setShowReset] = useState(false);
   const [adminClicks, setAdminClicks] = useState(0);
   const isAdminMode = adminClicks >= 3;
+
+  const navigateByRole = (role: string | null) => {
+    if (role === "admin") navigate("/portal/admin");
+    else if (role === "creator") navigate("/portal/creator");
+    else navigate("/portal/client");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await loginWithEmail(email, password);
+      const role = await loginWithEmail(email, password);
       toast.success(t("welcomeBack"));
-      // Navigation is handled by onAuthStateChanged in context
-      if (isAdminMode || email === "rezig@admin.np") navigate("/portal/admin");
-      else if (tab === "creator") navigate("/portal/creator");
-      else navigate("/portal/client");
+      navigateByRole(role);
     } catch (err: any) {
-      const code = err?.code;
-      toast.error(
-        code === "auth/invalid-credential" || code === "auth/wrong-password" ? "كلمة مرور أو بريد إلكتروني خاطئ." :
-        code === "auth/user-not-found" ? "لا يوجد حساب بهذا البريد الإلكتروني." :
-        "فشل تسجيل الدخول. حاول مرة أخرى."
-      );
-    } finally {
-      setLoading(false);
-    }
+      const c = err?.code;
+      toast.error(c === "auth/invalid-credential" || c === "auth/wrong-password" ? "كلمة مرور أو بريد إلكتروني خاطئ." : c === "auth/user-not-found" ? "لا يوجد حساب بهذا البريد." : "فشل تسجيل الدخول.");
+    } finally { setLoading(false); }
   };
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      await loginWithGoogle(tab);
+      const role = await loginWithGoogle(tab);
       toast.success(t("welcomeBack"));
-      if (tab === "creator") navigate("/portal/creator");
-      else navigate("/portal/client");
+      navigateByRole(role);
     } catch (err: any) {
-      toast.error("فشل تسجيل الدخول بجوجل. حاول مرة أخرى.");
-    } finally {
-      setGoogleLoading(false);
-    }
+      if (err?.code !== "auth/popup-closed-by-user") toast.error("فشل تسجيل الدخول بجوجل.");
+    } finally { setGoogleLoading(false); }
+  };
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { toast.error("أدخل بريدك الإلكتروني أولًا."); return; }
+    try {
+      await resetPassword(email);
+      toast.success("تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.");
+      setShowReset(false);
+    } catch { toast.error("فشل الإرسال. تأكد من البريد الإلكتروني."); }
   };
 
   return (
@@ -70,48 +74,29 @@ const Login = () => {
       <SiteHeader />
       <main className="flex-1 flex items-center justify-center px-6 pt-28 pb-12">
         <div className="w-full max-w-md glass rounded-3xl p-8 animate-fade-in">
-
-          {/* Secret admin trigger — clicking title 3 times */}
-          <h1
-            className="font-serif text-3xl font-bold mb-2 cursor-default select-none"
-            onClick={() => setAdminClicks(c => c + 1)}
-          >
+          <h1 className="font-serif text-3xl font-bold mb-2 cursor-default select-none" onClick={() => setAdminClicks(c => c + 1)}>
             {t("welcomeBack")}
           </h1>
           <p className="text-muted-foreground text-sm mb-6">{t("loginSub")}</p>
 
-          {/* Tab: client / creator — admin hidden */}
           {!isAdminMode && (
             <div className="grid grid-cols-2 gap-2 p-1 bg-secondary/60 rounded-full mb-6 text-xs">
               {(["client", "creator"] as const).map((r) => (
                 <button key={r} type="button" onClick={() => setTab(r)}
                   className={`py-2 rounded-full transition-smooth ${tab === r ? "bg-gradient-royal text-primary-foreground" : "text-muted-foreground"}`}>
-                  {r === "client" ? t("forClients") : t("forCreators")}
+                  {r === "client" ? "أنا زبون" : "أنا عامل حر"}
                 </button>
               ))}
             </div>
           )}
 
-          {isAdminMode && (
-            <div className="glass rounded-xl p-3 mb-4 text-xs border border-destructive/30 text-destructive">
-              🔐 وضع المشرف
-            </div>
-          )}
+          {isAdminMode && <div className="glass rounded-xl p-3 mb-4 text-xs border border-destructive/30 text-destructive">🔐 وضع المشرف</div>}
 
-          {/* Google Sign-In — only for client/creator */}
           {!isAdminMode && (
             <>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full flex items-center gap-3 mb-4 h-11"
-                onClick={handleGoogle}
-                disabled={googleLoading}
-              >
-                <GoogleIcon />
-                <span>{googleLoading ? "..." : t("signInWithGoogle")}</span>
+              <Button type="button" variant="outline" className="w-full flex items-center gap-3 mb-4 h-11" onClick={handleGoogle} disabled={googleLoading}>
+                <GoogleIcon /><span>{googleLoading ? "..." : t("signInWithGoogle")}</span>
               </Button>
-
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-border" />
                 <span className="text-xs text-muted-foreground">{t("orContinueWith")}</span>
@@ -120,22 +105,31 @@ const Login = () => {
             </>
           )}
 
-          <form onSubmit={submit} className="space-y-4">
-            <div>
-              <Label>{t("email")}</Label>
-              <Input type="text" required
-                placeholder={isAdminMode ? "rezig@admin.np" : "you@example.com"}
-                value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
-            </div>
-            <div>
-              <Label>{t("password")}</Label>
-              <Input type="password" required placeholder="••••••••"
-                value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
-            </div>
-            <Button type="submit" variant="royal" className="w-full" size="lg" disabled={loading}>
-              {loading ? "..." : t("login")}
-            </Button>
-          </form>
+          {!showReset ? (
+            <form onSubmit={submit} className="space-y-4">
+              <div><Label>{t("email")}</Label>
+                <Input type="text" required placeholder={isAdminMode ? "rezig@admin.np" : "you@example.com"} value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div><Label>{t("password")}</Label>
+                <Input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <button type="button" onClick={() => setShowReset(true)} className="text-xs text-accent hover:underline">
+                {t("lang") === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+              </button>
+              <Button type="submit" variant="royal" className="w-full" size="lg" disabled={loading}>
+                {loading ? "..." : t("login")}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleReset} className="space-y-4">
+              <p className="text-sm text-muted-foreground">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور.</p>
+              <div><Label>{t("email")}</Label>
+                <Input type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <Button type="submit" variant="royal" className="w-full">إرسال رابط إعادة التعيين</Button>
+              <button type="button" onClick={() => setShowReset(false)} className="text-xs text-muted-foreground hover:text-accent w-full text-center">{t("back")}</button>
+            </form>
+          )}
 
           <p className="text-sm text-center text-muted-foreground mt-6">
             {t("newHere")} <Link to="/auth/signup" className="text-accent font-medium">{t("createAccount")}</Link>
