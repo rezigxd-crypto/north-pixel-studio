@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -7,9 +7,22 @@ import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
 import { ArrowRight, Sparkles, Award, Users } from "lucide-react";
 import { useApp } from "@/lib/context";
+import { useEffect } from "react";
 
 const Index = () => {
-  const { t, lang } = useApp();
+  const { t, lang, auth } = useApp();
+  const navigate = useNavigate();
+
+  // Redirect logged in users to their portal
+  useEffect(() => {
+    if (!auth.loading && auth.role) {
+      navigate(`/portal/${auth.role}`, { replace: true });
+    }
+  }, [auth.loading, auth.role]);
+
+  const heroSub = lang === "ar"
+    ? "أستوديو الجزائر نورث بيكسل ستوديو يربط العلامات التجارية و اصحاب المحتوى بشبكة منتقاة من المصورين السينمائيين والمحررين والمواهب الصوتية وغيرهم — تحت سقف احترافي واحد."
+    : t("heroSub");
 
   return (
     <div className="min-h-screen">
@@ -27,16 +40,18 @@ const Index = () => {
           <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-bold leading-[1.05] mb-6">
             {t("heroTitle1")}<br />{t("heroTitle2")} <span className="text-gradient-gold">{t("heroCinema")}</span>.
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">{t("heroSub")}</p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">{heroSub}</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button asChild variant="gold" size="xl"><Link to="/auth/signup">{t("startProject")} <ArrowRight /></Link></Button>
             <Button asChild variant="glass" size="xl"><Link to="/#offers">{t("exploreServices")}</Link></Button>
           </div>
+
+          {/* Stats — accurate */}
           <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-20 text-left">
             {[
-              { icon: Award, k: "150+", v: t("stat1") },
-              { icon: Users, k: "60+", v: t("stat2") },
-              { icon: Sparkles, k: "12", v: t("stat3") },
+              { icon: Award, k: "0", v: lang === "ar" ? "إنتاجات مسلّمة" : lang === "fr" ? "Productions livrées" : "Productions delivered" },
+              { icon: Users, k: "0", v: lang === "ar" ? "مبدعون موثّقون" : lang === "fr" ? "Créateurs vérifiés" : "Vetted creators" },
+              { icon: Sparkles, k: "0", v: lang === "ar" ? "ترشيحات للجوائز" : lang === "fr" ? "Nominations aux prix" : "Award nominations" },
             ].map((s) => (
               <div key={s.v} className="glass rounded-2xl p-5">
                 <s.icon className="w-5 h-5 text-accent mb-3" />
@@ -61,13 +76,10 @@ const Index = () => {
             const title = o.title[lang];
             const tagline = o.tagline[lang];
             return (
-              <Link key={o.slug} to={`/services/${o.slug}`}
-                style={{ animationDelay: `${i * 60}ms` }}
+              <Link key={o.slug} to={`/services/${o.slug}`} style={{ animationDelay: `${i * 60}ms` }}
                 className="group relative glass rounded-3xl overflow-hidden transition-smooth hover:-translate-y-1 hover:border-accent/40 animate-fade-in">
-                {/* Service image */}
                 <div className="relative h-44 overflow-hidden">
-                  <img src={o.image} alt={title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={o.image} alt={title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                   <div className={`absolute top-4 ${lang === "ar" ? "right-4" : "left-4"} w-12 h-12 rounded-xl flex items-center justify-center ${o.accent === "gold" ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
                     <Icon className="w-5 h-5" />
@@ -78,7 +90,7 @@ const Index = () => {
                   <p className="text-muted-foreground text-sm mb-4">{tagline}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-accent">{o.startingPrice}</span>
-                    <span className="inline-flex items-center gap-1 text-sm font-medium text-foreground group-hover:text-accent transition">
+                    <span className="inline-flex items-center gap-1 text-sm font-medium group-hover:text-accent transition">
                       {t("discover")} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
                     </span>
                   </div>
@@ -89,7 +101,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — only visible when not logged in */}
       <section id="about" className="px-6 py-24 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="glass rounded-3xl p-10 relative overflow-hidden">
