@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* North Pixel — Royal Blue + Gold on Deep Night */
+    --background: 222 47% 5%;
+    --foreground: 0 0% 98%;
+
+    --card: 222 40% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 222 47% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Royal Blue */
+    --primary: 207 67% 35%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 207 75% 50%;
+    --primary-dark: 207 67% 25%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 222 25% 14%;
+    --muted-foreground: 215 16% 65%;
+
+    /* Gold */
+    --accent: 41 51% 54%;
+    --accent-foreground: 222 47% 5%;
+    --accent-glow: 41 67% 70%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 222 30% 18%;
+    --input: 222 30% 16%;
+    --ring: 207 75% 50%;
+
+    --radius: 1rem;
+
+    /* Gradients */
+    --gradient-royal: linear-gradient(135deg, hsl(207 67% 35%), hsl(207 75% 50%));
+    --gradient-gold: linear-gradient(135deg, hsl(41 51% 54%), hsl(41 67% 70%));
+    --gradient-night: radial-gradient(ellipse at top, hsl(207 60% 18% / 0.5), transparent 60%),
+                      radial-gradient(ellipse at bottom right, hsl(41 51% 40% / 0.15), transparent 60%);
+
+    /* Shadows */
+    --shadow-royal: 0 0 40px hsl(207 75% 50% / 0.35);
+    --shadow-gold: 0 0 40px hsl(41 67% 60% / 0.35);
+    --shadow-elevated: 0 24px 60px -20px hsl(222 47% 2% / 0.8);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Light theme — Royal Blue on White (for client portal) */
+  .theme-light {
+    --background: 210 30% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 207 67% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 41 51% 54%;
+    --accent-foreground: 222 47% 5%;
+    --border: 214 32% 88%;
+    --input: 214 32% 90%;
+    --ring: 207 75% 45%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Tajawal', sans-serif;
+    background-image: var(--gradient-night);
+    background-attachment: fixed;
+  }
+  h1, h2, .font-serif { font-family: 'Amiri', serif; }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image: radial-gradient(hsl(0 0% 100% / 0.07) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+  }
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-royal {
+    background: var(--gradient-royal);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glow-royal { box-shadow: var(--shadow-royal); }
+  .glow-gold { box-shadow: var(--shadow-gold); }
+  .glass {
+    background: hsl(222 40% 10% / 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+  }
+  .transition-smooth { transition: var(--transition-smooth); }
+}
+
+/* Theme light overrides for body */
+.theme-light body {
+  background-image: radial-gradient(ellipse at top, hsl(207 60% 90% / 0.4), transparent 60%),
+                    radial-gradient(ellipse at bottom right, hsl(41 51% 80% / 0.15), transparent 60%);
+}
+
+/* RTL support */
+[dir="rtl"] .font-serif {
+  font-family: 'Amiri', serif;
+}
+
+[dir="rtl"] .tracking-widest,
+[dir="rtl"] .tracking-\[0\.3em\] {
+  letter-spacing: 0.05em;
+}
+
+/* Select styling */
+select {
+  color-scheme: dark;
+}
+
+.theme-light select {
+  color-scheme: light;
+}
+
+/* ms- margin-start utility for RTL */
+.ms-auto { margin-inline-start: auto; }
+.ms-2 { margin-inline-start: 0.5rem; }
