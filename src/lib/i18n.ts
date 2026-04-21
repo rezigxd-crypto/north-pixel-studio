@@ -301,3 +301,9 @@ export const ALGERIA_WILAYAS = [
   { code: "57", name: "المغير", nameEn: "El M'Ghair" },
   { code: "58", name: "المنيعة", nameEn: "El Meniaa" },
 ];
+// Extra export for compatibility
+export const getWilayaName = (nameEn: string, lang: Lang): string => {
+  if (lang !== "ar") return nameEn;
+  const w = ALGERIA_WILAYAS.find((x) => x.nameEn === nameEn);
+  return w ? w.name : nameEn;
+};
