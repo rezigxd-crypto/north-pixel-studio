@@ -115,7 +115,7 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          {OFFERS.map((o, i) => {
+          {OFFERS.map((o) => {
             const Icon = (Icons as any)[o.icon] ?? Icons.Sparkles;
             const title = o.title[lang];
             const tagline = o.tagline[lang];
@@ -123,8 +123,7 @@ const Index = () => {
               <Link
                 key={o.slug}
                 to={`/services/${o.slug}`}
-                style={{ animationDelay: `${i * 50}ms` }}
-                className="block animate-fade-in group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[20px]"
+                className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[20px]"
               >
                 <GlowCard
                   variant={o.accent === "gold" ? "gold" : "royal"}
