@@ -104,10 +104,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const user = result.user;
     const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) {
+      // Write user profile
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName || "", email: user.email || "",
         wilaya: "", role, createdAt: new Date().toISOString(), provider: "google",
       });
+      // If creator — also write a pending creator application so admin can see it
+      if (role === "creator") {
+        const { addDoc, collection: col, serverTimestamp: sts } = await import("firebase/firestore");
+        await addDoc(col(db, "creators"), {
+          fullName: user.displayName || user.email?.split("@")[0] || "Creator",
+          email: user.email || "",
+          country: "Algeria",
+          wilaya: "",
+          city: "",
+          role: "عامل حر (Google)",
+          bio: "تسجيل عبر جوجل — يرجى التواصل معه لإكمال الملف الشخصي.",
+          rate: 0,
+          portfolio: [],
+          status: "pending",
+          createdAt: sts(),
+          provider: "google",
+          uid: user.uid,
+        });
+      }
       return role;
     }
     return snap.data().role as UserRole;
