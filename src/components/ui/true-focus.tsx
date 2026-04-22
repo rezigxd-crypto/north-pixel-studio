@@ -17,11 +17,11 @@ const TrueFocus = ({
   sentence = 'True Focus',
   separator = ' ',
   manualMode = false,
-  blurAmount = 5,
-  borderColor = 'hsl(207 75% 50%)',
-  glowColor = 'hsl(207 75% 50% / 0.6)',
-  animationDuration = 0.5,
-  pauseBetweenAnimations = 1.2,
+  blurAmount = 4,
+  borderColor = 'hsl(41 67% 60%)',
+  glowColor = 'hsl(41 67% 60% / 0.55)',
+  animationDuration = 0.25,       // faster
+  pauseBetweenAnimations = 0.8,   // shorter pause
   className = '',
 }: TrueFocusProps) => {
   const words = sentence.split(separator);
@@ -41,10 +41,12 @@ const TrueFocus = ({
   }, [manualMode, animationDuration, pauseBetweenAnimations, words.length]);
 
   useEffect(() => {
-    if (currentIndex === null || currentIndex === -1) return;
-    if (!wordRefs.current[currentIndex] || !containerRef.current) return;
-    const parentRect = containerRef.current.getBoundingClientRect();
-    const activeRect = wordRefs.current[currentIndex].getBoundingClientRect();
+    if (currentIndex === null) return;
+    const el = wordRefs.current[currentIndex];
+    const container = containerRef.current;
+    if (!el || !container) return;
+    const parentRect = container.getBoundingClientRect();
+    const activeRect = el.getBoundingClientRect();
     setFocusRect({
       x: activeRect.left - parentRect.left,
       y: activeRect.top - parentRect.top,
@@ -53,67 +55,42 @@ const TrueFocus = ({
     });
   }, [currentIndex]);
 
-  const handleMouseEnter = (index: number) => {
-    if (manualMode) { setLastActiveIndex(index); setCurrentIndex(index); }
-  };
-  const handleMouseLeave = () => {
-    if (manualMode) setCurrentIndex(lastActiveIndex ?? 0);
-  };
-
   return (
     <div
       ref={containerRef}
       className={`relative flex gap-3 md:gap-4 justify-center items-center flex-wrap ${className}`}
-      style={{ outline: 'none', userSelect: 'none' }}
+      style={{ userSelect: 'none' }}
     >
-      {words.map((word, index) => {
-        const isActive = index === currentIndex;
-        return (
-          <span
-            key={index}
-            ref={el => { wordRefs.current[index] = el; }}
-            className="relative cursor-default"
-            style={{
-              filter: isActive ? 'blur(0px)' : `blur(${blurAmount}px)`,
-              transition: `filter ${animationDuration}s ease`,
-              outline: 'none',
-              userSelect: 'none',
-            }}
-            onMouseEnter={() => handleMouseEnter(index)}
-            onMouseLeave={handleMouseLeave}
-          >
-            {word}
-          </span>
-        );
-      })}
+      {words.map((word, index) => (
+        <span
+          key={index}
+          ref={el => { wordRefs.current[index] = el; }}
+          style={{
+            filter: index === currentIndex ? 'blur(0px)' : `blur(${blurAmount}px)`,
+            transition: `filter ${animationDuration}s ease`,
+            userSelect: 'none',
+          }}
+          onMouseEnter={() => manualMode && (setLastActiveIndex(index), setCurrentIndex(index))}
+          onMouseLeave={() => manualMode && setCurrentIndex(lastActiveIndex ?? 0)}
+        >
+          {word}
+        </span>
+      ))}
 
       <motion.div
         className="absolute top-0 left-0 pointer-events-none"
-        animate={{
-          x: focusRect.x,
-          y: focusRect.y,
-          width: focusRect.width,
-          height: focusRect.height,
-          opacity: currentIndex >= 0 ? 1 : 0,
-        }}
-        transition={{ duration: animationDuration }}
+        animate={{ x: focusRect.x, y: focusRect.y, width: focusRect.width, height: focusRect.height, opacity: 1 }}
+        transition={{ duration: animationDuration, ease: 'easeOut' }}
         style={{ '--border-color': borderColor, '--glow-color': glowColor } as React.CSSProperties}
       >
-        {/* 4 corner brackets */}
         {[
-          'top-[-8px] left-[-8px] border-r-0 border-b-0',
-          'top-[-8px] right-[-8px] border-l-0 border-b-0',
-          'bottom-[-8px] left-[-8px] border-r-0 border-t-0',
-          'bottom-[-8px] right-[-8px] border-l-0 border-t-0',
+          'top-[-7px] left-[-7px] border-r-0 border-b-0',
+          'top-[-7px] right-[-7px] border-l-0 border-b-0',
+          'bottom-[-7px] left-[-7px] border-r-0 border-t-0',
+          'bottom-[-7px] right-[-7px] border-l-0 border-t-0',
         ].map((cls, i) => (
-          <span
-            key={i}
-            className={`absolute w-3.5 h-3.5 border-2 rounded-sm ${cls}`}
-            style={{
-              borderColor: 'var(--border-color)',
-              filter: 'drop-shadow(0 0 5px var(--glow-color))',
-            }}
-          />
+          <span key={i} className={`absolute w-3 h-3 border-2 rounded-sm ${cls}`}
+            style={{ borderColor: 'var(--border-color)', filter: 'drop-shadow(0 0 4px var(--glow-color))' }} />
         ))}
       </motion.div>
     </div>
