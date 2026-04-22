@@ -9,10 +9,8 @@
     /* North Pixel — Royal Blue + Gold on Deep Night */
     --background: 222 47% 5%;
     --foreground: 0 0% 98%;
-
     --card: 222 40% 8%;
     --card-foreground: 0 0% 98%;
-
     --popover: 222 47% 7%;
     --popover-foreground: 0 0% 98%;
 
@@ -24,7 +22,6 @@
 
     --secondary: 222 30% 14%;
     --secondary-foreground: 0 0% 98%;
-
     --muted: 222 25% 14%;
     --muted-foreground: 215 16% 65%;
 
@@ -35,45 +32,41 @@
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 222 30% 18%;
     --input: 222 30% 16%;
     --ring: 207 75% 50%;
-
     --radius: 1rem;
 
-    /* Gradients */
     --gradient-royal: linear-gradient(135deg, hsl(207 67% 35%), hsl(207 75% 50%));
     --gradient-gold: linear-gradient(135deg, hsl(41 51% 54%), hsl(41 67% 70%));
     --gradient-night: radial-gradient(ellipse at top, hsl(207 60% 18% / 0.5), transparent 60%),
                       radial-gradient(ellipse at bottom right, hsl(41 51% 40% / 0.15), transparent 60%);
-
-    /* Shadows */
     --shadow-royal: 0 0 40px hsl(207 75% 50% / 0.35);
     --shadow-gold: 0 0 40px hsl(41 67% 60% / 0.35);
     --shadow-elevated: 0 24px 60px -20px hsl(222 47% 2% / 0.8);
-
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Light theme — Royal Blue on White (for client portal) */
+  /* ─── LIGHT MODE — fixed high contrast ─────────────────────────────── */
   .theme-light {
-    --background: 210 30% 98%;
-    --foreground: 222 47% 11%;
+    --background: 220 25% 96%;
+    --foreground: 222 47% 8%;          /* very dark — fully readable */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 47% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 207 67% 35%;
+    --popover-foreground: 222 47% 8%;
+    --primary: 207 67% 32%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 16% 40%;
-    --accent: 41 51% 54%;
-    --accent-foreground: 222 47% 5%;
-    --border: 214 32% 88%;
-    --input: 214 32% 90%;
+    --secondary: 214 30% 90%;
+    --secondary-foreground: 222 47% 10%;
+    --muted: 214 25% 88%;
+    --muted-foreground: 222 20% 28%;   /* dark grey — clearly readable */
+    --accent: 41 55% 45%;              /* slightly deeper gold for light bg */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 25% 78%;
+    --input: 214 25% 82%;
     --ring: 207 75% 45%;
   }
 }
@@ -108,40 +101,61 @@
     color: transparent;
   }
   .glow-royal { box-shadow: var(--shadow-royal); }
-  .glow-gold { box-shadow: var(--shadow-gold); }
+  .glow-gold  { box-shadow: var(--shadow-gold); }
+
+  /* Dark glass (default) */
   .glass {
-    background: hsl(222 40% 10% / 0.6);
+    background: hsl(222 40% 10% / 0.60);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid hsl(0 0% 100% / 0.08);
   }
+
   .transition-smooth { transition: var(--transition-smooth); }
+
+  /* ── Animations — GPU-only, no layout thrash ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.35s ease both;
+    /* will-change removed — causes layer explosion on grid */
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.65; }
+  }
+  .animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
 }
 
-/* Theme light overrides for body */
+/* ── Light mode body gradient ── */
 .theme-light body {
-  background-image: radial-gradient(ellipse at top, hsl(207 60% 90% / 0.4), transparent 60%),
-                    radial-gradient(ellipse at bottom right, hsl(41 51% 80% / 0.15), transparent 60%);
+  background-image:
+    radial-gradient(ellipse at top, hsl(207 60% 88% / 0.45), transparent 55%),
+    radial-gradient(ellipse at bottom right, hsl(41 55% 80% / 0.18), transparent 60%);
 }
 
-/* RTL support */
-[dir="rtl"] .font-serif {
-  font-family: 'Amiri', serif;
+/* Light mode glass — lighter frosted look */
+.theme-light .glass {
+  background: hsl(0 0% 100% / 0.72);
+  border-color: hsl(214 30% 70% / 0.45);
 }
 
+/* RTL */
+[dir="rtl"] .font-serif { font-family: 'Amiri', serif; }
 [dir="rtl"] .tracking-widest,
-[dir="rtl"] .tracking-\[0\.3em\] {
-  letter-spacing: 0.05em;
-}
+[dir="rtl"] .tracking-\[0\.3em\] { letter-spacing: 0.05em; }
 
-/* Select styling */
-select {
-  color-scheme: dark;
-}
+/* Select */
+select { color-scheme: dark; }
+.theme-light select { color-scheme: light; }
 
-.theme-light select {
-  color-scheme: light;
-}
-
-/* ms- margin-start utility for RTL */
-.ms-auto { margin-inline-start: auto; }
-.ms-2 { margin-inline-start: 0.5rem; }
+/* RTL margin utilities */
+.ms-auto  { margin-inline-start: auto; }
+.ms-1     { margin-inline-start: 0.25rem; }
+.ms-2     { margin-inline-start: 0.5rem; }
+.ms-3     { margin-inline-start: 0.75rem; }
+.me-1     { margin-inline-end: 0.25rem; }
+.me-2     { margin-inline-end: 0.5rem; }
