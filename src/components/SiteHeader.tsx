@@ -13,13 +13,9 @@ const LANGS: { code: Lang; label: string }[] = [
   { code: "en", label: "EN" },
 ];
 
-// NP Logo SVG
 const NPLogo = () => (
-  <div className="w-10 h-10 rounded-xl bg-gradient-royal flex items-center justify-center glow-royal flex-shrink-0">
-    <svg viewBox="0 0 40 40" className="w-6 h-6" fill="none">
-      <text x="4" y="28" fontFamily="serif" fontSize="22" fontWeight="bold" fill="white">N</text>
-      <text x="18" y="28" fontFamily="serif" fontSize="14" fontWeight="bold" fill="#c9a84c">P</text>
-    </svg>
+  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 glow-royal">
+    <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" />
   </div>
 );
 

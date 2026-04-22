@@ -11,11 +11,8 @@ const LANGS: { code: Lang; label: string }[] = [
 ];
 
 const NPLogo = () => (
-  <div className="w-9 h-9 rounded-lg bg-gradient-royal flex items-center justify-center">
-    <svg viewBox="0 0 36 36" className="w-5 h-5" fill="none">
-      <text x="2" y="26" fontFamily="serif" fontSize="20" fontWeight="bold" fill="white">N</text>
-      <text x="16" y="26" fontFamily="serif" fontSize="13" fontWeight="bold" fill="#c9a84c">P</text>
-    </svg>
+  <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+    <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" />
   </div>
 );
 
