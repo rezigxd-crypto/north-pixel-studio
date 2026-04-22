@@ -189,3 +189,17 @@ export const formatDZD = (n: number) =>
   `${new Intl.NumberFormat("ar-DZ").format(Math.round(n))} دج`;
 
 export const getOffer = (slug: string) => OFFERS.find((o) => o.slug === slug);
+
+// ─── University bundle (special offer) ─────────────────────────────────────
+export const UNIVERSITY_BUNDLE = {
+  slug: "university-bundle",
+  badge: { ar: "عرض خاص للجامعات", en: "Special University Offer", fr: "Offre Spéciale Universités" },
+  slogan: { ar: "دعم للرقمنة والبحث العلمي وتعزيز العلاقة بين الطالب والمؤسسة الجامعية", en: "Supporting digitalization, scientific research, and student-institution relations", fr: "Pour la numérisation, la recherche scientifique et le lien étudiant-université" },
+  headline: { ar: "نطرح عليكم عرضًا يتضمن ما يلي — ويتيح لكم الحصول على مادة سمعية بصرية ترقى بمستوى جامعتكم بين الجامعات.", en: "We offer you a package that includes the following — giving you audio-visual content that elevates your university among peers.", fr: "Nous vous proposons un package qui comprend ce qui suit — pour vous offrir un contenu audiovisuel qui élève le niveau de votre université." },
+  includes: {
+    ar: ["تغطية فعاليات الجامعة (مؤتمرات، أيام مفتوحة، حفلات تخرج)", "حلقات بودكاست (طلاب، أساتذة، باحثون)", "تصوير المحاضرات وأرشفتها رقميًا", "إنتاج مقاطع دعائية للجامعة"],
+    en: ["University event coverage (conferences, open days, graduations)", "Podcast episodes (students, professors, researchers)", "Lecture recording & digital archiving", "Promotional video production"],
+    fr: ["Couverture événements universitaires", "Épisodes podcast (étudiants, profs, chercheurs)", "Enregistrement de cours & archivage numérique", "Production de vidéos promotionnelles"],
+  },
+  image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80",
+};
