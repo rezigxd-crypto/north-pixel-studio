@@ -1,61 +1,58 @@
 import { PortalShell } from "@/components/PortalShell";
 import {
   Users, Camera, FolderKanban, DollarSign, Check, X, Bell,
-  Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye
+  Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle,
+  Eye, Trophy, MapPin, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreators, useOffers, useBids, setCreatorStatus, setOfferStatus, acceptBid } from "@/lib/store";
-import { formatDZD, ADMIN_COMMISSION } from "@/lib/offers";
+import {
+  useCreators, useOffers, useBids, useUserCounts,
+  setCreatorStatus, setOfferStatus, acceptBid
+} from "@/lib/store";
+import { formatDZD, CREATOR_ROLE_AR, getRank } from "@/lib/offers";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
-// ── Stat card ──────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, value, label, color = "accent" }: {
   icon: React.ElementType; value: string; label: string; color?: string;
 }) => (
-  <div className="glass rounded-2xl p-5 flex flex-col gap-2 hover:border-accent/30 transition-smooth">
-    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+  <div className="glass rounded-2xl p-4 flex flex-col gap-2 hover:border-accent/30 transition-smooth">
+    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
       color === "green" ? "bg-emerald-500/15 text-emerald-400" :
       color === "yellow" ? "bg-yellow-400/15 text-yellow-400" :
-      color === "blue" ? "bg-primary/15 text-primary-foreground" :
+      color === "blue" ? "bg-primary/20 text-primary-foreground" :
       color === "red" ? "bg-destructive/15 text-destructive" :
       "bg-accent/15 text-accent"
     }`}>
       <Icon className="w-4 h-4" />
     </div>
-    <div className="font-serif text-2xl font-bold leading-none">{value}</div>
-    <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="font-serif text-xl md:text-2xl font-bold leading-none">{value}</div>
+    <div className="text-[11px] text-muted-foreground">{label}</div>
   </div>
 );
 
-// ── Status pill ────────────────────────────────────────────────────────────
 const Pill = ({ children, color }: { children: React.ReactNode; color: string }) => (
   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
     color === "red" ? "bg-destructive/20 text-destructive" :
     color === "green" ? "bg-emerald-400/20 text-emerald-400" :
     color === "yellow" ? "bg-yellow-400/20 text-yellow-400" :
+    color === "blue" ? "bg-primary/20 text-primary-foreground" :
     "bg-accent/20 text-accent"
   }`}>{children}</span>
 );
 
-// ── Section header ─────────────────────────────────────────────────────────
 const SectionHeader = ({ title, count, color }: { title: string; count?: number; color?: string }) => (
   <div className="flex items-center justify-between mb-4">
-    <h2 className="font-serif text-xl md:text-2xl font-bold">{title}</h2>
-    {count !== undefined && count > 0 && <Pill color={color || "accent"}>{count} جديد</Pill>}
+    <h2 className="font-serif text-xl font-bold">{title}</h2>
+    {count !== undefined && count > 0 && <Pill color={color || "accent"}>{count}</Pill>}
   </div>
 );
 
-// ── Empty state ────────────────────────────────────────────────────────────
 const Empty = ({ msg }: { msg: string }) => (
   <div className="glass rounded-2xl p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
-    <div className="w-10 h-10 rounded-full bg-secondary/60 flex items-center justify-center">
-      <Eye className="w-4 h-4 text-muted-foreground" />
-    </div>
+    <Eye className="w-8 h-8 text-muted-foreground/40" />
     {msg}
   </div>
 );
@@ -66,18 +63,13 @@ const AdminPortal = () => {
   const creators = useCreators();
   const offers = useOffers();
   const bids = useBids();
-  const [totalClients, setTotalClients] = useState(0);
+  const userCounts = useUserCounts();
   const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators">("overview");
+  const [expandedCreator, setExpandedCreator] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth.loading && auth.role !== "admin") navigate("/auth/login");
   }, [auth.loading, auth.role]);
-
-  useEffect(() => {
-    return onSnapshot(collection(db, "users"), (snap) => {
-      setTotalClients(snap.docs.filter((d) => d.data().role === "client").length);
-    });
-  }, []);
 
   const pendingCreators = creators.filter((c) => c.status === "pending");
   const approvedCreators = creators.filter((c) => c.status === "approved");
@@ -88,6 +80,8 @@ const AdminPortal = () => {
   const notifications = pendingCreators.length + pendingOffers.length;
 
   const pendingBids = (offerId: string) => bids.filter((b) => b.offerId === offerId && b.status === "pending");
+  const creatorJobCount = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").length;
+  const creatorEarnings = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").reduce((s, b) => s + b.amount, 0);
 
   const approveCreator = async (id: string, name: string) => {
     await setCreatorStatus(id, "approved");
@@ -118,99 +112,90 @@ const AdminPortal = () => {
 
   const TABS = [
     { id: "overview", label: lang === "ar" ? "نظرة عامة" : "Overview" },
-    { id: "offers", label: lang === "ar" ? `العروض ${pendingOffers.length > 0 ? `(${pendingOffers.length})` : ""}` : `Offers ${pendingOffers.length > 0 ? `(${pendingOffers.length})` : ""}` },
-    { id: "bids", label: lang === "ar" ? "المزايدات" : "Bids" },
-    { id: "creators", label: lang === "ar" ? `العمال ${pendingCreators.length > 0 ? `(${pendingCreators.length})` : ""}` : `Creators ${pendingCreators.length > 0 ? `(${pendingCreators.length})` : ""}` },
+    { id: "offers",   label: lang === "ar" ? `العروض${pendingOffers.length > 0 ? ` (${pendingOffers.length})` : ""}` : `Offers${pendingOffers.length > 0 ? ` (${pendingOffers.length})` : ""}` },
+    { id: "bids",     label: lang === "ar" ? "المزايدات" : "Bids" },
+    { id: "creators", label: lang === "ar" ? `العمال${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` : `Creators${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` },
   ] as const;
 
   return (
     <PortalShell title={lang === "ar" ? "لوحة الإدارة" : "Admin Panel"} subtitle="North Pixel Studio" accent="destructive">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <p className="text-xs text-destructive uppercase tracking-widest mb-1">{lang === "ar" ? "العمليات" : "Operations"}</p>
-          <h1 className="font-serif text-2xl md:text-4xl font-bold">{lang === "ar" ? "الاستوديو في لمحة" : "Studio at a glance"}</h1>
+          <h1 className="font-serif text-2xl md:text-3xl font-bold">{lang === "ar" ? "الاستوديو في لمحة" : "Studio at a glance"}</h1>
         </div>
         {notifications > 0 && (
-          <div className="glass rounded-full px-4 py-2 inline-flex items-center gap-2 border border-accent/30 animate-glow-pulse self-start">
-            <Bell className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-accent">{notifications} {lang === "ar" ? "إشعار جديد" : "new"}</span>
+          <div className="glass rounded-full px-4 py-2 inline-flex items-center gap-2 border border-destructive/30 animate-glow-pulse self-start">
+            <Bell className="w-4 h-4 text-destructive" />
+            <span className="text-sm font-medium text-destructive">{notifications} {lang === "ar" ? "إشعار" : "alerts"}</span>
           </div>
         )}
       </div>
 
-      {/* ── Stats grid ── */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-        <StatCard icon={Users}      value={String(creators.length)}                         label={lang === "ar" ? "إجمالي العمال" : "Total creators"} color="blue" />
-        <StatCard icon={Camera}     value={String(approvedCreators.length)}                  label={lang === "ar" ? "عمال موافق عليهم" : "Approved"}     color="green" />
-        <StatCard icon={UserSquare2} value={String(totalClients)}                            label={lang === "ar" ? "إجمالي العملاء" : "Clients"}        color="accent" />
-        <StatCard icon={FolderKanban} value={String(liveOffers.length + assignedOffers.length)} label={lang === "ar" ? "مشاريع نشطة" : "Active projects"} color="yellow" />
-        <StatCard icon={DollarSign} value={formatDZD(revenue)}                              label={`${lang === "ar" ? "إيرادات" : "Revenue"} (20%)`}    color="green" />
+        <StatCard icon={UserSquare2} value={String(userCounts.clients)}                              label={lang === "ar" ? "عملاء" : "Clients"}            color="blue" />
+        <StatCard icon={Users}       value={String(userCounts.creators)}                             label={lang === "ar" ? "عمال حرون" : "Freelancers"}    color="accent" />
+        <StatCard icon={Camera}      value={String(approvedCreators.length)}                          label={lang === "ar" ? "موافق عليهم" : "Approved"}      color="green" />
+        <StatCard icon={FolderKanban} value={String(liveOffers.length + assignedOffers.length)}      label={lang === "ar" ? "مشاريع" : "Active projects"}    color="yellow" />
+        <StatCard icon={DollarSign}  value={formatDZD(revenue)}                                      label={lang === "ar" ? "إيراداتي" : "My revenue"}       color="green" />
       </div>
 
-      {/* ── Tabs ── */}
+      {/* Tabs */}
       <div className="flex gap-1 p-1 glass rounded-2xl mb-8 overflow-x-auto">
         {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex-1 min-w-max py-2.5 px-4 rounded-xl text-sm font-medium transition-smooth whitespace-nowrap ${
-              activeTab === tab.id
-                ? "bg-gradient-royal text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+              activeTab === tab.id ? "bg-gradient-royal text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}>
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ══ OVERVIEW TAB ══════════════════════════════════════════════════ */}
+      {/* ══ OVERVIEW ══ */}
       {activeTab === "overview" && (
-        <div className="space-y-8">
-          {/* Quick alerts */}
-          {(pendingOffers.length > 0 || pendingCreators.length > 0) && (
-            <div className="space-y-2">
-              {pendingOffers.length > 0 && (
-                <button onClick={() => setActiveTab("offers")}
-                  className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-yellow-400/40 transition-smooth text-start">
-                  <div className="w-9 h-9 rounded-xl bg-yellow-400/15 flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="w-4 h-4 text-yellow-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm">{pendingOffers.length} {lang === "ar" ? "عرض ينتظر مراجعتك" : "offer(s) awaiting review"}</div>
-                    <div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للمراجعة والنشر" : "Click to review and publish"}</div>
-                  </div>
-                  <TrendingUp className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                </button>
-              )}
-              {pendingCreators.length > 0 && (
-                <button onClick={() => setActiveTab("creators")}
-                  className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-accent/40 transition-smooth text-start">
-                  <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-accent" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm">{pendingCreators.length} {lang === "ar" ? "عامل حر ينتظر الموافقة" : "creator(s) pending approval"}</div>
-                    <div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للمراجعة والموافقة" : "Click to review and approve"}</div>
-                  </div>
-                  <TrendingUp className="w-4 h-4 text-accent flex-shrink-0" />
-                </button>
-              )}
+        <div className="space-y-4">
+          {pendingOffers.length > 0 && (
+            <button onClick={() => setActiveTab("offers")}
+              className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-yellow-400/40 transition-smooth text-start">
+              <div className="w-9 h-9 rounded-xl bg-yellow-400/15 flex items-center justify-center flex-shrink-0"><AlertCircle className="w-4 h-4 text-yellow-400" /></div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm">{pendingOffers.length} {lang === "ar" ? "عرض ينتظر مراجعتك" : "offer(s) need review"}</div>
+                <div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للمراجعة" : "Click to review"}</div>
+              </div>
+              <TrendingUp className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+            </button>
+          )}
+          {pendingCreators.length > 0 && (
+            <button onClick={() => setActiveTab("creators")}
+              className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-accent/40 transition-smooth text-start">
+              <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-accent" /></div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm">{pendingCreators.length} {lang === "ar" ? "عامل ينتظر الموافقة" : "creator(s) pending"}</div>
+                <div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للموافقة" : "Click to approve"}</div>
+              </div>
+              <TrendingUp className="w-4 h-4 text-accent flex-shrink-0" />
+            </button>
+          )}
+          {notifications === 0 && (
+            <div className="glass rounded-2xl p-8 text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <p className="text-muted-foreground text-sm">{lang === "ar" ? "كل شيء على ما يرام، لا إشعارات جديدة." : "All good — no pending items."}</p>
             </div>
           )}
-
-          {/* Recent activity */}
-          <div>
-            <SectionHeader title={lang === "ar" ? "آخر المشاريع" : "Recent projects"} />
-            {offers.length === 0 ? <Empty msg={lang === "ar" ? "لا توجد مشاريع بعد." : "No projects yet."} /> : (
+          {/* Recent offers */}
+          {offers.length > 0 && (
+            <div>
+              <h3 className="font-serif text-lg font-bold mb-3 mt-4">{lang === "ar" ? "آخر المشاريع" : "Recent projects"}</h3>
               <div className="space-y-2">
-                {offers.slice(0, 5).map((o) => (
+                {offers.slice(0, 6).map((o) => (
                   <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate">{o.serviceTitle}</div>
-                      <div className="text-xs text-muted-foreground">{o.clientName} {o.clientWilaya ? `· ${o.clientWilaya}` : ""}</div>
+                      <div className="text-xs text-muted-foreground">{o.clientName}{o.clientWilaya ? ` · ${o.clientWilaya}` : ""}</div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
@@ -224,80 +209,61 @@ const AdminPortal = () => {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ══ OFFERS TAB ════════════════════════════════════════════════════ */}
+      {/* ══ OFFERS ══ */}
       {activeTab === "offers" && (
-        <div className="space-y-8">
-          {/* Pending */}
+        <div className="space-y-6">
           <div>
-            <SectionHeader title={lang === "ar" ? "عروض تنتظر المراجعة" : "Pending offers"} count={pendingOffers.length} color="yellow" />
+            <SectionHeader title={lang === "ar" ? "عروض معلقة" : "Pending offers"} count={pendingOffers.length} color="yellow" />
             {pendingOffers.length === 0 ? <Empty msg={lang === "ar" ? "لا توجد عروض معلقة." : "No pending offers."} /> : (
               <div className="space-y-3">
                 {pendingOffers.map((o) => (
-                  <div key={o.id} className="glass rounded-2xl p-5 border border-yellow-400/10 hover:border-yellow-400/25 transition-smooth">
+                  <div key={o.id} className="glass rounded-2xl p-5 border border-yellow-400/10">
                     <div className="flex flex-col md:flex-row md:items-start gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="text-xs font-bold uppercase tracking-widest text-accent">{o.serviceTitle}</span>
-                          <Clock className="w-3 h-3 text-muted-foreground" />
                           {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
                           {o.advancePaid && <Pill color="green">✓ {lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
                         </div>
-                        <p className="font-semibold">{o.clientName} · {o.units} {o.unitLabel}</p>
+                        <p className="font-semibold">{o.clientName}</p>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{o.brief}</p>
-                        {o.referenceLink && (
-                          <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1">
-                            <Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference link"}
-                          </a>
-                        )}
+                        {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
                         {o.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {o.deadline}</p>}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span>
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
                       </div>
-                      <div className="glass rounded-xl p-4 bg-secondary/20 md:w-48 flex-shrink-0">
-                        <div className="text-xs text-muted-foreground mb-1">{lang === "ar" ? "الإجمالي" : "Total"}</div>
-                        <div className="font-serif text-xl font-bold mb-2">{formatDZD(o.totalPrice)}</div>
-                        <div className="space-y-1 text-xs border-t border-border pt-2">
-                          <div className="flex justify-between"><span className="text-muted-foreground">{lang === "ar" ? "حصتك" : "Your cut"}</span><span className="text-accent font-bold">{formatDZD(o.adminCut)}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">{lang === "ar" ? "نطاق العرض" : "Bid range"}</span><span className="text-foreground">{formatDZD(o.bidMin)}–{formatDZD(o.bidMax)}</span></div>
-                        </div>
+                      <div className="glass rounded-xl p-3 bg-secondary/20 md:w-44 flex-shrink-0">
+                        <div className="text-xs text-muted-foreground">{lang === "ar" ? "الإجمالي" : "Total"}</div>
+                        <div className="font-serif text-lg font-bold">{formatDZD(o.totalPrice)}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "حصتي:" : "My cut:"} <span className="text-accent font-semibold">{formatDZD(o.adminCut)}</span></div>
                       </div>
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
-                      <Button variant="destructive" size="sm" onClick={() => rejectOffer(o.id)}>
-                        <X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}
-                      </Button>
-                      <Button variant="royal" size="sm" onClick={() => acceptOffer(o.id, o.serviceTitle)}>
-                        <Check className="w-4 h-4 me-1" />{lang === "ar" ? "قبول ونشر" : "Accept & publish"}
-                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => rejectOffer(o.id)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
+                      <Button variant="royal" size="sm" onClick={() => acceptOffer(o.id, o.serviceTitle)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "قبول ونشر" : "Accept"}</Button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Live */}
           {liveOffers.length > 0 && (
             <div>
-              <SectionHeader title={lang === "ar" ? "مشاريع مباشرة" : "Live projects"} count={liveOffers.length} color="green" />
+              <SectionHeader title={lang === "ar" ? "مباشر" : "Live projects"} count={liveOffers.length} color="green" />
               <div className="space-y-2">
                 {liveOffers.map((o) => (
                   <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm">{o.serviceTitle} · {o.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عرض مستلم" : "bids"}</div>
+                      <div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عروض" : "bids"}</div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
                       <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
-                      <Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>
-                        {lang === "ar" ? "المزايدات" : "View bids"}
-                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>{lang === "ar" ? "المزايدات" : "Bids"}</Button>
                     </div>
                   </div>
                 ))}
@@ -307,39 +273,28 @@ const AdminPortal = () => {
         </div>
       )}
 
-      {/* ══ BIDS TAB ══════════════════════════════════════════════════════ */}
+      {/* ══ BIDS ══ */}
       {activeTab === "bids" && (
         <div className="space-y-4">
-          <SectionHeader title={lang === "ar" ? "نظام المزايدة" : "Bidding System"} />
-          {liveOffers.length === 0 ? <Empty msg={lang === "ar" ? "لا توجد مشاريع مباشرة حاليًا." : "No live projects right now."} /> : (
+          <SectionHeader title={lang === "ar" ? "نظام المزايدة" : "Bidding"} />
+          {liveOffers.length === 0 ? <Empty msg={lang === "ar" ? "لا توجد مشاريع مباشرة." : "No live projects."} /> :
             liveOffers.map((o) => {
               const ob = pendingBids(o.id);
               return (
                 <div key={o.id} className="glass rounded-2xl p-5">
                   <div className="flex items-center gap-3 mb-3 flex-wrap">
-                    <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0">
-                      <Gavel className="w-4 h-4 text-accent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-semibold">{o.serviceTitle}</span>
-                      <span className="text-xs text-muted-foreground ms-2">· {o.clientName}</span>
-                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0"><Gavel className="w-4 h-4 text-accent" /></div>
+                    <span className="font-semibold">{o.serviceTitle}</span>
+                    <span className="text-xs text-muted-foreground">· {o.clientName}</span>
                     {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
-                    <span className="text-accent font-bold text-sm">{formatDZD(o.totalPrice)}</span>
+                    <span className="ms-auto text-accent font-bold text-sm">{formatDZD(o.totalPrice)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {lang === "ar" ? "نطاق العرض:" : "Bid range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span>
-                  </p>
-                  {ob.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic">{lang === "ar" ? "لا توجد عروض بعد." : "No bids yet."}</p>
-                  ) : (
+                  <p className="text-xs text-muted-foreground mb-3">{lang === "ar" ? "نطاق:" : "Range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span></p>
+                  {ob.length === 0 ? <p className="text-xs text-muted-foreground italic">{lang === "ar" ? "لا عروض بعد." : "No bids yet."}</p> : (
                     <div className="space-y-2">
                       {ob.map((b) => (
                         <div key={b.id} className="flex items-center justify-between glass rounded-xl px-4 py-2.5">
-                          <div>
-                            <span className="font-semibold text-sm">{b.creatorName}</span>
-                            <span className="text-xs text-muted-foreground ms-2">{b.creatorEmail}</span>
-                          </div>
+                          <div><span className="font-semibold text-sm">{b.creatorName}</span><span className="text-xs text-muted-foreground ms-2">{b.creatorEmail}</span></div>
                           <div className="flex items-center gap-3">
                             <span className="text-accent font-bold">{formatDZD(b.amount)}</span>
                             <Button size="sm" variant="gold" onClick={() => handleAcceptBid(b.id, o.id, b.creatorName, b.amount)}>
@@ -353,45 +308,34 @@ const AdminPortal = () => {
                 </div>
               );
             })
-          )}
+          }
         </div>
       )}
 
-      {/* ══ CREATORS TAB ══════════════════════════════════════════════════ */}
+      {/* ══ CREATORS ══ */}
       {activeTab === "creators" && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Pending */}
           <div>
-            <SectionHeader title={lang === "ar" ? "طلبات تنتظر الموافقة" : "Pending approvals"} count={pendingCreators.length} color="accent" />
-            {pendingCreators.length === 0 ? <Empty msg={lang === "ar" ? "لا توجد طلبات معلقة." : "No pending requests."} /> : (
+            <SectionHeader title={lang === "ar" ? "طلبات معلقة" : "Pending approvals"} count={pendingCreators.length} color="accent" />
+            {pendingCreators.length === 0 ? <Empty msg={lang === "ar" ? "لا طلبات معلقة." : "No pending requests."} /> : (
               <div className="space-y-3">
                 {pendingCreators.map((p) => (
                   <div key={p.id} className="glass rounded-2xl p-5">
                     <div className="flex items-start gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-serif text-lg font-bold text-primary-foreground flex-shrink-0">
-                        {p.fullName[0]}
-                      </div>
+                      <div className="w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-lg">{p.fullName[0]}</div>
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold">{p.fullName}</div>
-                        <div className="text-sm text-muted-foreground mt-0.5">
-                          {p.role} · {p.wilaya ? `${p.wilaya}, ` : ""}الجزائر · {formatDZD(p.rate)}/h
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{p.bio}</p>
+                        <div className="text-sm text-muted-foreground">{p.role} · {p.wilaya || "Algeria"} · {formatDZD(p.rate)}/h</div>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio}</p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {p.portfolio.map((l) => (
-                            <a key={l} href={l} target="_blank" rel="noreferrer"
-                              className="text-xs text-accent underline truncate max-w-[200px] hover:text-accent/80">{l}</a>
-                          ))}
+                          {p.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-[200px]">{l}</a>)}
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
-                      <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}>
-                        <X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}
-                      </Button>
-                      <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}>
-                        <Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}
-                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
+                      <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}</Button>
                     </div>
                   </div>
                 ))}
@@ -399,24 +343,77 @@ const AdminPortal = () => {
             )}
           </div>
 
-          {/* Approved list */}
-          {approvedCreators.length > 0 && (
-            <div>
-              <SectionHeader title={lang === "ar" ? "العمال الموافق عليهم" : "Approved creators"} />
+          {/* Approved creators — with job stats, expandable */}
+          <div>
+            <SectionHeader title={lang === "ar" ? "العمال الموافق عليهم" : "Approved creators"} count={approvedCreators.length} color="green" />
+            {approvedCreators.length === 0 ? <Empty msg={lang === "ar" ? "لا يوجد عمال موافق عليهم بعد." : "No approved creators yet."} /> : (
               <div className="space-y-2">
-                {approvedCreators.map((c) => (
-                  <div key={c.id} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-400/15 flex items-center justify-center text-sm font-bold text-emerald-400 flex-shrink-0">{c.fullName[0]}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{c.fullName}</div>
-                      <div className="text-xs text-muted-foreground">{c.role} · {c.wilaya || "Algeria"}</div>
+                {approvedCreators.map((c) => {
+                  const jobs = creatorJobCount(c.email);
+                  const earnings = creatorEarnings(c.email);
+                  const rank = getRank(jobs);
+                  const expanded = expandedCreator === c.id;
+                  return (
+                    <div key={c.id} className="glass rounded-2xl overflow-hidden">
+                      <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/20 transition-smooth text-start"
+                        onClick={() => setExpandedCreator(expanded ? null : c.id)}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                          {/* Role emoji */}
+                          {c.role in {"Cinematographer":"","Video Editor":"","Motion Designer":"","Voice-Over Artist":"","Sound Designer":"","Photographer":"","Director":"","Colorist":"","VFX Artist":"","Ghost Writer":"","UGC Creator":""}
+                            ? ["🎥","✂️","🎨","🎙️","🎧","📸","🎬","🎨","✨","✍️","📱"][
+                                ["Cinematographer","Video Editor","Motion Designer","Voice-Over Artist","Sound Designer","Photographer","Director","Colorist","VFX Artist","Ghost Writer","UGC Creator"].indexOf(c.role)
+                              ] || "🎬"
+                            : "🎬"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm">{c.fullName}</div>
+                          <div className="text-xs text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[c.role] || c.role) : c.role} · {c.wilaya || "Algeria"}</div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: rank.color, backgroundColor: rank.color + "20", borderColor: rank.color }}>
+                            {lang === "ar" ? rank.labelAr : rank.label}
+                          </span>
+                          <div className="text-right hidden sm:block">
+                            <div className="text-xs font-semibold text-accent">{jobs} {lang === "ar" ? "مهمة" : "jobs"}</div>
+                            <div className="text-[10px] text-muted-foreground">{formatDZD(earnings)}</div>
+                          </div>
+                          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </button>
+
+                      {expanded && (
+                        <div className="px-4 pb-4 pt-1 border-t border-border space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div className="glass rounded-xl p-3 text-center">
+                              <div className="font-bold text-lg">{jobs}</div>
+                              <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مهام منجزة" : "Completed jobs"}</div>
+                            </div>
+                            <div className="glass rounded-xl p-3 text-center">
+                              <div className="font-bold text-lg text-accent">{formatDZD(earnings)}</div>
+                              <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مكتسبات" : "Total earned"}</div>
+                            </div>
+                            <div className="glass rounded-xl p-3 text-center">
+                              <div className="font-bold text-lg">{c.rate > 0 ? formatDZD(c.rate) : "—"}</div>
+                              <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "الأجر/ساعة" : "Hourly rate"}</div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground">{c.bio}</div>
+                          <div className="flex flex-wrap gap-2">
+                            {c.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-xs">{l}</a>)}
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button variant="destructive" size="sm" onClick={() => rejectCreator(c.id, c.fullName)}>
+                              <X className="w-3 h-3 me-1" />{lang === "ar" ? "إلغاء الموافقة" : "Revoke"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <Pill color="green">✓ {lang === "ar" ? "موافق" : "Approved"}</Pill>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </PortalShell>

@@ -2,7 +2,10 @@ import { PortalShell } from "@/components/PortalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, FolderKanban, Clock, CheckCircle2, XCircle, Gavel, MapPin, User, Phone, CreditCard, Edit2, Save } from "lucide-react";
+import {
+  Plus, FolderKanban, Clock, CheckCircle2, XCircle,
+  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { OFFERS, formatDZD } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
@@ -12,184 +15,266 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const CLIENT_AVATARS = [
-  { id: "brand", emoji: "🏢", label: "Brand" },
-  { id: "university", emoji: "🎓", label: "University" },
-  { id: "store", emoji: "🛍️", label: "Store" },
-  { id: "realestate", emoji: "🏠", label: "Real Estate" },
-  { id: "film", emoji: "🎬", label: "Film" },
-  { id: "media", emoji: "📺", label: "Media" },
+  { id: "brand", emoji: "🏢" }, { id: "university", emoji: "🎓" },
+  { id: "store", emoji: "🛍️" }, { id: "realestate", emoji: "🏠" },
+  { id: "film", emoji: "🎬" }, { id: "media", emoji: "📺" },
 ];
 
-const statusBadge = (s: string, lang: string) => {
-  if (s === "pending_admin") return { label: lang === "ar" ? "في انتظار المراجعة" : "Pending review", icon: Clock, cls: "text-accent" };
-  if (s === "open") return { label: lang === "ar" ? "مباشر — يستقبل عروض" : "Live — receiving bids", icon: CheckCircle2, cls: "text-emerald-400" };
-  if (s === "assigned") return { label: lang === "ar" ? "تم التعيين" : "Assigned", icon: CheckCircle2, cls: "text-blue-400" };
-  if (s === "delivered") return { label: lang === "ar" ? "تم التسليم" : "Delivered", icon: CheckCircle2, cls: "text-purple-400" };
-  return { label: lang === "ar" ? "مرفوض" : "Rejected", icon: XCircle, cls: "text-destructive" };
+const StatusBadge = ({ status, lang }: { status: string; lang: string }) => {
+  const map: Record<string, { label: string; labelAr: string; cls: string; Icon: any }> = {
+    pending_admin: { label: "Pending review", labelAr: "في انتظار المراجعة", cls: "text-accent", Icon: Clock },
+    open:          { label: "Live — receiving bids", labelAr: "مباشر — يستقبل عروضًا", cls: "text-emerald-400", Icon: CheckCircle2 },
+    assigned:      { label: "Assigned to freelancer", labelAr: "تم تعيين عامل حر", cls: "text-blue-400", Icon: CheckCircle2 },
+    delivered:     { label: "Delivered", labelAr: "تم التسليم", cls: "text-purple-400", Icon: CheckCircle2 },
+    rejected:      { label: "Rejected", labelAr: "مرفوض", cls: "text-destructive", Icon: XCircle },
+  };
+  const s = map[status] || map.rejected;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${s.cls}`}>
+      <s.Icon className="w-3.5 h-3.5" />
+      {lang === "ar" ? s.labelAr : s.label}
+    </span>
+  );
 };
 
 const ClientPortal = () => {
-  const { t, auth, lang, refreshAuth } = useApp();
+  const { auth, lang, refreshAuth } = useApp();
   const navigate = useNavigate();
   const offers = useOffers();
   const bids = useBids();
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [phone, setPhone] = useState(auth.name ? "" : "");
-  const [bariMob, setBariMob] = useState("");
+
+  const [activeTab, setActiveTab] = useState<"projects" | "profile">("projects");
+  const [editMode, setEditMode] = useState(false);
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileBariMob, setProfileBariMob] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("brand");
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!auth.loading && auth.role !== "client") navigate("/auth/login");
   }, [auth.loading, auth.role]);
 
   const myOffers = offers.filter((o) => o.clientEmail === auth.email);
-  const pending = myOffers.filter((o) => o.status === "pending_admin").length;
-  const live = myOffers.filter((o) => o.status === "open").length;
-  const assigned = myOffers.filter((o) => o.status === "assigned").length;
+  const pending  = myOffers.filter((o) => o.status === "pending_admin").length;
+  const live     = myOffers.filter((o) => o.status === "open").length;
+  const assigned = myOffers.filter((o) => o.status === "assigned" || o.status === "delivered").length;
 
   const saveProfile = async () => {
     if (!auth.uid) return;
-    setSavingProfile(true);
+    setSaving(true);
     try {
-      await updateUserProfile(auth.uid, { phone, bariMobAccount: bariMob, avatar: selectedAvatar });
+      await updateUserProfile(auth.uid, { phone: profilePhone, bariMobAccount: profileBariMob, avatar: selectedAvatar });
       await refreshAuth();
-      toast.success(lang === "ar" ? "تم حفظ الملف الشخصي." : "Profile saved.");
-      setEditingProfile(false);
-    } catch { toast.error("فشل الحفظ."); }
-    finally { setSavingProfile(false); }
+      toast.success(lang === "ar" ? "✓ تم الحفظ." : "✓ Saved.");
+      setEditMode(false);
+    } catch { toast.error(lang === "ar" ? "فشل الحفظ." : "Save failed."); }
+    finally { setSaving(false); }
   };
 
-  if (auth.loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (auth.loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-glow-pulse text-accent font-serif text-2xl">North Pixel</div>
+    </div>
+  );
+
+  const TABS = [
+    { id: "projects", label: lang === "ar" ? "مشاريعي" : "My Projects" },
+    { id: "profile",  label: lang === "ar" ? "ملفي" : "My Profile" },
+  ] as const;
 
   return (
-    <PortalShell title={lang === "ar" ? "لوحة تحكم العميل" : t("clientCommandCenter")} subtitle="North Pixel Studio">
+    <PortalShell title={lang === "ar" ? "لوحة العميل" : "Client Dashboard"} subtitle="North Pixel Studio">
 
-      {/* Profile card */}
-      <div className="glass rounded-2xl p-6 mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-royal flex items-center justify-center text-3xl">
-              {CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢"}
-            </div>
-            <div>
-              <div className="font-serif text-xl font-bold">{auth.name}</div>
-              <div className="text-sm text-muted-foreground">{auth.email}</div>
-              {auth.wilaya && <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1"><MapPin className="w-3 h-3" />{auth.wilaya}</div>}
-            </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-royal flex items-center justify-center text-2xl flex-shrink-0">
+            {CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢"}
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setEditingProfile(!editingProfile)}>
-            <Edit2 className="w-4 h-4 me-1" />{lang === "ar" ? "تعديل" : "Edit"}
-          </Button>
+          <div>
+            <h1 className="font-serif text-xl font-bold">{auth.name}</h1>
+            <div className="text-sm text-muted-foreground">{auth.email}</div>
+            {auth.wilaya && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                <MapPin className="w-3 h-3 text-accent" />{auth.wilaya}
+              </div>
+            )}
+          </div>
         </div>
-
-        {editingProfile && (
-          <div className="space-y-4 pt-4 border-t border-border">
-            <div>
-              <Label className="mb-2 block">{lang === "ar" ? "اختر صورة رمزية" : "Choose avatar"}</Label>
-              <div className="flex flex-wrap gap-2">
-                {CLIENT_AVATARS.map((a) => (
-                  <button key={a.id} type="button" onClick={() => setSelectedAvatar(a.id)}
-                    className={`w-12 h-12 rounded-xl text-2xl transition-smooth ${selectedAvatar === a.id ? "ring-2 ring-accent bg-accent/10" : "bg-secondary/40 hover:bg-secondary/60"}`}>
-                    {a.emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-1"><Phone className="w-3 h-3" /> {lang === "ar" ? "رقم الهاتف" : "Phone number"}</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+213 X XX XX XX XX" />
-              </div>
-              <div>
-                <Label className="flex items-center gap-1"><CreditCard className="w-3 h-3" /> {lang === "ar" ? "حساب بريدي موب" : "Baridi Mob account"}</Label>
-                <Input value={bariMob} onChange={(e) => setBariMob(e.target.value)} placeholder="00799999XXXXXXXXXX" />
-              </div>
-            </div>
-            <Button onClick={saveProfile} variant="royal" size="sm" disabled={savingProfile}>
-              <Save className="w-4 h-4 me-1" />{savingProfile ? "..." : lang === "ar" ? "حفظ" : "Save"}
+        <PostProjectWizard
+          trigger={
+            <Button variant="royal">
+              <Plus className="w-4 h-4 me-1" />
+              {lang === "ar" ? "نشر مشروع جديد" : "Post a project"}
             </Button>
-          </div>
-        )}
+          }
+          clientName={auth.name}
+          clientEmail={auth.email}
+          clientWilaya={auth.wilaya}
+        />
       </div>
 
       {/* Stats */}
-      <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <h1 className="font-serif text-2xl font-bold">{lang === "ar" ? "مشاريعك" : t("yourProjects")}</h1>
-        <PostProjectWizard trigger={<Button variant="royal"><Plus /> {lang === "ar" ? "نشر مشروع" : t("postProject")}</Button>}
-          clientName={auth.name} clientEmail={auth.email} clientWilaya={auth.wilaya} />
-      </header>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { icon: FolderKanban, k: String(myOffers.length), v: lang === "ar" ? "المشاريع المنشورة" : t("projectsPosted") },
-          { icon: Clock, k: String(pending), v: lang === "ar" ? "في انتظار المراجعة" : t("awaitingReview") },
-          { icon: CheckCircle2, k: String(live), v: lang === "ar" ? "يستقبل عروضًا" : t("liveReceivingBids") },
-          { icon: Gavel, k: String(assigned), v: lang === "ar" ? "تم التعيين" : "Assigned" },
+          { icon: FolderKanban, k: String(myOffers.length), v: lang === "ar" ? "إجمالي المشاريع" : "Total projects" },
+          { icon: Clock,        k: String(pending),          v: lang === "ar" ? "في الانتظار" : "Pending review" },
+          { icon: Gavel,        k: String(live),             v: lang === "ar" ? "يستقبل عروضًا" : "Receiving bids" },
         ].map((s) => (
-          <div key={s.v} className="glass rounded-2xl p-5">
-            <s.icon className="w-5 h-5 text-accent mb-3" />
+          <div key={s.v} className="glass rounded-2xl p-4 text-center">
+            <s.icon className="w-4 h-4 text-accent mx-auto mb-2" />
             <div className="font-serif text-2xl font-bold">{s.k}</div>
-            <div className="text-sm text-muted-foreground">{s.v}</div>
+            <div className="text-[11px] text-muted-foreground">{s.v}</div>
           </div>
         ))}
       </div>
 
-      {/* Projects list */}
-      {myOffers.length === 0 ? (
-        <div className="glass rounded-2xl p-10 text-center">
-          <p className="text-muted-foreground mb-4">{t("noProjectsYet")}</p>
-          <PostProjectWizard trigger={<Button variant="gold"><Plus /> {t("postFirstProject")}</Button>}
-            clientName={auth.name} clientEmail={auth.email} clientWilaya={auth.wilaya} />
-        </div>
-      ) : (
-        <div className="grid gap-3 mb-10">
-          {myOffers.map((p) => {
-            const s = statusBadge(p.status, lang);
-            const offerBids = bids.filter((b) => b.offerId === p.id);
-            const acceptedBid = offerBids.find((b) => b.status === "accepted");
-            const deliveredBid = offerBids.find((b) => b.status === "delivered");
-            return (
-              <div key={p.id} className="glass rounded-2xl p-5">
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="flex-1">
-                    <div className="font-semibold">{p.serviceTitle}</div>
-                    <div className="text-sm text-muted-foreground">{p.units} {p.unitLabel} · {p.brief.slice(0, 80)}{p.brief.length > 80 ? "…" : ""}</div>
-                    {p.referenceLink && <a href={p.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 block">🔗 {lang === "ar" ? "الرابط المرجعي" : "Reference link"}</a>}
-                    <div className={`text-xs mt-2 inline-flex items-center gap-1 ${s.cls}`}><s.icon className="w-3.5 h-3.5" /> {s.label}</div>
-                    {acceptedBid && <div className="mt-1 text-xs text-blue-400 flex items-center gap-1"><Gavel className="w-3 h-3" /> {lang === "ar" ? `تم التعيين لـ ${acceptedBid.creatorName}` : `Assigned to ${acceptedBid.creatorName}`} · {formatDZD(acceptedBid.amount)}</div>}
-                    {deliveredBid?.deliverableLink && (
-                      <a href={deliveredBid.deliverableLink} target="_blank" rel="noreferrer"
-                        className="mt-2 inline-flex items-center gap-1 text-xs text-purple-400 underline">
-                        📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
-                      </a>
-                    )}
-                    {p.status === "open" && offerBids.length > 0 && <div className="mt-1 text-xs text-emerald-400">🎯 {offerBids.length} {lang === "ar" ? "عرض مستلم" : "bids received"}</div>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-accent font-semibold">{formatDZD(p.totalPrice)}</div>
-                    <div className="text-xs text-muted-foreground">{p.deadline ? `📅 ${p.deadline}` : lang === "ar" ? "بلا موعد" : "no deadline"}</div>
-                    {p.advancePaid && <div className="text-xs text-yellow-400 mt-1">✓ {lang === "ar" ? "الدفع المسبق مؤكد" : "Advance paid"}</div>}
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 glass rounded-2xl mb-8">
+        {TABS.map((tab) => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition-smooth ${activeTab === tab.id ? "bg-gradient-royal text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ══ PROJECTS ══ */}
+      {activeTab === "projects" && (
+        <div className="space-y-3">
+          {myOffers.length === 0 ? (
+            <div className="glass rounded-3xl p-12 text-center">
+              <div className="text-4xl mb-3">📋</div>
+              <p className="text-muted-foreground mb-4">{lang === "ar" ? "لم تنشر أي مشروع بعد." : "No projects posted yet."}</p>
+              <PostProjectWizard
+                trigger={<Button variant="gold"><Plus className="w-4 h-4 me-1" />{lang === "ar" ? "انشر مشروعك الأول" : "Post first project"}</Button>}
+                clientName={auth.name} clientEmail={auth.email} clientWilaya={auth.wilaya}
+              />
+            </div>
+          ) : (
+            myOffers.map((p) => {
+              const offerBids = bids.filter((b) => b.offerId === p.id);
+              const acceptedBid = offerBids.find((b) => b.status === "accepted");
+              const deliveredBid = offerBids.find((b) => b.status === "delivered");
+              const pendingBidCount = offerBids.filter((b) => b.status === "pending").length;
+              return (
+                <div key={p.id} className="glass rounded-2xl p-5 hover:border-accent/20 transition-smooth">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-semibold">{p.serviceTitle}</span>
+                        {p.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {p.clientWilaya}</span>}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{p.brief}</p>
+
+                      {p.referenceLink && (
+                        <a href={p.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1">
+                          <Link2 className="w-3 h-3" />{lang === "ar" ? "الرابط المرجعي" : "Reference link"}
+                        </a>
+                      )}
+
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <StatusBadge status={p.status} lang={lang} />
+                        {p.status === "open" && pendingBidCount > 0 && (
+                          <span className="text-xs text-emerald-400 flex items-center gap-1">
+                            <Gavel className="w-3 h-3" />{pendingBidCount} {lang === "ar" ? "عرض مستلم" : "bids received"}
+                          </span>
+                        )}
+                        {acceptedBid && (
+                          <span className="text-xs text-blue-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {lang === "ar" ? `تم التعيين — ${acceptedBid.creatorName}` : `Assigned to ${acceptedBid.creatorName}`}
+                          </span>
+                        )}
+                        {deliveredBid?.deliverableLink && (
+                          <a href={deliveredBid.deliverableLink} target="_blank" rel="noreferrer"
+                            className="text-xs text-purple-400 underline flex items-center gap-1">
+                            📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {/* Only show total price — no cut breakdown */}
+                      <div className="text-accent font-bold">{formatDZD(p.totalPrice)}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {p.deadline ? `📅 ${p.deadline}` : lang === "ar" ? "بلا موعد" : "No deadline"}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       )}
 
-      {/* Browse services */}
-      <section>
-        <h2 className="font-serif text-2xl font-bold mb-4">{t("browseServices")}</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {OFFERS.map((o) => (
-            <Link to={`/services/${o.slug}`} key={o.slug} className="glass rounded-2xl overflow-hidden hover:border-accent/40 transition-smooth">
-              <div className="h-24 overflow-hidden"><img src={o.image} alt={o.title[lang]} className="w-full h-full object-cover" /></div>
-              <div className="p-4"><div className="font-semibold text-sm">{o.title[lang]}</div><div className="text-xs text-muted-foreground mt-1">{o.startingPrice}</div></div>
-            </Link>
-          ))}
+      {/* ══ PROFILE ══ */}
+      {activeTab === "profile" && (
+        <div className="space-y-5 max-w-lg">
+          <div className="glass rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">{lang === "ar" ? "الصورة الرمزية" : "Avatar"}</h3>
+              <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
+                <Edit2 className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              {CLIENT_AVATARS.map((a) => (
+                <button key={a.id} onClick={() => editMode && setSelectedAvatar(a.id)}
+                  className={`w-12 h-12 rounded-xl text-2xl transition-smooth ${selectedAvatar === a.id ? "ring-2 ring-accent bg-accent/10 scale-110" : "bg-secondary/40"} ${!editMode ? "cursor-default" : "hover:scale-105"}`}>
+                  {a.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass rounded-2xl p-5 space-y-4">
+            <h3 className="font-semibold">{lang === "ar" ? "معلوماتي" : "My Info"}</h3>
+            <div className="text-sm space-y-2">
+              <div><span className="text-muted-foreground">{lang === "ar" ? "الاسم: " : "Name: "}</span>{auth.name}</div>
+              <div><span className="text-muted-foreground">{lang === "ar" ? "البريد: " : "Email: "}</span>{auth.email}</div>
+              <div><span className="text-muted-foreground">{lang === "ar" ? "الولاية: " : "Wilaya: "}</span>{auth.wilaya || "—"}</div>
+            </div>
+
+            {editMode && (
+              <div className="space-y-4 pt-3 border-t border-border">
+                <div>
+                  <Label className="flex items-center gap-1"><Phone className="w-3 h-3" />{lang === "ar" ? "رقم الهاتف" : "Phone"}</Label>
+                  <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} placeholder="+213 XXX XXX XXX" className="mt-1" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1"><CreditCard className="w-3 h-3" />{lang === "ar" ? "حساب بريدي موب" : "Baridi Mob"}</Label>
+                  <Input value={profileBariMob} onChange={(e) => setProfileBariMob(e.target.value)} placeholder="007999990XXXXXXXXX" className="mt-1" />
+                </div>
+                <Button variant="royal" className="w-full" onClick={saveProfile} disabled={saving}>
+                  <Save className="w-4 h-4 me-1" />{saving ? "..." : lang === "ar" ? "حفظ" : "Save"}
+                </Button>
+              </div>
+            )}
+
+            {!editMode && (
+              <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+                <Edit2 className="w-3.5 h-3.5 me-1" />{lang === "ar" ? "تعديل البيانات" : "Edit details"}
+              </Button>
+            )}
+          </div>
+
+          {/* Browse services */}
+          <div className="glass rounded-2xl p-5">
+            <h3 className="font-semibold mb-3">{lang === "ar" ? "تصفح خدماتنا" : "Browse services"}</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {OFFERS.map((o) => (
+                <Link to={`/services/${o.slug}`} key={o.slug}
+                  className="glass rounded-xl p-3 hover:border-accent/40 transition-smooth">
+                  <div className="text-sm font-medium">{o.title[lang]}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{o.startingPrice}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </PortalShell>
   );
 };
