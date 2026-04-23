@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Globe, Sun, Moon } from "lucide-react";
 import { useApp } from "@/lib/context";
@@ -9,12 +9,6 @@ import type { Lang } from "@/lib/i18n";
 const LANGS: { code: Lang; label: string }[] = [
   { code: "ar", label: "ع" }, { code: "fr", label: "FR" }, { code: "en", label: "EN" },
 ];
-
-const NPLogo = () => (
-  <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-    <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" />
-  </div>
-);
 
 export const PortalShell = ({
   title, subtitle, accent = "royal", children,
@@ -28,18 +22,28 @@ export const PortalShell = ({
     navigate("/");
   };
 
+  const accentClass = accent === "gold" ? "bg-gradient-gold text-accent-foreground" :
+    accent === "destructive" ? "bg-destructive text-destructive-foreground" :
+    "bg-gradient-royal text-primary-foreground";
+
   return (
     <div className="min-h-screen">
       <nav className="glass sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3">
-            <NPLogo />
-            <div className="leading-tight">
-              <div className="font-serif font-bold">{title}</div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+            <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+              <img src="/logonp.png" alt="NP" className="w-full h-full object-cover" onError={(e) => {
+                const t = e.target as HTMLImageElement;
+                t.parentElement!.innerHTML = `<div class="${accentClass} w-9 h-9 rounded-lg flex items-center justify-center font-serif font-bold">N</div>`;
+              }} />
+            </div>
+            <div className="leading-tight hidden sm:block">
+              <div className="font-serif font-bold text-sm">{title}</div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{subtitle}</div>
             </div>
           </Link>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 ms-auto">
             <div className="hidden sm:flex items-center gap-1 glass rounded-full px-2 py-1">
               <Globe className="w-3.5 h-3.5 text-muted-foreground mx-1" />
               {LANGS.map((l) => (
@@ -52,13 +56,14 @@ export const PortalShell = ({
             <Button variant="ghost" size="icon" onClick={toggleDark} className="w-8 h-8">
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 me-1" />{lang === "ar" ? "خروج" : "Logout"}
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
+              <LogOut className="w-4 h-4 me-1" />
+              <span className="hidden sm:inline">{lang === "ar" ? "خروج" : "Logout"}</span>
             </Button>
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto px-6 py-10">{children}</main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10">{children}</main>
     </div>
   );
 };

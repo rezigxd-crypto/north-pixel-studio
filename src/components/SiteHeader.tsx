@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Sun, Moon, Globe, LogOut, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
@@ -8,56 +8,45 @@ import { toast } from "sonner";
 import type { Lang } from "@/lib/i18n";
 
 const LANGS: { code: Lang; label: string }[] = [
-  { code: "ar", label: "ع" },
-  { code: "fr", label: "FR" },
-  { code: "en", label: "EN" },
+  { code: "ar", label: "ع" }, { code: "fr", label: "FR" }, { code: "en", label: "EN" },
 ];
-
-const NPLogo = () => (
-  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 glow-royal">
-    <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" />
-  </div>
-);
 
 export const SiteHeader = () => {
   const [open, setOpen] = useState(false);
-  const { t, lang, setLang, dark, toggleDark, auth, logout } = useApp();
+  const { lang, setLang, dark, toggleDark, auth, logout } = useApp();
   const navigate = useNavigate();
   const isLoggedIn = !!auth.role && !auth.loading;
-
-  const publicLinks = [
-    { to: "/#offers", label: t("services") },
-    { to: "/#about", label: t("studio") },
-  ];
 
   const handleLogout = async () => {
     await logout();
     toast.success(lang === "ar" ? "تم تسجيل الخروج." : "Logged out.");
     navigate("/");
+    setOpen(false);
   };
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 glass">
-      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-        <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} className="flex items-center gap-3 group flex-shrink-0">
-          <NPLogo />
-          <div className="leading-tight">
-            <div className="font-serif text-lg font-bold tracking-wide">North Pixel</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-accent">Studio</div>
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+
+        {/* Logo */}
+        <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} className="flex items-center gap-3 flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+            <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" onError={(e) => {
+              const t = e.target as HTMLImageElement;
+              t.style.display = "none";
+              t.parentElement!.classList.add("bg-gradient-royal", "flex", "items-center", "justify-center");
+              t.parentElement!.innerHTML = '<span class="font-serif font-bold text-white text-lg">N</span>';
+            }} />
+          </div>
+          <div className="leading-tight hidden sm:block">
+            <div className="font-serif text-base font-bold">North Pixel</div>
+            <div className="text-[10px] uppercase tracking-widest text-accent">Studio</div>
           </div>
         </Link>
 
-        {/* Nav links — only shown when NOT logged in */}
-        {!isLoggedIn && (
-          <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground flex-1 justify-center">
-            {publicLinks.map((l) => (
-              <NavLink key={l.to} to={l.to} className="hover:text-accent transition-smooth">{l.label}</NavLink>
-            ))}
-          </div>
-        )}
-
+        {/* Desktop controls */}
         <div className="hidden md:flex items-center gap-2 ms-auto">
-          {/* Language */}
+          {/* Lang switcher */}
           <div className="flex items-center gap-1 glass rounded-full px-2 py-1">
             <Globe className="w-3.5 h-3.5 text-muted-foreground mx-1" />
             {LANGS.map((l) => (
@@ -67,10 +56,11 @@ export const SiteHeader = () => {
               </button>
             ))}
           </div>
+          {/* Dark/light */}
           <Button variant="ghost" size="icon" onClick={toggleDark} className="w-8 h-8">
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
-
+          {/* Auth buttons */}
           {isLoggedIn ? (
             <>
               <Button asChild variant="ghost" size="sm">
@@ -82,21 +72,28 @@ export const SiteHeader = () => {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm"><Link to="/auth/login">{t("login")}</Link></Button>
-              <Button asChild variant="gold" size="sm"><Link to="/auth/signup">{t("join")}</Link></Button>
+              <Button asChild variant="ghost" size="sm"><Link to="/auth/login">{lang === "ar" ? "دخول" : lang === "fr" ? "Connexion" : "Log in"}</Link></Button>
+              <Button asChild variant="gold" size="sm"><Link to="/auth/signup">{lang === "ar" ? "انضم" : lang === "fr" ? "Rejoindre" : "Join"}</Link></Button>
             </>
           )}
         </div>
 
+        {/* Mobile hamburger */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden"><Menu /></Button>
           </SheetTrigger>
-          <SheetContent side={lang === "ar" ? "left" : "right"} className="bg-background border-border">
-            <div className="flex flex-col gap-4 mt-10">
-              {!isLoggedIn && publicLinks.map((l) => (
-                <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="text-lg">{l.label}</Link>
-              ))}
+          <SheetContent side={lang === "ar" ? "left" : "right"} className="bg-background border-border w-72">
+            <div className="flex flex-col gap-5 mt-10">
+              {/* Logo in sheet */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl overflow-hidden">
+                  <img src="/logonp.png" alt="NP" className="w-full h-full object-cover" />
+                </div>
+                <div className="font-serif font-bold">North Pixel Studio</div>
+              </div>
+
+              {/* Lang + dark */}
               <div className="flex gap-2 flex-wrap">
                 {LANGS.map((l) => (
                   <button key={l.code} onClick={() => setLang(l.code)}
@@ -108,16 +105,19 @@ export const SiteHeader = () => {
                   {dark ? "☀️" : "🌙"}
                 </button>
               </div>
+
               <div className="border-t border-border pt-4 flex flex-col gap-3">
                 {isLoggedIn ? (
                   <>
-                    <Button asChild variant="outline"><Link to={`/portal/${auth.role}`} onClick={() => setOpen(false)}>{lang === "ar" ? "لوحتي" : "Dashboard"}</Link></Button>
-                    <Button variant="outline" onClick={() => { handleLogout(); setOpen(false); }}>{lang === "ar" ? "خروج" : "Logout"}</Button>
+                    <Button asChild variant="royal" onClick={() => setOpen(false)}>
+                      <Link to={`/portal/${auth.role}`}>{lang === "ar" ? "لوحتي" : "My Dashboard"}</Link>
+                    </Button>
+                    <Button variant="outline" onClick={handleLogout}>{lang === "ar" ? "تسجيل الخروج" : "Logout"}</Button>
                   </>
                 ) : (
                   <>
-                    <Button asChild variant="outline"><Link to="/auth/login" onClick={() => setOpen(false)}>{t("login")}</Link></Button>
-                    <Button asChild variant="gold"><Link to="/auth/signup" onClick={() => setOpen(false)}>{t("join")}</Link></Button>
+                    <Button asChild variant="outline" onClick={() => setOpen(false)}><Link to="/auth/login">{lang === "ar" ? "دخول" : "Log in"}</Link></Button>
+                    <Button asChild variant="gold" onClick={() => setOpen(false)}><Link to="/auth/signup">{lang === "ar" ? "انضم" : "Join"}</Link></Button>
                   </>
                 )}
               </div>
