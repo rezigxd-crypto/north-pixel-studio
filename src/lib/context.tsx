@@ -89,7 +89,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const refreshAuth = async () => {
-    if (auth.currentUser) await loadUser(auth.currentUser);
+    const u = auth.currentUser;
+    if (u) await loadUser(u);
   };
 
   const loginWithEmail = async (email: string, password: string): Promise<UserRole> => {

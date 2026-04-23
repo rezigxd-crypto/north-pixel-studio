@@ -12,9 +12,11 @@ export type UserProfile = {
   role: "client" | "creator" | "admin";
   wilaya?: string;
   phone?: string;
-  avatar?: string; // URL or avatar key
+  avatar?: string;
   bariMobAccount?: string;
   completedJobs?: number;
+  roles?: string[];   // multiple roles for creators
+  profilePic?: string;
   createdAt: string;
 };
 
@@ -31,6 +33,7 @@ export type CreatorApplication = {
   portfolio: string[];
   status: "pending" | "approved" | "rejected";
   createdAt: number;
+  uid?: string;
 };
 
 export type Bid = {
@@ -40,7 +43,7 @@ export type Bid = {
   creatorName: string;
   creatorEmail: string;
   amount: number;
-  deliverableLink?: string; // uploaded by creator when done
+  deliverableLink?: string;
   status: "pending" | "accepted" | "rejected" | "delivered";
   createdAt: number;
 };
@@ -60,11 +63,11 @@ export type ClientOffer = {
   bidMin: number;
   bidMax: number;
   brief: string;
-  referenceLink?: string; // client can attach a link
+  referenceLink?: string;
   deadline?: string;
   matchingRoles: string[];
   wilayaFilter?: string;
-  advancePaid?: boolean; // 10% advance
+  advancePaid?: boolean;
   advanceAmount?: number;
   status: "pending_admin" | "open" | "assigned" | "delivered" | "rejected";
   acceptedBidId?: string;
@@ -78,17 +81,16 @@ const toTs = (v: any): number => {
   return Date.now();
 };
 
-// ─── User profile ─────────────────────────────────────────────────────────────
+// ─── User profile ──────────────────────────────────────────────────────────
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
-  await updateDoc(doc(db, "users", uid), data);
+  await updateDoc(doc(db, "users", uid), data as any);
 };
-
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists() ? { uid: snap.id, ...snap.data() } as UserProfile : null;
 };
 
-// ─── Creators ─────────────────────────────────────────────────────────────────
+// ─── Creators ─────────────────────────────────────────────────────────────
 export const addCreator = async (c: Omit<CreatorApplication, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "creators"), { ...c, status: "pending", createdAt: serverTimestamp() });
   return ref.id;
@@ -97,7 +99,7 @@ export const setCreatorStatus = async (id: string, status: CreatorApplication["s
   await updateDoc(doc(db, "creators", id), { status });
 };
 
-// ─── Offers ───────────────────────────────────────────────────────────────────
+// ─── Offers ───────────────────────────────────────────────────────────────
 export const addOffer = async (o: Omit<ClientOffer, "id" | "status" | "createdAt" | "bidMin" | "bidMax">) => {
   const bidMin = Math.round(o.creatorPayout * 0.83);
   const bidMax = o.creatorPayout;
@@ -111,7 +113,7 @@ export const markAdvancePaid = async (id: string, amount: number) => {
   await updateDoc(doc(db, "offers", id), { advancePaid: true, advanceAmount: amount });
 };
 
-// ─── Bids ─────────────────────────────────────────────────────────────────────
+// ─── Bids ─────────────────────────────────────────────────────────────────
 export const addBid = async (b: Omit<Bid, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "bids"), { ...b, status: "pending", createdAt: serverTimestamp() });
   return ref.id;
@@ -127,7 +129,7 @@ export const acceptBid = async (bidId: string, offerId: string) => {
   await Promise.all(snap.docs.filter((d) => d.id !== bidId).map((d) => updateDoc(doc(db, "bids", d.id), { status: "rejected" })));
 };
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
+// ─── Hooks ────────────────────────────────────────────────────────────────
 export function useCreators(): CreatorApplication[] {
   const [data, setData] = useState<CreatorApplication[]>([]);
   useEffect(() => {
@@ -160,4 +162,17 @@ export function useBidsForOffer(offerId: string): Bid[] {
     return onSnapshot(q, (snap) => setData(snap.docs.map((d) => ({ id: d.id, ...d.data(), createdAt: toTs(d.data().createdAt) } as Bid))));
   }, [offerId]);
   return data;
+}
+export function useUserCounts(): { clients: number; creators: number } {
+  const [counts, setCounts] = useState({ clients: 0, creators: 0 });
+  useEffect(() => {
+    return onSnapshot(collection(db, "users"), (snap) => {
+      const docs = snap.docs.map((d) => d.data());
+      setCounts({
+        clients: docs.filter((d) => d.role === "client").length,
+        creators: docs.filter((d) => d.role === "creator").length,
+      });
+    });
+  }, []);
+  return counts;
 }
