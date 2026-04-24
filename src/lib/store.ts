@@ -176,3 +176,24 @@ export function useUserCounts(): { clients: number; creators: number } {
   }, []);
   return counts;
 }
+
+export type UserDoc = {
+  uid: string;
+  name: string;
+  email: string;
+  role: "client" | "creator" | "admin";
+  wilaya?: string;
+  phone?: string;
+  bariMobAccount?: string;
+  createdAt?: string;
+};
+
+export function useAllUsers(): UserDoc[] {
+  const [data, setData] = useState<UserDoc[]>([]);
+  useEffect(() => {
+    return onSnapshot(collection(db, "users"), (snap) => {
+      setData(snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc)));
+    });
+  }, []);
+  return data;
+}
