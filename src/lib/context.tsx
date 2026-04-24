@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import {
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
-  sendPasswordResetEmail, type User as FirebaseUser
+  sendPasswordResetEmail, EmailAuthProvider, linkWithCredential,
+  type User as FirebaseUser
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -19,6 +20,10 @@ interface AuthState {
   loading: boolean;
 }
 
+export type GoogleSignupResult =
+  | { status: "existing"; role: UserRole }
+  | { status: "new"; email: string; name: string; uid: string };
+
 interface AppCtx {
   lang: Lang;
   setLang: (l: Lang) => void;
@@ -27,7 +32,8 @@ interface AppCtx {
   toggleDark: () => void;
   auth: AuthState;
   loginWithEmail: (email: string, password: string) => Promise<UserRole>;
-  loginWithGoogle: (role: "client" | "creator") => Promise<UserRole>;
+  loginWithGoogle: (role: "client" | "creator") => Promise<GoogleSignupResult>;
+  completeGoogleSignup: (args: { role: "client" | "creator"; name: string; password: string; wilaya: string; extra?: Record<string, unknown> }) => Promise<UserRole>;
   registerClient: (email: string, password: string, name: string, wilaya: string) => Promise<string>;
   registerCreator: (email: string, password: string, name: string, wilaya: string) => Promise<string>;
   resetPassword: (email: string) => Promise<void>;
@@ -100,38 +106,71 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return snap.exists() ? (snap.data().role as UserRole) : null;
   };
 
-  const loginWithGoogle = async (role: "client" | "creator"): Promise<UserRole> => {
+  const loginWithGoogle = async (role: "client" | "creator"): Promise<GoogleSignupResult> => {
+    void role; // role is kept in the API for forward compatibility; actual role is collected on the complete-signup page
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) {
-      // Write user profile
-      await setDoc(doc(db, "users", user.uid), {
-        name: user.displayName || "", email: user.email || "",
-        wilaya: "", role, createdAt: new Date().toISOString(), provider: "google",
-      });
-      // If creator — also write a pending creator application so admin can see it
-      if (role === "creator") {
-        const { addDoc, collection: col, serverTimestamp: sts } = await import("firebase/firestore");
-        await addDoc(col(db, "creators"), {
-          fullName: user.displayName || user.email?.split("@")[0] || "Creator",
-          email: user.email || "",
-          country: "Algeria",
-          wilaya: "",
-          city: "",
-          role: "عامل حر (Google)",
-          bio: "تسجيل عبر جوجل — يرجى التواصل معه لإكمال الملف الشخصي.",
-          rate: 0,
-          portfolio: [],
-          status: "pending",
-          createdAt: sts(),
-          provider: "google",
-          uid: user.uid,
-        });
-      }
-      return role;
+    if (snap.exists()) {
+      return { status: "existing", role: snap.data().role as UserRole };
     }
-    return snap.data().role as UserRole;
+    // New Google user — require them to complete signup
+    return {
+      status: "new",
+      email: user.email || "",
+      name: user.displayName || "",
+      uid: user.uid,
+    };
+  };
+
+  const completeGoogleSignup = async ({
+    role, name, password, wilaya, extra,
+  }: { role: "client" | "creator"; name: string; password: string; wilaya: string; extra?: Record<string, unknown> }): Promise<UserRole> => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error("no-google-user");
+
+    // Try linking email/password credential so the user can log in with password too.
+    try {
+      const cred = EmailAuthProvider.credential(user.email, password);
+      await linkWithCredential(user, cred);
+    } catch (e: any) {
+      // If already linked or provider conflict — ignore, still save profile.
+      if (e?.code !== "auth/provider-already-linked" &&
+          e?.code !== "auth/credential-already-in-use" &&
+          e?.code !== "auth/email-already-in-use") {
+        // surface real errors
+        throw e;
+      }
+    }
+
+    await setDoc(doc(db, "users", user.uid), {
+      name, email: user.email, wilaya, role,
+      createdAt: new Date().toISOString(), provider: "google",
+      ...(extra || {}),
+    });
+
+    // If creator — also write a pending creator application so admin can see it
+    if (role === "creator") {
+      const { addDoc, collection: col, serverTimestamp: sts } = await import("firebase/firestore");
+      const e = extra || {};
+      await addDoc(col(db, "creators"), {
+        fullName: name,
+        email: user.email,
+        country: "Algeria",
+        wilaya,
+        city: (e.city as string) || "",
+        role: (e.creatorRole as string) || "عامل حر (Google)",
+        bio: (e.bio as string) || "تسجيل عبر جوجل — سيتم التواصل لإكمال الملف الشخصي.",
+        rate: (e.rate as number) || 0,
+        portfolio: (e.portfolio as string[]) || [],
+        status: "pending",
+        createdAt: sts(),
+        provider: "google",
+        uid: user.uid,
+      });
+    }
+    await loadUser(user);
+    return role;
   };
 
   const registerClient = async (email: string, password: string, name: string, wilaya: string): Promise<string> => {
@@ -155,7 +194,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const t = (k: TranslationKey): string => translations[lang][k] as string;
 
   return (
-    <AppContext.Provider value={{ lang, setLang, t, dark, toggleDark, auth: authState, loginWithEmail, loginWithGoogle, registerClient, registerCreator, resetPassword, logout, refreshAuth }}>
+    <AppContext.Provider value={{ lang, setLang, t, dark, toggleDark, auth: authState, loginWithEmail, loginWithGoogle, completeGoogleSignup, registerClient, registerCreator, resetPassword, logout, refreshAuth }}>
       {children}
     </AppContext.Provider>
   );

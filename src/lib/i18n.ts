@@ -184,7 +184,7 @@ export const translations = {
     clientAccount: "حساب عميل", tellUs: "أخبرنا من تمثل.",
     matchTeam: "سنربطك بالفريق المناسب لقصتك.",
     iRepresent: "أنا أمثل *", fullName: "الاسم الكامل *", organization: "المنظمة",
-    lookingFor: "باختصار، ماذا تبحث عن؟",
+    lookingFor: "اخبرنا المزيد ما هي الخدمات التي تريدها",
     createClientAccount: "إنشاء حساب عميل",
     areYouCreator: "هل أنت مبدع؟", applyHere: "تقدم هنا",
     creatorNetwork: "شبكة المبدعين", buildProfile: "ابنِ ملفك في نورث بيكسل.",
