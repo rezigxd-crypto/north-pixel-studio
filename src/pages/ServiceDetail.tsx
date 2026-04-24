@@ -15,7 +15,9 @@ const ServiceDetail = () => {
 
   useEffect(() => {
     if (offer) document.title = `${offer.title[lang]} — North Pixel Studio`;
-  }, [offer, lang]);
+    // Always land on top of the page when opening a service
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [offer, lang, slug]);
 
   if (!offer) return <Navigate to="/" replace />;
   const Icon = (Icons as any)[offer.icon] ?? Icons.Sparkles;
@@ -25,12 +27,7 @@ const ServiceDetail = () => {
   const tagline = offer.tagline[lang];
   const description = offer.description[lang];
   const features = offer.features[lang];
-
-  const processSteps = lang === "ar"
-    ? ["الإحاطة والمكالمة الإبداعية", "التصور + عرض الأسعار", "الإنتاج / التسجيل", "ما بعد الإنتاج والتسليم"]
-    : lang === "fr"
-    ? ["Brief & appel créatif", "Traitement + devis", "Production / enregistrement", "Post-production & livraison"]
-    : ["Brief & creative call", "Treatment + quote", "Production / recording", "Post & delivery"];
+  const processSteps = offer.process[lang];
 
   const labels = {
     allServices: lang === "ar" ? "جميع الخدمات" : lang === "fr" ? "Tous les services" : "All services",

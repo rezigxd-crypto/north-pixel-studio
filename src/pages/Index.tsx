@@ -113,7 +113,7 @@ const Index = () => {
               <Link key={o.slug} to={`/services/${o.slug}`} className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[18px]">
                 <GlowCard variant={o.accent === "gold" ? "gold" : "royal"} className="group-hover:-translate-y-0.5 transition-transform duration-200">
                   <div className="relative h-36 sm:h-40 overflow-hidden flex-shrink-0">
-                    <img src={o.image} alt={title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={o.image} alt={title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                     <div className={`absolute top-3 ${lang === "ar" ? "right-3" : "left-3"} w-9 h-9 rounded-xl flex items-center justify-center ${o.accent === "gold" ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
                       <Icon className="w-4 h-4" />
