@@ -53,8 +53,13 @@ const CreatorSignup = () => {
     if (!agreed) { toast.error(t("termsRequired")); return; }
     setGLoading(true);
     try {
-      await loginWithGoogle("creator");
-      navigate("/auth/pending", { state: { email: "", name: "" } });
+      const res = await loginWithGoogle("creator");
+      if (res.status === "new") {
+        toast.info("خطوة أخيرة لإكمال تسجيلك");
+        navigate("/auth/signup/complete", { state: { role: "creator", email: res.email, name: res.name } });
+      } else {
+        navigate("/auth/pending", { state: { email: res.role === "creator" ? "" : "", name: "" } });
+      }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }
   };
@@ -100,6 +105,9 @@ const CreatorSignup = () => {
             <span className="text-xs uppercase tracking-[0.3em] text-accent-foreground/80">{t("creatorNetwork")}</span>
             <h1 className="font-serif text-3xl md:text-4xl font-bold text-accent-foreground mt-2">{t("buildProfile")}</h1>
             <p className="text-accent-foreground/80 text-sm mt-2">{t("portfolioMandatory")}</p>
+            {lang === "ar" && (
+              <p className="text-accent-foreground/75 text-xs mt-3 italic">لا نحب أعمال الأوراق أيضًا، هذا لن يطول.</p>
+            )}
           </div>
 
           <div className="p-8 space-y-6">

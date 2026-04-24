@@ -47,8 +47,13 @@ const ClientSignup = () => {
     if (!agreed) { toast.error(t("termsRequired")); return; }
     setGLoading(true);
     try {
-      await loginWithGoogle("client");
-      navigate("/portal/client");
+      const res = await loginWithGoogle("client");
+      if (res.status === "new") {
+        toast.info("خطوة أخيرة لإكمال تسجيلك");
+        navigate("/auth/signup/complete", { state: { role: "client", email: res.email, name: res.name } });
+      } else {
+        navigate("/portal/client");
+      }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }
   };
@@ -95,6 +100,9 @@ const ClientSignup = () => {
             <span className="text-xs uppercase tracking-[0.3em] text-primary-foreground/80">{t("clientAccount")}</span>
             <h1 className="font-serif text-3xl md:text-4xl font-bold text-primary-foreground mt-2">{t("tellUs")}</h1>
             <p className="text-primary-foreground/80 text-sm mt-2">{t("matchTeam")}</p>
+            {lang === "ar" && (
+              <p className="text-primary-foreground/75 text-xs mt-3 italic">لا نحب أعمال الأوراق أيضًا، هذا لن يطول.</p>
+            )}
           </div>
 
           <div className="p-8 space-y-6">

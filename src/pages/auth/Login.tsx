@@ -51,9 +51,14 @@ const Login = () => {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const role = await loginWithGoogle(tab);
-      toast.success(t("welcomeBack"));
-      navigateByRole(role);
+      const res = await loginWithGoogle(tab);
+      if (res.status === "new") {
+        toast.info("خطوة أخيرة لإكمال تسجيلك");
+        navigate("/auth/signup/complete", { state: { role: tab, email: res.email, name: res.name } });
+      } else {
+        toast.success(t("welcomeBack"));
+        navigateByRole(res.role);
+      }
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") toast.error("فشل تسجيل الدخول بجوجل.");
     } finally { setGoogleLoading(false); }
