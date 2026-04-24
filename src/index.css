@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -77,9 +77,25 @@
     @apply bg-background text-foreground;
     font-family: 'Tajawal', sans-serif;
     background-image: var(--gradient-night);
-    background-attachment: fixed;
+  }
+  /* Fixed background is smooth on desktop only — mobile paints it every scroll */
+  @media (min-width: 1024px) {
+    body { background-attachment: fixed; }
   }
   h1, h2, .font-serif { font-family: 'Amiri', serif; }
+}
+
+/* Arabic cinematic typography — premium calligraphic feel */
+[dir="rtl"] body {
+  font-family: 'Reem Kufi', 'Tajawal', sans-serif;
+  letter-spacing: 0;
+}
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] .font-serif {
+  font-family: 'Aref Ruqaa', 'Amiri', serif;
+  letter-spacing: 0;
+  line-height: 1.55;
 }
 
 @layer utilities {
@@ -160,10 +176,34 @@ select { color-scheme: dark; }
 .me-1     { margin-inline-end: 0.25rem; }
 .me-2     { margin-inline-end: 0.5rem; }
 
-/* ── Service card hover — pure CSS, no JS, no lag ── */
-.np-glow-card.royal:hover {
-  border-color: hsl(207 75% 50% / 0.55) !important;
+/* ── Service card — neutral, theme-aware, no coloured glow ── */
+.np-glow-card {
+  background: hsl(var(--card) / 0.88);
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--card-foreground));
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
-.np-glow-card.gold:hover {
-  border-color: hsl(41 67% 60% / 0.55) !important;
+.theme-light .np-glow-card {
+  background: hsl(0 0% 100% / 0.96);
+  border-color: hsl(214 25% 78%);
+}
+.np-glow-card:hover {
+  border-color: hsl(var(--border));
+}
+.theme-light .np-glow-card:hover {
+  border-color: hsl(214 25% 62%);
+}
+/* Ensure muted-foreground text inside cards is readable in light mode */
+.theme-light .np-glow-card .text-muted-foreground {
+  color: hsl(222 25% 22%);
+}
+
+/* ── Logo flip on click (goes home) ── */
+@keyframes npLogoFlip {
+  0%   { transform: rotateY(0deg);   }
+  100% { transform: rotateY(360deg); }
+}
+.np-logo-flip {
+  animation: npLogoFlip 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
 }

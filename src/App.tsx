@@ -10,6 +10,7 @@ import Login from "./pages/auth/Login.tsx";
 import SignupChoice from "./pages/auth/SignupChoice.tsx";
 import ClientSignup from "./pages/auth/ClientSignup.tsx";
 import CreatorSignup from "./pages/auth/CreatorSignup.tsx";
+import CompleteSignup from "./pages/auth/CompleteSignup.tsx";
 import PendingReview from "./pages/auth/PendingReview.tsx";
 import ClientPortal from "./pages/portals/ClientPortal.tsx";
 import CreatorPortal from "./pages/portals/CreatorPortal.tsx";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/auth/signup" element={<SignupChoice />} />
           <Route path="/auth/signup/client" element={<ClientSignup />} />
           <Route path="/auth/signup/creator" element={<CreatorSignup />} />
+          <Route path="/auth/signup/complete" element={<CompleteSignup />} />
           <Route path="/auth/pending" element={<PendingReview />} />
           <Route path="/portal/client" element={<ClientPortal />} />
           <Route path="/portal/creator" element={<CreatorPortal />} />
