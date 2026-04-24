@@ -162,10 +162,8 @@ select { color-scheme: dark; }
 
 /* ── Service card hover — pure CSS, no JS, no lag ── */
 .np-glow-card.royal:hover {
-  border-color: hsl(207 75% 50% / 0.6) !important;
-  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px hsl(207 75% 50% / 0.18) !important;
+  border-color: hsl(207 75% 50% / 0.55) !important;
 }
 .np-glow-card.gold:hover {
-  border-color: hsl(41 67% 60% / 0.6) !important;
-  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.6), 0 0 20px hsl(41 67% 60% / 0.18) !important;
+  border-color: hsl(41 67% 60% / 0.55) !important;
 }
