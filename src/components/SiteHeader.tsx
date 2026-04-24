@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Sun, Moon, Globe, LogOut, LayoutDashboard } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useApp } from "@/lib/context";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ export const SiteHeader = () => {
   const { lang, setLang, dark, toggleDark, auth, logout } = useApp();
   const navigate = useNavigate();
   const isLoggedIn = !!auth.role && !auth.loading;
+  const logoRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     await logout();
@@ -24,13 +25,22 @@ export const SiteHeader = () => {
     setOpen(false);
   };
 
+  const flipLogo = () => {
+    const el = logoRef.current;
+    if (!el) return;
+    el.classList.remove("np-logo-flip");
+    // force reflow so animation restarts every click
+    void el.offsetWidth;
+    el.classList.add("np-logo-flip");
+  };
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 glass">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} className="flex items-center gap-3 flex-shrink-0">
-          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+        <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} onClick={flipLogo} className="flex items-center gap-3 flex-shrink-0">
+          <div ref={logoRef} className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ perspective: "500px" }}>
             <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" onError={(e) => {
               const t = e.target as HTMLImageElement;
               t.style.display = "none";

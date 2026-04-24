@@ -17,14 +17,11 @@ type Step = "service" | "describe" | "payment" | "done";
 const SUGGESTIONS: Record<string, { ar: string[]; en: string[]; fr: string[] }> = {
   "voice-over":      { ar: ["ما اللغة؟", "ما نبرة الصوت؟", "هل تحتاج موسيقى خلفية؟"], en: ["Which language?", "What tone?", "Background music needed?"], fr: ["Quelle langue?", "Quel ton?", "Musique de fond?"] },
   "editing-montage": { ar: ["المنصة المستهدفة؟", "هل تحتاج موشن جرافيك؟", "أي أسلوب مونتاج؟"], en: ["Target platform?", "Motion graphics needed?", "Editing style?"], fr: ["Plateforme cible?", "Motion graphics?", "Style de montage?"] },
-  "social-reels":    { ar: ["ما المنتج أو الخدمة؟", "نوع المحتوى؟", "كم منشور أسبوعيًا؟"], en: ["What product?", "Content style?", "Posts per week?"], fr: ["Quel produit?", "Style?", "Posts/semaine?"] },
-  "cinematic-ads":   { ar: ["ما المنتج؟", "هل لديك نص؟", "داخلي أم خارجي؟"], en: ["What product?", "Script ready?", "Indoor or outdoor?"], fr: ["Quel produit?", "Script prêt?", "Intérieur/extérieur?"] },
-  "event-coverage":  { ar: ["نوع الفعالية؟", "هل تحتاج طائرة مسيّرة؟", "كم كاميرا؟"], en: ["Event type?", "Drone needed?", "How many cameras?"], fr: ["Type d'événement?", "Drone?", "Combien de caméras?"] },
+  "social-reels":    { ar: ["ما المنتج أو الخدمة؟", "نوع المحتوى (ريل أم UGC)؟", "كم منشور أسبوعيًا؟"], en: ["What product?", "Reel or UGC style?", "Posts per week?"], fr: ["Quel produit?", "Reel ou UGC?", "Posts/semaine?"] },
+  "cinematic-ads":   { ar: ["ما المنتج أو القصة؟", "هل لديك نص؟", "داخلي أم خارجي؟"], en: ["Product or story?", "Script ready?", "Indoor or outdoor?"], fr: ["Produit ou histoire?", "Script prêt?", "Intérieur/extérieur?"] },
+  "event-coverage":  { ar: ["نوع الفعالية؟", "كم كاميرا؟", "هل تحتاج مقطعًا في نفس اليوم؟"], en: ["Event type?", "How many cameras?", "Same-day edit needed?"], fr: ["Type d'événement?", "Combien de caméras?", "Montage le jour même?"] },
   "photography":     { ar: ["داخلي أم خارجي؟", "ما الغرض؟", "كم جلسة؟"], en: ["Indoor or outdoor?", "Purpose?", "Sessions count?"], fr: ["Intérieur/extérieur?", "Objectif?", "Sessions?"] },
   "ghost-writing":   { ar: ["ما المنصة؟", "ما الأسلوب؟", "هل تحتاج SEO؟"], en: ["Platform?", "Writing style?", "SEO needed?"], fr: ["Plateforme?", "Style?", "SEO requis?"] },
-  "ugc-content":     { ar: ["ما المنتج؟", "أسلوب؟", "شهادة أم أنباكسينج؟"], en: ["Product?", "Style?", "Testimonial or unboxing?"], fr: ["Produit?", "Style?", "Témoignage ou unboxing?"] },
-  "short-movie":     { ar: ["كم دقيقة؟", "ما النوع؟", "هل لديك سيناريو؟"], en: ["Duration?", "Genre?", "Script ready?"], fr: ["Durée?", "Genre?", "Script prêt?"] },
-  "political-coverage": { ar: ["نوع الفعالية؟", "مونتاج في نفس اليوم؟"], en: ["Event type?", "Same-day edit?"], fr: ["Type d'événement?", "Montage rapide?"] },
 };
 
 export const PostProjectWizard = ({
