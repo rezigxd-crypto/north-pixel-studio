@@ -91,9 +91,9 @@ const AdminPortal = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-        <StatCard icon={UserSquare2} value={String(userCounts.clients)} label={lang === "ar" ? "عملاء" : "Clients"} color="blue" />
-        <StatCard icon={Users} value={String(userCounts.creators)} label={lang === "ar" ? "عمال حرون" : "Freelancers"} color="accent" />
-        <StatCard icon={Camera} value={String(approvedCreators.length)} label={lang === "ar" ? "موافق عليهم" : "Approved"} color="green" />
+        <StatCard icon={UserSquare2} value={String(Math.max(userCounts.clients, clients.length))} label={lang === "ar" ? "عملاء" : "Clients"} color="blue" />
+        <StatCard icon={Users} value={String(approvedCreators.length)} label={lang === "ar" ? "عمال حرون" : "Freelancers"} color="accent" />
+        <StatCard icon={Camera} value={String(pendingCreators.length)} label={lang === "ar" ? "بانتظار الموافقة" : "Pending"} color="yellow" />
         <StatCard icon={FolderKanban} value={String(liveOffers.length + assignedOffers.length)} label={lang === "ar" ? "مشاريع" : "Projects"} color="yellow" />
         <StatCard icon={DollarSign} value={formatDZD(revenue)} label={lang === "ar" ? "إيراداتي" : "Revenue"} color="green" />
       </div>
