@@ -4,27 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { OFFERS, ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD, type Offer } from "@/lib/offers";
 import { addOffer } from "@/lib/store";
 import * as Icons from "lucide-react";
-import { ArrowLeft, ArrowRight, Send, CheckCircle2, Link2, CreditCard } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Link2, CreditCard, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 
 type Step = "service" | "describe" | "payment" | "done";
 
-// Suggestion prompts per service slug
 const SUGGESTIONS: Record<string, { ar: string[]; en: string[]; fr: string[] }> = {
-  "voice-over":     { ar: ["كم دقيقة التعليق الصوتي؟", "ما اللغة المطلوبة؟", "ما نبرة الصوت؟ (رسمي / ودي / مثير)"], en: ["How many minutes?", "Which language?", "Tone? (formal / friendly / exciting)"], fr: ["Combien de minutes?", "Quelle langue?", "Ton? (formel / amical / dynamique)"] },
-  "editing-montage":{ ar: ["كم دقيقة الفيديو النهائي؟", "هل تحتاج موشن جرافيك؟", "ما المنصة المستهدفة؟"], en: ["How long is the final video?", "Need motion graphics?", "Target platform?"], fr: ["Durée de la vidéo finale?", "Motion graphics requis?", "Plateforme cible?"] },
-  "social-reels":   { ar: ["كم ريل تحتاج؟", "ما المنتج أو الخدمة؟", "نوع المحتوى؟ (كوميدي / تعليمي / إعلاني)"], en: ["How many reels?", "What product/service?", "Style? (comedy / educational / ads)"], fr: ["Combien de reels?", "Quel produit?", "Style?"] },
-  "photography":    { ar: ["كم صورة تحتاج؟", "داخلي أم خارجي؟", "ما الغرض من الصور؟"], en: ["How many photos?", "Indoor or outdoor?", "Purpose of photos?"], fr: ["Combien de photos?", "Intérieur ou extérieur?", "Objectif des photos?"] },
-  "cinematic-ads":  { ar: ["كم يوم تصوير تحتاج؟", "ما المنتج أو الخدمة المراد الإعلان عنها؟", "هل لديك نص إعلاني؟"], en: ["How many shoot days?", "What product to advertise?", "Do you have a script?"], fr: ["Combien de jours de tournage?", "Quel produit?", "Avez-vous un script?"] },
-  "event-coverage": { ar: ["كم ساعة الفعالية؟", "نوع الفعالية؟ (مؤتمر / عرس / معرض)", "هل تحتاج طائرة مسيّرة؟"], en: ["Event duration?", "Type? (conference / wedding / expo)", "Need drone shots?"], fr: ["Durée?", "Type d'événement?", "Drone requis?"] },
-  "ghost-writing":  { ar: ["كم مقال أو سيناريو؟", "ما الأسلوب المطلوب؟", "ما المنصة؟ (إنستغرام / لينكدإن / يوتيوب)"], en: ["How many pieces?", "What writing style?", "Platform?"], fr: ["Combien de pièces?", "Style d'écriture?", "Plateforme?"] },
-  "ugc-content":    { ar: ["كم مقطع تحتاج؟", "ما المنتج؟", "أسلوب؟ (تجريب / شهادة / أنباكسينج)"], en: ["How many clips?", "What product?", "Style? (review / testimonial / unboxing)"], fr: ["Combien de clips?", "Quel produit?", "Style?"] },
-  "short-movie":    { ar: ["كم دقيقة الفيلم؟", "ما نوع القصة؟", "هل لديك سيناريو؟"], en: ["How long is the film?", "What genre?", "Do you have a script?"], fr: ["Durée?", "Genre?", "Vous avez un script?"] },
-  "political-coverage": { ar: ["نوع الفعالية؟", "كم يوم التغطية؟", "هل تحتاج مونتاج في نفس اليوم؟"], en: ["Event type?", "Coverage days?", "Same-day edit?"], fr: ["Type d'événement?", "Jours de couverture?", "Montage le jour même?"] },
+  "voice-over":      { ar: ["ما اللغة؟", "ما نبرة الصوت؟", "هل تحتاج موسيقى خلفية؟"], en: ["Which language?", "What tone?", "Background music needed?"], fr: ["Quelle langue?", "Quel ton?", "Musique de fond?"] },
+  "editing-montage": { ar: ["المنصة المستهدفة؟", "هل تحتاج موشن جرافيك؟", "أي أسلوب مونتاج؟"], en: ["Target platform?", "Motion graphics needed?", "Editing style?"], fr: ["Plateforme cible?", "Motion graphics?", "Style de montage?"] },
+  "social-reels":    { ar: ["ما المنتج أو الخدمة؟", "نوع المحتوى؟", "كم منشور أسبوعيًا؟"], en: ["What product?", "Content style?", "Posts per week?"], fr: ["Quel produit?", "Style?", "Posts/semaine?"] },
+  "cinematic-ads":   { ar: ["ما المنتج؟", "هل لديك نص؟", "داخلي أم خارجي؟"], en: ["What product?", "Script ready?", "Indoor or outdoor?"], fr: ["Quel produit?", "Script prêt?", "Intérieur/extérieur?"] },
+  "event-coverage":  { ar: ["نوع الفعالية؟", "هل تحتاج طائرة مسيّرة؟", "كم كاميرا؟"], en: ["Event type?", "Drone needed?", "How many cameras?"], fr: ["Type d'événement?", "Drone?", "Combien de caméras?"] },
+  "photography":     { ar: ["داخلي أم خارجي؟", "ما الغرض؟", "كم جلسة؟"], en: ["Indoor or outdoor?", "Purpose?", "Sessions count?"], fr: ["Intérieur/extérieur?", "Objectif?", "Sessions?"] },
+  "ghost-writing":   { ar: ["ما المنصة؟", "ما الأسلوب؟", "هل تحتاج SEO؟"], en: ["Platform?", "Writing style?", "SEO needed?"], fr: ["Plateforme?", "Style?", "SEO requis?"] },
+  "ugc-content":     { ar: ["ما المنتج؟", "أسلوب؟", "شهادة أم أنباكسينج؟"], en: ["Product?", "Style?", "Testimonial or unboxing?"], fr: ["Produit?", "Style?", "Témoignage ou unboxing?"] },
+  "short-movie":     { ar: ["كم دقيقة؟", "ما النوع؟", "هل لديك سيناريو؟"], en: ["Duration?", "Genre?", "Script ready?"], fr: ["Durée?", "Genre?", "Script prêt?"] },
+  "political-coverage": { ar: ["نوع الفعالية؟", "مونتاج في نفس اليوم؟"], en: ["Event type?", "Same-day edit?"], fr: ["Type d'événement?", "Montage rapide?"] },
 };
 
 export const PostProjectWizard = ({
@@ -34,34 +34,35 @@ export const PostProjectWizard = ({
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("service");
   const [offer, setOffer] = useState<Offer | null>(null);
-  const [duration, setDuration] = useState("");       // free-form duration text
+  const [units, setUnits] = useState(1);
   const [brief, setBrief] = useState("");
   const [deadline, setDeadline] = useState("");
   const [referenceLink, setReferenceLink] = useState("");
 
-  // We compute an estimated total based on a sensible parse of duration
-  // But we don't show the admin cut to the client at all
-  const parsedUnits = Math.max(1, parseInt(duration) || 1);
   const pricePerUnit = offer?.pricing.pricePerUnit || 0;
-  const total = parsedUnits * pricePerUnit;
+  const minUnits = offer?.pricing.minUnits || 1;
+  const maxUnits = offer?.pricing.maxUnits || 20;
+  const total = units * pricePerUnit;
   const adminCut = Math.round(total * ADMIN_COMMISSION);
   const payout = total - adminCut;
   const advance = Math.round(total * CLIENT_ADVANCE_PCT);
 
-  const reset = () => { setStep("service"); setOffer(null); setDuration(""); setBrief(""); setDeadline(""); setReferenceLink(""); };
+  const reset = () => { setStep("service"); setOffer(null); setUnits(1); setBrief(""); setDeadline(""); setReferenceLink(""); };
+
+  const pickOffer = (o: Offer) => { setOffer(o); setUnits(o.pricing.minUnits); setStep("describe"); };
 
   const submit = async () => {
     if (!offer) return;
-    if (brief.trim().length < 10) { toast.error(lang === "ar" ? "صف مشروعك بتفصيل أكثر." : "Describe your project in more detail."); return; }
+    if (brief.trim().length < 10) { toast.error(lang === "ar" ? "صف مشروعك أكثر." : "Describe your project more."); return; }
     try {
       await addOffer({
         clientName, clientEmail, clientWilaya: clientWilaya || undefined,
         serviceSlug: offer.slug,
         serviceTitle: offer.title[lang],
-        units: parsedUnits,
+        units,
         unitLabel: lang === "ar" ? offer.pricing.unitLabelAr : offer.pricing.unitLabel,
         totalPrice: total, adminCut, creatorPayout: payout,
-        brief: (duration ? `[${duration}]\n` : "") + brief.trim(),
+        brief: brief.trim(),
         referenceLink: referenceLink.trim() || undefined,
         deadline: deadline || undefined,
         matchingRoles: offer.matchingRoles,
@@ -69,94 +70,113 @@ export const PostProjectWizard = ({
         advancePaid: false, advanceAmount: advance,
       });
       setStep("payment");
-    } catch { toast.error(lang === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Error. Please try again."); }
+    } catch { toast.error(lang === "ar" ? "حدث خطأ." : "Error occurred."); }
   };
 
   const suggestions = offer ? (SUGGESTIONS[offer.slug]?.[lang] || []) : [];
+  const unitLabelDisplay = offer ? (lang === "ar" ? offer.pricing.unitLabelAr : offer.pricing.unitLabel) : "";
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl">
             {step === "service" && (lang === "ar" ? "اختر خدمة" : "Pick a service")}
             {step === "describe" && offer?.title[lang]}
             {step === "payment" && (lang === "ar" ? "الدفع المسبق" : "Advance Payment")}
-            {step === "done" && (lang === "ar" ? "تم الإرسال ✓" : "Submitted ✓")}
+            {step === "done" && (lang === "ar" ? "تم الإرسال" : "Submitted")}
           </DialogTitle>
         </DialogHeader>
 
-        {/* STEP 1 — pick service */}
+        {/* SERVICE PICKER */}
         {step === "service" && (
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {OFFERS.map((o) => {
               const Icon = (Icons as any)[o.icon] ?? Icons.Sparkles;
               return (
-                <button key={o.slug} onClick={() => { setOffer(o); setStep("describe"); }}
-                  className="text-left glass rounded-2xl p-4 hover:border-accent/50 transition-smooth">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${o.accent === "gold" ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
+                <button key={o.slug} onClick={() => pickOffer(o)}
+                  className="text-left glass rounded-xl p-3 hover:border-accent/50 transition-smooth">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${o.accent === "gold" ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
                     <Icon className="w-4 h-4" />
                   </div>
-                  <div className="font-semibold text-sm">{o.title[lang]}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{o.startingPrice}</div>
+                  <div className="font-semibold text-sm leading-tight">{o.title[lang]}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{o.startingPrice}</div>
                 </button>
               );
             })}
           </div>
         )}
 
-        {/* STEP 2 — describe project */}
+        {/* DESCRIBE + DURATION SLIDER */}
         {step === "describe" && offer && (
           <div className="space-y-5">
-            <div className="glass rounded-xl px-4 py-3 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{offer.title[lang]}</span>
-              <span className="text-xs text-accent">{offer.startingPrice}</span>
+            {/* Price summary bar */}
+            <div className="glass rounded-xl p-4 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{offer.title[lang]}</span>
+              <div className="text-right">
+                <div className="text-accent font-bold text-lg">{formatDZD(total)}</div>
+                <div className="text-xs text-muted-foreground">{units} {unitLabelDisplay}</div>
+              </div>
             </div>
 
-            {/* Duration — free form */}
+            {/* Duration slider */}
             <div>
-              <Label htmlFor="duration">
-                {lang === "ar" ? "المدة / الكمية (مثال: 3 دقائق، يومان، 5 صور)" :
-                 lang === "fr" ? "Durée / Quantité (ex: 3 minutes, 2 jours, 5 photos)" :
-                 "Duration / Quantity (e.g. 3 minutes, 2 days, 5 photos)"}
-              </Label>
-              <Input id="duration" value={duration} onChange={(e) => setDuration(e.target.value)}
-                placeholder={lang === "ar" ? "اكتب ما تريد بدون قيود..." : "Describe duration freely..."}
-                className="mt-1" />
+              <div className="flex items-center justify-between mb-3">
+                <Label className="font-semibold">
+                  {lang === "ar" ? `المدة / الكمية` : `Duration / Quantity`}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setUnits(u => Math.max(minUnits, u - 1))}
+                    className="w-7 h-7 rounded-full glass flex items-center justify-center hover:border-accent/50 transition-smooth">
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="font-bold text-accent min-w-[3rem] text-center">{units} {unitLabelDisplay}</span>
+                  <button onClick={() => setUnits(u => Math.min(maxUnits, u + 1))}
+                    className="w-7 h-7 rounded-full glass flex items-center justify-center hover:border-accent/50 transition-smooth">
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              <Slider
+                min={minUnits} max={maxUnits} step={1}
+                value={[units]}
+                onValueChange={(v) => setUnits(v[0])}
+                className="mb-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatDZD(minUnits * pricePerUnit)}</span>
+                <span className="text-accent font-semibold">{formatDZD(pricePerUnit)} / {unitLabelDisplay}</span>
+                <span>{formatDZD(maxUnits * pricePerUnit)}</span>
+              </div>
             </div>
 
             {/* Suggestions */}
             {suggestions.length > 0 && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  {lang === "ar" ? "💡 أسئلة مقترحة — أجب عنها في وصفك:" : "💡 Suggested questions — answer in your description:"}
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">
+                  {lang === "ar" ? "أجب عن هذه الأسئلة في وصفك:" : "Answer these in your description:"}
                 </p>
-                <div className="flex flex-col gap-1">
-                  {suggestions.map((s, i) => (
-                    <div key={i} className="text-xs glass rounded-lg px-3 py-2 text-muted-foreground">• {s}</div>
-                  ))}
-                </div>
+                {suggestions.map((s, i) => (
+                  <div key={i} className="text-xs glass rounded-lg px-3 py-1.5 text-muted-foreground">• {s}</div>
+                ))}
               </div>
             )}
 
             {/* Brief */}
             <div>
-              <Label htmlFor="brief">
-                {lang === "ar" ? "صف لنا ما الذي تريده *" : lang === "fr" ? "Décrivez votre projet *" : "Describe what you want *"}
-              </Label>
-              <Textarea id="brief" rows={5} value={brief} onChange={(e) => setBrief(e.target.value)} maxLength={1500}
-                placeholder={lang === "ar" ? "كن تفصيليًا قدر الإمكان — المنتج، الجمهور، الأسلوب، المراجع..." : "Be as detailed as possible — product, audience, style, references..."} />
+              <Label htmlFor="brief">{lang === "ar" ? "صف مشروعك *" : "Project description *"}</Label>
+              <Textarea id="brief" rows={4} value={brief} onChange={(e) => setBrief(e.target.value)} maxLength={1500} className="mt-1"
+                placeholder={lang === "ar" ? "كن تفصيليًا — المنتج، الجمهور، الأسلوب، المراجع..." : "Be detailed — product, audience, style, references..."} />
             </div>
 
             {/* Reference link */}
             <div>
               <Label htmlFor="refLink" className="flex items-center gap-1">
-                <Link2 className="w-3.5 h-3.5" />
-                {lang === "ar" ? "رابط مرجعي (اختياري)" : "Reference link (optional)"}
+                <Link2 className="w-3.5 h-3.5" />{lang === "ar" ? "رابط مرجعي (اختياري)" : "Reference link (optional)"}
               </Label>
               <Input id="refLink" type="url" value={referenceLink} onChange={(e) => setReferenceLink(e.target.value)}
-                placeholder="https://drive.google.com/... or YouTube link" className="mt-1" />
+                placeholder="https://drive.google.com/..." className="mt-1" />
             </div>
 
             {/* Deadline */}
@@ -165,59 +185,48 @@ export const PostProjectWizard = ({
               <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
             </div>
 
-            <div className="flex justify-between">
-              <Button variant="ghost" onClick={() => setStep("service")}><ArrowLeft className="w-4 h-4" /> {lang === "ar" ? "رجوع" : "Back"}</Button>
-              <Button variant="gold" onClick={submit}><Send className="w-4 h-4" /> {lang === "ar" ? "إرسال" : "Send"}</Button>
+            <div className="flex justify-between pt-1">
+              <Button variant="ghost" onClick={() => setStep("service")}><ArrowLeft className="w-4 h-4 me-1" />{lang === "ar" ? "رجوع" : "Back"}</Button>
+              <Button variant="gold" onClick={submit}><Send className="w-4 h-4 me-1" />{lang === "ar" ? "إرسال" : "Send"}</Button>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — advance payment (no 20% mention) */}
+        {/* PAYMENT */}
         {step === "payment" && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div className="glass rounded-2xl p-5 border border-yellow-400/25">
               <div className="flex items-center gap-3 mb-4">
-                <CreditCard className="w-6 h-6 text-yellow-400" />
+                <CreditCard className="w-6 h-6 text-yellow-400 flex-shrink-0" />
                 <div>
-                  <div className="font-semibold">
-                    {lang === "ar" ? "ادفع 10% مسبقًا لتأكيد مشروعك" : "Pay 10% advance to confirm your project"}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {lang === "ar" ? "يضمن هذا جدية الطلب ويحفظ حق الطرفين." : "This secures your project and protects both parties."}
-                  </div>
+                  <div className="font-semibold text-sm">{lang === "ar" ? "ادفع 10% مسبقًا لتأكيد مشروعك" : "Pay 10% advance to confirm"}</div>
+                  <div className="text-xs text-muted-foreground">{lang === "ar" ? "يحمي حقوق الطرفين." : "Protects both parties."}</div>
                 </div>
               </div>
-              {total > 0 && <div className="text-3xl font-serif font-bold text-yellow-400 mb-3">{formatDZD(advance)}</div>}
-              <div className="glass rounded-xl p-4 bg-secondary/20 space-y-2 text-sm">
-                <div className="font-semibold text-accent">{lang === "ar" ? "الدفع عبر بريدي موب" : "Pay via Baridi Mob"}</div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-yellow-400/10 border border-yellow-400/25 flex items-center justify-center text-yellow-400 font-bold text-xs flex-shrink-0">CCP</div>
-                  <div>
-                    <div className="font-mono text-sm font-semibold">007999990029553196</div>
-                    <div className="text-xs text-muted-foreground">{lang === "ar" ? "المفتاح: 73" : "Key: 73"}</div>
-                  </div>
-                </div>
+              {total > 0 && <div className="text-3xl font-serif font-bold text-yellow-400 mb-4">{formatDZD(advance)}</div>}
+              <div className="glass rounded-xl p-3 bg-secondary/20 space-y-2">
+                <div className="text-xs font-semibold text-accent">{lang === "ar" ? "الدفع عبر بريدي موب" : "Pay via Baridi Mob"}</div>
+                <div className="font-mono text-sm font-bold">007999990029553196</div>
+                <div className="text-xs text-muted-foreground">{lang === "ar" ? "المفتاح: 73" : "Key: 73"}</div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                {lang === "ar" ? "* إذا لم يتوفر عامل حر في منطقتك، يُسترد المبلغ كاملًا." : "* Full refund if no freelancer is found in your area."}
+                {lang === "ar" ? "* استرداد كامل إذا لم يتوفر عامل." : "* Full refund if no freelancer found."}
               </p>
             </div>
             <Button variant="royal" className="w-full" onClick={() => setStep("done")}>
-              {lang === "ar" ? "تم الدفع — المتابعة ✓" : "Payment sent — Continue ✓"}
+              {lang === "ar" ? "تم الدفع — متابعة" : "Payment sent — Continue"}
             </Button>
           </div>
         )}
 
-        {/* STEP 4 — done */}
+        {/* DONE */}
         {step === "done" && (
           <div className="text-center py-6 space-y-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-gold flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-10 h-10 text-accent-foreground" />
+            <div className="w-16 h-16 rounded-full bg-gradient-gold flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-8 h-8 text-accent-foreground" />
             </div>
-            <h3 className="font-serif text-2xl font-bold">{lang === "ar" ? "تم إرسال مشروعك!" : "Project submitted!"}</h3>
-            <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-              {lang === "ar" ? "مشروعك في يد الإدارة. بمجرد الموافقة سيُرسل لعمال حرين متخصصين في ولايتك." : "Your project is with our team. Once approved it'll be sent to matching freelancers in your area."}
-            </p>
+            <h3 className="font-serif text-xl font-bold">{lang === "ar" ? "تم إرسال مشروعك" : "Project submitted!"}</h3>
+            <p className="text-muted-foreground text-sm">{lang === "ar" ? "مشروعك في يد الإدارة وسيُرسل لعمال في منطقتك." : "Your project is with our team and will be sent to freelancers in your area."}</p>
             <Button variant="royal" onClick={() => { setOpen(false); reset(); }}>{lang === "ar" ? "فهمت" : "Got it"}</Button>
           </div>
         )}
