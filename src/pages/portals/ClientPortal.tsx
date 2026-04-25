@@ -55,6 +55,16 @@ const ClientPortal = () => {
     if (!auth.loading && auth.role !== "client") navigate("/auth/login");
   }, [auth.loading, auth.role]);
 
+  // Pre-populate edit fields whenever auth profile changes (e.g. after a save).
+  // This was the bug behind "I updated my phone but admin can't see it" — the
+  // edit form started empty every time, so re-saving overwrote stored values
+  // with empty strings.
+  useEffect(() => {
+    setProfilePhone(auth.phone || "");
+    setProfileBariMob(auth.bariMobAccount || "");
+    if (auth.avatar) setSelectedAvatar(auth.avatar);
+  }, [auth.phone, auth.bariMobAccount, auth.avatar]);
+
   const myOffers = offers.filter((o) => o.clientEmail === auth.email);
   const pending  = myOffers.filter((o) => o.status === "pending_admin").length;
   const live     = myOffers.filter((o) => o.status === "open").length;

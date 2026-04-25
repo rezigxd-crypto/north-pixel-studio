@@ -5,7 +5,6 @@ import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HomepageDebug } from "@/components/HomepageDebug";
 import { OFFERS, UNIVERSITY_BUNDLE } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
@@ -203,10 +202,6 @@ const Index = () => {
       )}
 
       <SiteFooter />
-
-      {/* On-screen debug panel — only renders when ?debug=1 is in the URL.
-          Lets phone users diagnose homepage stats without DevTools. */}
-      <HomepageDebug />
     </div>
   );
 };

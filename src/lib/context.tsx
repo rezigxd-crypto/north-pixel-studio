@@ -18,6 +18,9 @@ interface AuthState {
   name: string;
   wilaya?: string;
   uid?: string;
+  phone?: string;
+  bariMobAccount?: string;
+  avatar?: string;
   loading: boolean;
 }
 
@@ -79,7 +82,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
         const data = snap.data();
-        setAuthState({ role: data.role as UserRole, email: user.email || "", name: data.name || user.displayName || "", wilaya: data.wilaya || "", uid: user.uid, loading: false });
+        setAuthState({
+          role: data.role as UserRole,
+          email: user.email || "",
+          name: data.name || user.displayName || "",
+          wilaya: data.wilaya || "",
+          uid: user.uid,
+          phone: data.phone || "",
+          bariMobAccount: data.bariMobAccount || "",
+          avatar: data.avatar || "",
+          loading: false,
+        });
       } else {
         setAuthState({ role: null, email: user.email || "", name: user.displayName || "", wilaya: "", uid: user.uid, loading: false });
       }

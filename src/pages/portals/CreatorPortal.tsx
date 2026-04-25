@@ -66,6 +66,14 @@ const CreatorPortal = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Sync edit fields with the latest auth profile so opening the form shows
+  // the user's actual phone / Baridi Mob — and saving doesn't blank them out.
+  useEffect(() => {
+    setProfileName(auth.name || "");
+    setProfilePhone(auth.phone || "");
+    setProfileBariMob(auth.bariMobAccount || "");
+  }, [auth.name, auth.phone, auth.bariMobAccount]);
+
   // ── Computed
   const creatorEmail = auth.email;
   const creatorWilaya = auth.wilaya || "";
@@ -87,7 +95,6 @@ const CreatorPortal = () => {
   });
 
   const hasBid = (offerId: string) => myBids.some((b) => b.offerId === offerId);
-  const bidCountForOffer = (offerId: string) => bids.filter((b) => b.offerId === offerId && b.status === "pending").length;
 
   const handleBid = async (offerId: string, min: number, max: number) => {
     const raw = bidAmounts[offerId];
@@ -246,14 +253,14 @@ const CreatorPortal = () => {
             <div className="space-y-4">
               {availableOffers.map((offer) => {
                 const already = hasBid(offer.id);
-                const othersCount = bidCountForOffer(offer.id);
                 const myBidAmt = bidAmounts[offer.id] || "";
                 const isSubmitting = submittingBid === offer.id;
 
+                const closed = offer.bidsCloseAt ? Date.now() >= offer.bidsCloseAt : false;
                 return (
-                  <div key={offer.id} className="glass rounded-2xl p-5 hover:border-accent/30 transition-smooth">
+                  <div key={offer.id} className="glass rounded-2xl p-5 hover:border-accent/40 transition-smooth animate-fade-in-up">
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-bold uppercase tracking-widest text-accent">{offer.serviceTitle}</span>
                           {offer.clientWilaya && (
@@ -264,31 +271,46 @@ const CreatorPortal = () => {
                         </div>
                         <p className="font-semibold mt-1">{offer.brief.slice(0, 120)}{offer.brief.length > 120 ? "…" : ""}</p>
                         {offer.referenceLink && (
-                          <a href={offer.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 block">
-                            🔗 {lang === "ar" ? "رابط مرجعي" : "Reference"}
+                          <a href={offer.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 inline-flex items-center gap-1">
+                            <Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}
                           </a>
                         )}
-                        {offer.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {offer.deadline}</p>}
+                        {offer.deadline && (
+                          <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
+                            <CalendarClock className="w-3 h-3" />{offer.deadline}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Bid info — show range and competitor count only */}
-                    <div className="glass rounded-xl p-4 bg-secondary/20">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-0.5">{lang === "ar" ? "نطاق السعر" : "Price range"}</div>
-                          <div className="font-bold text-accent">{formatDZD(offer.bidMin)} – {formatDZD(offer.bidMax)}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-muted-foreground mb-0.5">{lang === "ar" ? "عدد المزايدين" : "Others bidding"}</div>
-                          <div className="font-bold">{othersCount} <span className="text-muted-foreground text-xs">{lang === "ar" ? "منافس" : "competitor(s)"}</span></div>
-                        </div>
+                    {/* Countdown — admin-set bidding window */}
+                    {offer.bidsCloseAt && (
+                      <div className="mb-3">
+                        <CountdownTimer
+                          target={offer.bidsCloseAt}
+                          lang={lang}
+                          label={lang === "ar" ? "ينتهي تقديم العروض خلال" : "Bidding closes in"}
+                          tone="gold"
+                        />
                       </div>
+                    )}
+
+                    {/* Bid info — price range only (no competitor count) */}
+                    <div className="rounded-xl p-4 bg-gradient-to-br from-accent/8 via-secondary/15 to-transparent border border-accent/15">
+                      <div className="text-[10px] uppercase tracking-widest text-accent mb-1 font-bold">
+                        {lang === "ar" ? "نطاق السعر المتاح" : "Available price range"}
+                      </div>
+                      <div className="font-serif text-xl font-bold text-accent mb-3">{formatDZD(offer.bidMin)} – {formatDZD(offer.bidMax)}</div>
 
                       {already ? (
-                        <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
-                          <TrendingUp className="w-4 h-4" />
-                          {lang === "ar" ? "لقد قدّمت عرضك — انتظر قرار الإدارة." : "Bid submitted — waiting for admin decision."}
+                        <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium rounded-lg bg-emerald-400/10 border border-emerald-400/20 px-3 py-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          {lang === "ar" ? "تم استلام عرضك — في المراجعة." : "Bid received — under review."}
+                        </div>
+                      ) : closed ? (
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm rounded-lg bg-secondary/30 px-3 py-2">
+                          <Clock3 className="w-4 h-4" />
+                          {lang === "ar" ? "أُغلق تقديم العروض على هذا المشروع." : "Bidding has closed on this project."}
                         </div>
                       ) : (
                         <div className="flex gap-2 items-center">
@@ -298,8 +320,9 @@ const CreatorPortal = () => {
                               min={offer.bidMin} max={offer.bidMax}
                               value={myBidAmt}
                               onChange={(e) => setBidAmounts((p) => ({ ...p, [offer.id]: e.target.value }))}
-                              placeholder={lang === "ar" ? `أدخل سعرك (${formatDZD(offer.bidMin)} – ${formatDZD(offer.bidMax)})` : `Your price (${formatDZD(offer.bidMin)} – ${formatDZD(offer.bidMax)})`}
-                              className="h-9 text-sm"
+                              placeholder={lang === "ar" ? `سعرك (${formatDZD(offer.bidMin)} – ${formatDZD(offer.bidMax)})` : `Your price (${formatDZD(offer.bidMin)} – ${formatDZD(offer.bidMax)})`}
+                              className="h-10 text-sm bg-background/60"
+                              dir="ltr"
                             />
                           </div>
                           <Button variant="gold" size="sm" disabled={isSubmitting}

@@ -71,6 +71,10 @@ export type ClientOffer = {
   advanceAmount?: number;
   status: "pending_admin" | "open" | "assigned" | "delivered" | "rejected";
   acceptedBidId?: string;
+  /** Timestamp (ms) when the bidding window closes. Set by admin when approving. */
+  bidsCloseAt?: number;
+  /** Duration in hours admin chose for the bidding window — kept for display. */
+  bidsDurationHours?: number;
   createdAt: number;
 };
 
@@ -108,6 +112,20 @@ export const addOffer = async (o: Omit<ClientOffer, "id" | "status" | "createdAt
 };
 export const setOfferStatus = async (id: string, status: ClientOffer["status"]) => {
   await updateDoc(doc(db, "offers", id), { status });
+};
+/**
+ * Admin approves a pending project and opens it for bidding with a chosen
+ * duration (in hours). Sets bidsCloseAt = now + duration so creators see a
+ * live countdown.
+ */
+export const approveOfferForBidding = async (id: string, durationHours: number) => {
+  const closeAt = Date.now() + Math.round(durationHours * 3600 * 1000);
+  await updateDoc(doc(db, "offers", id), {
+    status: "open",
+    bidsCloseAt: closeAt,
+    bidsDurationHours: durationHours,
+  });
+  return closeAt;
 };
 export const markAdvancePaid = async (id: string, amount: number) => {
   await updateDoc(doc(db, "offers", id), { advancePaid: true, advanceAmount: amount });
@@ -254,24 +272,15 @@ export function usePublicStats(): { clients: number; creators: number } {
     const pubUnsub = onSnapshot(
       doc(db, "public", "stats"),
       (snap) => {
-        if (!snap.exists()) {
-          // eslint-disable-next-line no-console
-          console.warn("[v0] /public/stats document does not exist yet — homepage will show 0 until an admin loads the dashboard.");
-          return;
-        }
+        if (!snap.exists()) return;
         const d = snap.data();
         const next = { clients: num(d.clients), creators: num(d.creators) };
-        // eslint-disable-next-line no-console
-        console.log("[v0] /public/stats →", next);
         setStats((prev) => ({
           clients:  Math.max(prev.clients,  next.clients),
           creators: Math.max(prev.creators, next.creators),
         }));
       },
-      (err) => {
-        // eslint-disable-next-line no-console
-        console.error("[v0] /public/stats READ blocked — check Firestore rules:", err.code, err.message);
-      }
+      () => { /* silent */ }
     );
 
     // 2) /users — works for authenticated users; preferred source of truth.
@@ -285,17 +294,10 @@ export function usePublicStats(): { clients: number; creators: number } {
           clients:  docs.filter((d) => d.role === "client").length,
           creators: docs.filter((d) => d.role === "creator").length,
         };
-        // eslint-disable-next-line no-console
-        console.log("[v0] /users live count →", counts);
         setStats(counts);
-        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch((err) => {
-          // eslint-disable-next-line no-console
-          console.error("[v0] mirror /public/stats WRITE blocked — check Firestore rules:", err.code, err.message);
-        });
+        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch(() => {});
       },
-      () => {
-        // permission denied for visitors — fine, we still have pubUnsub
-      }
+      () => { /* permission denied for visitors — fine */ }
     );
 
     return () => { pubUnsub(); userUnsub(); };
