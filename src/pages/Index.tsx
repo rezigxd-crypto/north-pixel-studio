@@ -110,7 +110,7 @@ const Index = () => {
             const title = o.title[lang];
             const tagline = o.tagline[lang];
             return (
-              <Link key={o.slug} to={`/services/${o.slug}`} className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[18px]">
+              <Link key={o.slug} to={o.slug === "motion-graphics" ? "/services/motion-graphics" : `/services/${o.slug}`} className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[18px]">
                 <GlowCard variant={o.accent === "gold" ? "gold" : "royal"} className="group-hover:-translate-y-0.5 transition-transform duration-200">
                   <div className="relative h-36 sm:h-40 overflow-hidden flex-shrink-0">
                     <img src={o.image} alt={title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
