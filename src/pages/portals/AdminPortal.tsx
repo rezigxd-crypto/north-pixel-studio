@@ -1,12 +1,12 @@
 import { PortalShell } from "@/components/PortalShell";
-import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin, Phone, CreditCard, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid } from "@/lib/store";
+import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, type UserDoc } from "@/lib/store";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS } from "@/lib/offers";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const StatCard = ({ icon: Icon, value, label, color = "accent" }: { icon: React.ElementType; value: string; label: string; color?: string }) => (
   <div className="glass rounded-2xl p-4 flex flex-col gap-2 hover:border-accent/30 transition-smooth">
@@ -51,11 +51,56 @@ const AdminPortal = () => {
   const revenue = [...liveOffers, ...assignedOffers].reduce((sum, o) => sum + o.adminCut, 0);
   const notifications = pendingCreators.length + pendingOffers.length;
 
-  const clients = allUsers.filter((u) => u.role === "client");
+  // Merge two sources of clients so the dashboard works even if /users
+  // listing is blocked by stale Firestore rules:
+  //   1. /users docs with role === "client" (full profile incl. phone, Baridi Mob)
+  //   2. clients derived from /offers (every offer has clientName/Email/Wilaya)
+  // Keyed by email to deduplicate; user-doc fields take priority over offer fields.
+  const clients: UserDoc[] = useMemo(() => {
+    const map = new Map<string, UserDoc>();
+
+    // From offers — guarantees we always show a client once they post a project
+    for (const o of offers) {
+      const email = (o.clientEmail || "").trim().toLowerCase();
+      if (!email) continue;
+      if (!map.has(email)) {
+        map.set(email, {
+          uid: email,
+          email: o.clientEmail,
+          name: o.clientName || "",
+          role: "client",
+          wilaya: o.clientWilaya,
+        });
+      }
+    }
+
+    // From /users — overlay richer profile fields (phone, Baridi Mob, avatar…)
+    for (const u of allUsers) {
+      if (u.role !== "client") continue;
+      const email = (u.email || "").trim().toLowerCase();
+      if (!email) continue;
+      const existing = map.get(email);
+      map.set(email, {
+        ...(existing || {}),
+        ...u,
+        // keep richest values in case one source is missing fields
+        name: u.name || existing?.name || "",
+        wilaya: u.wilaya || existing?.wilaya,
+      });
+    }
+
+    return Array.from(map.values()).sort((a, b) =>
+      (a.name || a.email).localeCompare(b.name || b.email)
+    );
+  }, [allUsers, offers]);
+
   const pendingBids = (offerId: string) => bids.filter((b) => b.offerId === offerId && b.status === "pending");
   const creatorJobs = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").length;
   const creatorEarned = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").reduce((s, b) => s + b.amount, 0);
-  const clientOffers = (email: string) => offers.filter((o) => o.clientEmail === email).length;
+  const clientOffers = (email: string) => {
+    const e = (email || "").trim().toLowerCase();
+    return offers.filter((o) => (o.clientEmail || "").trim().toLowerCase() === e).length;
+  };
 
   const approveCreator = async (id: string, name: string) => { await setCreatorStatus(id, "approved"); toast.success(`${name} — ${lang === "ar" ? "تمت الموافقة" : "approved"}`); };
   const rejectCreator = async (id: string, name: string) => { await setCreatorStatus(id, "rejected"); toast.error(`${name} — ${lang === "ar" ? "مرفوض" : "rejected"}`); };
@@ -313,24 +358,50 @@ const AdminPortal = () => {
       {/* CLIENTS */}
       {activeTab === "clients" && (
         <div>
-          <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "جميع العملاء" : "All Clients"}</h2><Pill color="blue">{clients.length}</Pill></div>
-          {clients.length === 0 ? <Empty msg={lang === "ar" ? "لا عملاء مسجلون بعد." : "No clients registered yet."} /> : (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-xl font-bold">{lang === "ar" ? "جميع العملاء" : "All Clients"}</h2>
+            <Pill color="blue">{clients.length}</Pill>
+          </div>
+          {clients.length === 0 ? (
+            <Empty msg={lang === "ar" ? "لا عملاء مسجلون بعد." : "No clients registered yet."} />
+          ) : (
             <div className="space-y-2">
               {clients.map((c) => {
                 const numOffers = clientOffers(c.email);
+                const initial = (c.name || c.email || "?")[0]?.toUpperCase() || "?";
                 return (
-                  <div key={c.uid} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-sm">
-                      {(c.name || c.email || "?")[0].toUpperCase()}
+                  <div key={c.uid || c.email} className="glass rounded-2xl px-4 py-3 flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-sm">
+                      {initial}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="font-semibold text-sm truncate">
                         {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+                        <Mail className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{c.email}</span>
+                      </div>
                       {c.wilaya && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                          <MapPin className="w-3 h-3" />{c.wilaya}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />{c.wilaya}
+                        </div>
+                      )}
+                      {c.phone && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Phone className="w-3 h-3 flex-shrink-0 text-accent" />
+                          <a href={`tel:${c.phone}`} className="hover:text-accent transition-smooth" dir="ltr">
+                            {c.phone}
+                          </a>
+                        </div>
+                      )}
+                      {c.bariMobAccount && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <CreditCard className="w-3 h-3 flex-shrink-0 text-accent" />
+                          <span className="text-foreground/80" dir="ltr">{c.bariMobAccount}</span>
+                          <span className="ms-1 text-[10px] uppercase tracking-wider text-accent">
+                            {lang === "ar" ? "بريدي موب" : "Baridi Mob"}
+                          </span>
                         </div>
                       )}
                     </div>

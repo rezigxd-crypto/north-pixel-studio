@@ -150,6 +150,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       ...(extra || {}),
     });
 
+    // Bump the public counter so visitors see correct numbers on the homepage.
+    bumpPublicStats(role).catch(() => {});
+
     // If creator — also write a pending creator application so admin can see it
     if (role === "creator") {
       const { addDoc, collection: col, serverTimestamp: sts } = await import("firebase/firestore");

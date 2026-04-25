@@ -218,46 +218,67 @@ export function useAllUsers(): UserDoc[] {
 
 
 // ─── Public stats — works for visitors + logged in users ─────────────────
-// Reads from users/ if authenticated, falls back to public/stats doc
+// Strategy:
+//  • Always listen to /public/stats (readable by everyone, even visitors).
+//  • Also try to listen to /users — if it succeeds (logged-in user with
+//    permission), use the live count and MIRROR it back to /public/stats so
+//    that visitors see fresh numbers next time.
+// This guarantees the homepage never shows a stale 0 once any logged-in user
+// has loaded the page.
 export function usePublicStats(): { clients: number; creators: number } {
   const [stats, setStats] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
-    let unsub: (() => void) | undefined;
-    // Try users collection first (works when logged in)
-    unsub = onSnapshot(
+    // 1) /public/stats — always readable
+    const pubUnsub = onSnapshot(
+      doc(db, "public", "stats"),
+      (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setStats((prev) => ({
+            clients:  Math.max(prev.clients,  d.clients  || 0),
+            creators: Math.max(prev.creators, d.creators || 0),
+          }));
+        }
+      },
+      () => { /* silent */ }
+    );
+
+    // 2) /users — works for authenticated users; preferred source of truth
+    const userUnsub = onSnapshot(
       collection(db, "users"),
       (snap) => {
         const docs = snap.docs.map((d) => d.data());
-        setStats({
-          clients: docs.filter((d) => d.role === "client").length,
+        const counts = {
+          clients:  docs.filter((d) => d.role === "client").length,
           creators: docs.filter((d) => d.role === "creator").length,
-        });
+        };
+        setStats(counts);
+        // Mirror to /public/stats so visitors see real counts.
+        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch(() => {});
       },
-      () => {
-        // Permission denied (visitor not logged in) — try public stats doc
-        unsub = onSnapshot(doc(db, "public", "stats"), (snap) => {
-          if (snap.exists()) {
-            const d = snap.data();
-            setStats({ clients: d.clients || 0, creators: d.creators || 0 });
-          }
-        }, () => { /* silent */ });
-      }
+      () => { /* permission denied for visitors — fine, we still have pubUnsub */ }
     );
-    return () => { if (unsub) unsub(); };
+
+    return () => { pubUnsub(); userUnsub(); };
   }, []);
   return stats;
 }
 
-// Call this after every successful registration to keep public stats in sync
+// Call this after every successful registration to keep public stats in sync.
+// Uses setDoc + merge + increment so it works whether the doc exists or not —
+// the previous version created a {clients:0, creators:0} doc on first run and
+// never actually incremented, which is why the home page kept showing 0.
 export const bumpPublicStats = async (role: "client" | "creator") => {
   try {
     const { increment } = await import("firebase/firestore");
     const statsRef = doc(db, "public", "stats");
-    await updateDoc(statsRef, { [role === "client" ? "clients" : "creators"]: increment(1) });
-  } catch {
-    // Doc might not exist yet — create it
-    try {
-      await setDoc(doc(db, "public", "stats"), { clients: 0, creators: 0 });
-    } catch { /* silent */ }
+    await setDoc(
+      statsRef,
+      { [role === "client" ? "clients" : "creators"]: increment(1) },
+      { merge: true }
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[v0] bumpPublicStats failed:", err);
   }
 };

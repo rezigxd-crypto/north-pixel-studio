@@ -8,11 +8,19 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Users — any authenticated user can read (admin needs to LIST clients);
-    // each user can only write their own document.
-    // NOTE: this rule covers BOTH `get` (single doc) AND `list` (collection query).
-    // If admin sees no clients, redeploy these rules:
-    //   firebase deploy --only firestore:rules
+    // Users — any authenticated user can read (admin needs to LIST clients
+    // along with phone numbers + Baridi Mob accounts); each user can only
+    // write their OWN document.
+    //
+    // ⚠️ IMPORTANT: `read` covers BOTH `get` (single doc) AND `list`
+    // (collection query). If clients still don't appear in the admin
+    // dashboard, redeploy these rules in your terminal:
+    //
+    //     firebase deploy --only firestore:rules
+    //
+    // Until rules are redeployed, the admin dashboard automatically falls
+    // back to deriving clients from the /offers collection so they still
+    // show up — they just won't include phone/Baridi Mob until rules go live.
     match /users/{uid} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == uid;
