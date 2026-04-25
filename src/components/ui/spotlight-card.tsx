@@ -6,15 +6,17 @@ interface GlowCardProps {
   variant?: 'royal' | 'gold';
 }
 
-// Neutral card — no colored border, no glow. Background + border adapt to light/dark theme.
-const GlowCard = ({ children, className = '', variant = 'royal' }: GlowCardProps) => {
-  return (
-    <div
-      className={`np-glow-card rounded-[18px] overflow-hidden h-full flex flex-col ${variant} ${className}`}
-    >
-      {children}
-    </div>
-  );
-};
+const GlowCard = ({ children, className = '', variant = 'royal' }: GlowCardProps) => (
+  <div
+    className={`np-service-card rounded-[18px] overflow-hidden h-full flex flex-col ${variant} ${className}`}
+    style={{
+      background: 'hsl(222 40% 7% / 0.82)',
+      border: `1.5px solid ${variant === 'gold' ? 'hsl(41 51% 45% / 0.30)' : 'hsl(207 67% 40% / 0.28)'}`,
+      // zero shadow, zero blur — pure border only, no GPU compositing
+    }}
+  >
+    {children}
+  </div>
+);
 
 export { GlowCard };
