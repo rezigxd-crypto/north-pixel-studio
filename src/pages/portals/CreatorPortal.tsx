@@ -354,23 +354,82 @@ const CreatorPortal = () => {
 
                   {/* Deliverable upload for accepted bids */}
                   {bid.status === "accepted" && !bid.deliverableLink && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <p className="text-xs text-emerald-400 mb-2">🎉 {lang === "ar" ? "عرضك مقبول! ارفع رابط التسليم عند الانتهاء." : "Your bid was accepted! Upload deliverable when done."}</p>
-                      <div className="flex gap-2">
-                        <Input type="url" placeholder={lang === "ar" ? "https://drive.google.com/..." : "https://drive.google.com/..."}
-                          value={deliverableLinks[bid.id] || ""}
-                          onChange={(e) => setDeliverableLinks((p) => ({ ...p, [bid.id]: e.target.value }))}
-                          className="h-8 text-sm flex-1" />
-                        <Button size="sm" variant="gold" onClick={() => handleDeliverable(bid.id)}>
-                          <Upload className="w-3.5 h-3.5 me-1" />{lang === "ar" ? "رفع" : "Submit"}
-                        </Button>
+                    <div className="mt-4 pt-4 border-t border-emerald-400/20">
+                      <div className="rounded-2xl p-4 bg-gradient-to-br from-emerald-500/10 via-accent/5 to-transparent border border-emerald-400/20">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm text-emerald-400">
+                              {lang === "ar" ? "تم قبول عرضك" : "Bid accepted"}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                              {lang === "ar"
+                                ? "ارفع ملفك على Google Drive أو WeTransfer ثم الصق الرابط هنا."
+                                : "Upload your file to Google Drive or WeTransfer, then paste the link below."}
+                            </div>
+                          </div>
+                        </div>
+
+                        <Label htmlFor={`del-${bid.id}`} className="text-[11px] uppercase tracking-widest text-accent font-bold mb-1.5 flex items-center gap-1">
+                          <Upload className="w-3 h-3" />
+                          {lang === "ar" ? "رابط التسليم" : "Delivery link"}
+                        </Label>
+                        <div className="relative">
+                          <div className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                            <Upload className="w-4 h-4" />
+                          </div>
+                          <Input
+                            id={`del-${bid.id}`}
+                            type="url"
+                            placeholder="https://drive.google.com/..."
+                            value={deliverableLinks[bid.id] || ""}
+                            onChange={(e) => setDeliverableLinks((p) => ({ ...p, [bid.id]: e.target.value }))}
+                            className="ps-10 h-11 text-sm bg-background/60 focus-visible:ring-emerald-400/40 focus-visible:border-emerald-400/40"
+                            dir="ltr"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 mt-3">
+                          <span className="text-[10px] text-muted-foreground">
+                            {lang === "ar" ? "تأكد أن الرابط مفتوح للجميع." : "Make sure the link is publicly accessible."}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="gold"
+                            disabled={!deliverableLinks[bid.id]?.trim()}
+                            onClick={() => handleDeliverable(bid.id)}
+                          >
+                            <Upload className="w-3.5 h-3.5 me-1" />
+                            {lang === "ar" ? "إرسال التسليم" : "Submit deliverable"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
                   {bid.deliverableLink && (
-                    <a href={bid.deliverableLink} target="_blank" rel="noreferrer" className="text-xs text-purple-400 underline mt-2 block">
-                      📦 {bid.deliverableLink}
-                    </a>
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <div className="rounded-2xl p-3 bg-purple-400/10 border border-purple-400/25 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-400/20 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] uppercase tracking-widest text-purple-400 font-bold">
+                            {lang === "ar" ? "تم التسليم" : "Delivered"}
+                          </div>
+                          <a
+                            href={bid.deliverableLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-foreground/90 hover:text-purple-400 transition-smooth truncate block"
+                            dir="ltr"
+                          >
+                            {bid.deliverableLink}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               );

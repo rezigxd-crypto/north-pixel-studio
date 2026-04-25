@@ -8,7 +8,7 @@ import { addOffer } from "@/lib/store";
 import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD } from "@/lib/offers";
 import { ALGERIA_WILAYAS } from "@/lib/i18n";
 import * as Icons from "lucide-react";
-import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Link2, Calendar, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 
@@ -125,7 +125,7 @@ const SERVICES = [
           { id: "youtube-shorts", label: { ar: "يوتيوب شورتس", en: "YouTube Shorts", fr: "YouTube Shorts" } },
           { id: "stories", label: { ar: "ستوريز", en: "Stories", fr: "Stories" } },
           { id: "ugc", label: { ar: "محتوى UGC (أصيل)", en: "UGC Content (authentic)", fr: "Contenu UGC (authentique)" } },
-          { id: "motion", label: { ar: "موشن جرافيك", en: "Motion Graphics", fr: "Motion Graphics" } },
+          { id: "motion", label: { ar: "��وشن جرافيك", en: "Motion Graphics", fr: "Motion Graphics" } },
         ],
       },
       quantity: {
@@ -431,7 +431,7 @@ export const PostProjectWizard = ({
           </div>
         )}
 
-        {/* ── STEP 3: Brief + details ───────────────────────────────────── */}
+        {/* ── STEP 3: Brief + details ─────────────────────────���─────────── */}
         {step === "brief" && selectedService && (
           <div className="space-y-5">
             {/* Summary bar */}
@@ -457,23 +457,51 @@ export const PostProjectWizard = ({
 
             {/* Brief */}
             <div>
-              <Label htmlFor="brief">{lang === "ar" ? "صف مشروعك بتفصيل *" : "Describe your project in detail *"}</Label>
-              <Textarea id="brief" rows={5} value={brief} onChange={(e) => setBrief(e.target.value)} maxLength={2000} className="mt-1"
+              <Label htmlFor="brief" className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-accent font-bold mb-1.5">
+                <FileText className="w-3 h-3" />
+                {lang === "ar" ? "وصف المشروع *" : "Project description *"}
+              </Label>
+              <Textarea id="brief" rows={5} value={brief} onChange={(e) => setBrief(e.target.value)} maxLength={2000}
                 placeholder={lang === "ar"
                   ? "مثال: نريد بودكاست مرئي لبرنامج أسبوعي عن ريادة الأعمال في الجزائر. يضم ضيفًا من المجال مع مقدم. أسلوب المحتوى: حواري وتحليلي..."
                   : "e.g. We want a weekly video podcast about entrepreneurship in Algeria, with a guest and host, conversational style..."} />
+              <div className="text-[10px] text-muted-foreground mt-1 text-end">{brief.length}/2000</div>
             </div>
 
-            {/* Reference */}
+            {/* Reference link — enhanced card with icon prefix */}
             <div>
-              <Label htmlFor="ref">{lang === "ar" ? "رابط مرجعي (اختياري)" : "Reference link (optional)"}</Label>
-              <Input id="ref" type="url" value={referenceLink} onChange={(e) => setReferenceLink(e.target.value)} placeholder="https://..." className="mt-1" />
+              <Label htmlFor="ref" className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-accent font-bold mb-1.5">
+                <Link2 className="w-3 h-3" />
+                {lang === "ar" ? "رابط مرجعي (اختياري)" : "Reference link (optional)"}
+              </Label>
+              <div className="relative">
+                <div className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                  <Link2 className="w-4 h-4" />
+                </div>
+                <Input
+                  id="ref"
+                  type="url"
+                  value={referenceLink}
+                  onChange={(e) => setReferenceLink(e.target.value)}
+                  placeholder="https://drive.google.com/... | https://youtube.com/..."
+                  className="ps-10 h-11"
+                  dir="ltr"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
+                {lang === "ar"
+                  ? "أمثلة على نمط المشروع، موود بورد، فيديو مرجعي، أو ملف مواصفات."
+                  : "Examples of the style, mood board, reference video, or spec sheet."}
+              </p>
             </div>
 
             {/* Deadline */}
             <div>
-              <Label htmlFor="deadline">{lang === "ar" ? "الموعد النهائي (اختياري)" : "Deadline (optional)"}</Label>
-              <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
+              <Label htmlFor="deadline" className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-accent font-bold mb-1.5">
+                <Calendar className="w-3 h-3" />
+                {lang === "ar" ? "الموعد النهائي (اختياري)" : "Deadline (optional)"}
+              </Label>
+              <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="h-11" />
             </div>
 
             <div className="flex justify-between">

@@ -243,22 +243,40 @@ export function useAllUsers(): UserDoc[] {
 export function usePublicStats(): { clients: number; creators: number } {
   const [stats, setStats] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
-    // 1) /public/stats — always readable
+    // Helper: coerce raw Firestore value to a positive integer, even if the
+    // field was accidentally stored as a string ("5") or null.
+    const num = (v: unknown): number => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    };
+
+    // 1) /public/stats — always readable (visitors + auth)
     const pubUnsub = onSnapshot(
       doc(db, "public", "stats"),
       (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          setStats((prev) => ({
-            clients:  Math.max(prev.clients,  d.clients  || 0),
-            creators: Math.max(prev.creators, d.creators || 0),
-          }));
+        if (!snap.exists()) {
+          // eslint-disable-next-line no-console
+          console.warn("[v0] /public/stats document does not exist yet — homepage will show 0 until an admin loads the dashboard.");
+          return;
         }
+        const d = snap.data();
+        const next = { clients: num(d.clients), creators: num(d.creators) };
+        // eslint-disable-next-line no-console
+        console.log("[v0] /public/stats →", next);
+        setStats((prev) => ({
+          clients:  Math.max(prev.clients,  next.clients),
+          creators: Math.max(prev.creators, next.creators),
+        }));
       },
-      () => { /* silent */ }
+      (err) => {
+        // eslint-disable-next-line no-console
+        console.error("[v0] /public/stats READ blocked — check Firestore rules:", err.code, err.message);
+      }
     );
 
-    // 2) /users — works for authenticated users; preferred source of truth
+    // 2) /users — works for authenticated users; preferred source of truth.
+    // When this works, we mirror back to /public/stats so visitors see fresh
+    // numbers next time they open the homepage.
     const userUnsub = onSnapshot(
       collection(db, "users"),
       (snap) => {
@@ -267,11 +285,17 @@ export function usePublicStats(): { clients: number; creators: number } {
           clients:  docs.filter((d) => d.role === "client").length,
           creators: docs.filter((d) => d.role === "creator").length,
         };
+        // eslint-disable-next-line no-console
+        console.log("[v0] /users live count →", counts);
         setStats(counts);
-        // Mirror to /public/stats so visitors see real counts.
-        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch(() => {});
+        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error("[v0] mirror /public/stats WRITE blocked — check Firestore rules:", err.code, err.message);
+        });
       },
-      () => { /* permission denied for visitors — fine, we still have pubUnsub */ }
+      () => {
+        // permission denied for visitors — fine, we still have pubUnsub
+      }
     );
 
     return () => { pubUnsub(); userUnsub(); };

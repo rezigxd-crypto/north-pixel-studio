@@ -97,6 +97,20 @@ const AdminPortal = () => {
   const pendingBids = (offerId: string) => bids.filter((b) => b.offerId === offerId && b.status === "pending");
   const creatorJobs = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").length;
   const creatorEarned = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").reduce((s, b) => s + b.amount, 0);
+
+  // Look up a creator's full UserDoc (which carries phone + Baridi Mob) by
+  // their email. The `creators` collection only stores application data —
+  // contact details live in the /users collection.
+  const userByEmail: Record<string, UserDoc> = useMemo(() => {
+    const map: Record<string, UserDoc> = {};
+    for (const u of allUsers) {
+      const e = (u.email || "").trim().toLowerCase();
+      if (e) map[e] = u;
+    }
+    return map;
+  }, [allUsers]);
+  const creatorProfile = (email: string): UserDoc | undefined =>
+    userByEmail[(email || "").trim().toLowerCase()];
   const clientOffers = (email: string) => {
     const e = (email || "").trim().toLowerCase();
     return offers.filter((o) => (o.clientEmail || "").trim().toLowerCase() === e).length;
@@ -290,23 +304,45 @@ const AdminPortal = () => {
             <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "طلبات معلقة" : "Pending"}</h2>{pendingCreators.length > 0 && <Pill color="accent">{pendingCreators.length}</Pill>}</div>
             {pendingCreators.length === 0 ? <Empty msg={lang === "ar" ? "لا طلبات معلقة." : "No pending."} /> : (
               <div className="space-y-3">
-                {pendingCreators.map((p) => (
-                  <div key={p.id} className="glass rounded-2xl p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-lg">{p.fullName[0]}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold">{p.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[p.role] || p.role) : p.role} · {p.wilaya || "Algeria"} · {formatDZD(p.rate)}/h</div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">{p.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-[200px]">{l}</a>)}</div>
+                {pendingCreators.map((p) => {
+                  const prof = creatorProfile(p.email);
+                  return (
+                    <div key={p.id} className="glass rounded-2xl p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-lg">{p.fullName[0]}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold">{p.fullName}</div>
+                          <div className="text-sm text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[p.role] || p.role) : p.role} · {p.wilaya || "Algeria"} · {formatDZD(p.rate)}/h</div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1 truncate">
+                            <Mail className="w-3 h-3 flex-shrink-0" /><span className="truncate">{p.email}</span>
+                          </div>
+                          {(prof?.phone || prof?.bariMobAccount) && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+                              {prof.phone && (
+                                <a href={`tel:${prof.phone}`} dir="ltr" className="text-xs text-foreground/90 hover:text-accent transition-smooth flex items-center gap-1">
+                                  <Phone className="w-3 h-3 text-accent flex-shrink-0" />{prof.phone}
+                                </a>
+                              )}
+                              {prof.bariMobAccount && (
+                                <span className="text-xs text-foreground/90 flex items-center gap-1">
+                                  <CreditCard className="w-3 h-3 text-accent flex-shrink-0" />
+                                  <span dir="ltr">{prof.bariMobAccount}</span>
+                                  <span className="text-[9px] uppercase tracking-wider text-accent">{lang === "ar" ? "بريدي" : "Baridi"}</span>
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{p.bio}</p>
+                          <div className="flex flex-wrap gap-2 mt-2">{p.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-[200px]">{l}</a>)}</div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4 justify-end">
+                        <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
+                        <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}</Button>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4 justify-end">
-                      <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
-                      <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}</Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -320,6 +356,7 @@ const AdminPortal = () => {
                   const earned = creatorEarned(c.email);
                   const rank = getRank(jobs);
                   const expanded = expandedCreator === c.id;
+                  const prof = creatorProfile(c.email);
                   return (
                     <div key={c.id} className="glass rounded-2xl overflow-hidden">
                       <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/20 transition-smooth text-start" onClick={() => setExpandedCreator(expanded ? null : c.id)}>
@@ -340,6 +377,40 @@ const AdminPortal = () => {
                             <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg">{jobs}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مهام" : "Jobs"}</div></div>
                             <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg text-accent">{formatDZD(earned)}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مكتسبات" : "Earned"}</div></div>
                             <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg">{c.rate > 0 ? formatDZD(c.rate) : "—"}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "أجر/ساعة" : "Rate/h"}</div></div>
+                          </div>
+                          {/* Contact card — phone + Baridi Mob from /users profile */}
+                          <div className="glass rounded-xl p-3 bg-secondary/15 space-y-1.5">
+                            <div className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-accent font-bold">
+                              <UserSquare2 className="w-3 h-3" />
+                              {lang === "ar" ? "بيانات التواصل" : "Contact"}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <Mail className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{c.email}</span>
+                            </div>
+                            {prof?.phone ? (
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <Phone className="w-3 h-3 text-accent flex-shrink-0" />
+                                <a href={`tel:${prof.phone}`} dir="ltr" className="hover:text-accent transition-smooth">{prof.phone}</a>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 italic">
+                                <Phone className="w-3 h-3 flex-shrink-0" />
+                                {lang === "ar" ? "لم يضف رقم هاتف بعد" : "No phone added yet"}
+                              </div>
+                            )}
+                            {prof?.bariMobAccount ? (
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <CreditCard className="w-3 h-3 text-accent flex-shrink-0" />
+                                <span dir="ltr">{prof.bariMobAccount}</span>
+                                <span className="text-[9px] uppercase tracking-wider text-accent ms-1">{lang === "ar" ? "بريدي موب" : "Baridi Mob"}</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 italic">
+                                <CreditCard className="w-3 h-3 flex-shrink-0" />
+                                {lang === "ar" ? "لم يضف حساب بريدي موب" : "No Baridi Mob added"}
+                              </div>
+                            )}
                           </div>
                           {c.bio && <p className="text-sm text-muted-foreground">{c.bio}</p>}
                           <div className="flex flex-wrap gap-2">{c.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-xs">{l}</a>)}</div>
