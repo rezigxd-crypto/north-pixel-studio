@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -60,7 +60,7 @@
     --secondary: 214 30% 90%;
     --secondary-foreground: 222 47% 10%;
     --muted: 214 25% 88%;
-    --muted-foreground: 222 20% 28%;   /* dark grey — clearly readable */
+    --muted-foreground: 222 25% 22%;   /* dark — fully readable on white */
     --accent: 41 55% 45%;              /* slightly deeper gold for light bg */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 45%;
@@ -160,7 +160,8 @@
 }
 
 /* RTL */
-[dir="rtl"] .font-serif { font-family: 'Amiri', serif; }
+[dir="rtl"] .font-serif { font-family: 'El Messiri', 'Amiri', serif; }
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { font-family: 'El Messiri', serif; }
 [dir="rtl"] .tracking-widest,
 [dir="rtl"] .tracking-\[0\.3em\] { letter-spacing: 0.05em; }
 
@@ -206,4 +207,27 @@ select { color-scheme: dark; }
 .np-logo-flip {
   animation: npLogoFlip 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
+}
+
+/* Service cards — border hover only, zero GPU cost */
+.np-service-card.royal:hover { border-color: hsl(207 67% 50% / 0.5) !important; }
+.np-service-card.gold:hover  { border-color: hsl(41 60% 55% / 0.5) !important; }
+
+/* Light mode cards — force dark text */
+.theme-light .np-service-card { background: hsl(0 0% 100% / 0.85) !important; border-color: hsl(214 25% 80% / 0.6) !important; }
+.theme-light .np-service-card .text-muted-foreground { color: hsl(222 25% 25%) !important; }
+
+/* ── Logo flip on click/tap ── */
+@keyframes np-logo-flip {
+  0%   { transform: rotateY(0deg); }
+  50%  { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+.np-logo-flip {
+  cursor: pointer;
+  perspective: 200px;
+  transition: transform 0.15s;
+}
+.np-logo-flip:active {
+  animation: np-logo-flip 0.5s ease;
 }
