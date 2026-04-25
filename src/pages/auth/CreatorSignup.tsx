@@ -27,7 +27,7 @@ const GoogleIcon = () => (
 const schema = z.object({
   fullName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  password: z.string().min(8).max(100),
+  password: z.string().min(8).max(100).regex(/[A-Z]/, "كلمة المرور يجب أن تحتوي على حرف كبير").regex(/[0-9]/, "كلمة المرور يجب أن تحتوي على رقم"),
   wilaya: z.string().min(1, "اختر ولايتك"),
   city: z.string().trim().max(60).optional().or(z.literal("")),
   role: z.string().min(1, "اختر تخصصك"),

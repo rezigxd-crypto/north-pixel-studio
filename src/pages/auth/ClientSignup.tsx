@@ -27,7 +27,7 @@ const GoogleIcon = () => (
 const schema = z.object({
   fullName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  password: z.string().min(8).max(100),
+  password: z.string().min(8).max(100).regex(/[A-Z]/, "كلمة المرور يجب أن تحتوي على حرف كبير").regex(/[0-9]/, "كلمة المرور يجب أن تحتوي على رقم"),
   org: z.string().trim().max(100),
   type: z.string().min(1, "اختر نوع حسابك"),
   wilaya: z.string().min(1, "اختر ولايتك"),
@@ -140,7 +140,13 @@ const ClientSignup = () => {
                 <div><Label htmlFor="fullName">{t("fullName")}</Label><Input id="fullName" name="fullName" required maxLength={100} /></div>
                 <div><Label htmlFor="org">{t("organization")}</Label><Input id="org" name="org" maxLength={100} /></div>
                 <div><Label htmlFor="email">{t("email")}</Label><Input id="email" name="email" type="email" required /></div>
-                <div><Label htmlFor="password">{t("password")}</Label><Input id="password" name="password" type="password" required minLength={8} /></div>
+                <div>
+                <Label htmlFor="password">{t("password")}</Label>
+                <Input id="password" name="password" type="password" required minLength={8} placeholder="Aa1••••••" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {lang === "ar" ? "8 أحرف على الأقل، حرف كبير، ورقم — لا نحب أعمال الأوراق أيضًا، هذا لن يطول 😄" : "8+ chars, uppercase & number — we hate paperwork too, this won't take long 😄"}
+                </p>
+              </div>
               </div>
 
               <div>
@@ -155,7 +161,7 @@ const ClientSignup = () => {
                 </div>
               </div>
 
-              <div><Label htmlFor="about">{t("lookingFor")}</Label><Textarea id="about" name="about" maxLength={500} rows={3} /></div>
+              <div><Label htmlFor="about">{t("lookingFor")}</Label><Textarea id="about" name="about" maxLength={500} rows={3} placeholder={lang === "ar" ? "مثال: أريد إعلانًا سينمائيًا لمنتجي، وبودكاست لعلامتي التجارية..." : "e.g. I need a cinematic ad for my product and a podcast series..."} /></div>
 
               <TermsModal agreed={agreed} onChange={setAgreed} />
 
