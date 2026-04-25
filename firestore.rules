@@ -8,27 +8,32 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Users — readable by authenticated users (needed for admin + counts)
+    // Users — any authenticated user can read (admin needs to LIST clients);
+    // each user can only write their own document.
+    // NOTE: this rule covers BOTH `get` (single doc) AND `list` (collection query).
+    // If admin sees no clients, redeploy these rules:
+    //   firebase deploy --only firestore:rules
     match /users/{uid} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if request.auth != null && request.auth.uid == uid;
     }
 
-    // Creators
+    // Creators (freelancer applications)
     match /creators/{docId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null;
       allow update: if request.auth != null;
     }
 
-    // Offers
+    // Offers (client projects)
     match /offers/{docId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null;
       allow update: if request.auth != null;
     }
 
-    // Bids
+    // Bids (creator offers on projects)
     match /bids/{docId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null;

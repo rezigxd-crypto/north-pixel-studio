@@ -181,11 +181,6 @@ const ClientPortal = () => {
                             <Gavel className="w-3 h-3" />{pendingBidCount} {lang === "ar" ? "عرض مستلم" : "bids received"}
                           </span>
                         )}
-                        {p.clientWilaya && p.status === "open" && (
-                          <div className="mt-2 w-full">
-                            <OfferMap wilaya={p.clientWilaya} className="border border-border/40" />
-                          </div>
-                        )}
                         {acceptedBid && (
                           <span className="text-xs text-blue-400 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
@@ -199,6 +194,18 @@ const ClientPortal = () => {
                           </a>
                         )}
                       </div>
+
+                      {/* Location map — shown for any project that has a wilaya, regardless of status */}
+                      {p.clientWilaya && (
+                        <div className="mt-3">
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mb-1.5">
+                            <MapPin className="w-3 h-3 text-accent" />
+                            <span>{lang === "ar" ? "الموقع:" : "Location:"}</span>
+                            <span className="text-foreground font-medium">{p.clientWilaya}</span>
+                          </div>
+                          <OfferMap wilaya={p.clientWilaya} className="border border-border/40" />
+                        </div>
+                      )}
                     </div>
                     <div className="text-right flex-shrink-0">
                       {/* Only show total price — no cut breakdown */}

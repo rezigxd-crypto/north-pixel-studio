@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { OFFERS, ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD, type Offer } from "@/lib/offers";
 import { addOffer } from "@/lib/store";
+import { OfferMap } from "@/components/OfferMap";
 import * as Icons from "lucide-react";
-import { ArrowLeft, Send, CheckCircle2, Link2, CreditCard, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Link2, CreditCard, Minus, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 
@@ -51,23 +52,44 @@ export const PostProjectWizard = ({
   const submit = async () => {
     if (!offer) return;
     if (brief.trim().length < 10) { toast.error(lang === "ar" ? "صف مشروعك أكثر." : "Describe your project more."); return; }
+
+    // Build payload — only include optional fields when they have a value.
+    // Firestore (now configured with ignoreUndefinedProperties) tolerates undefined,
+    // but we still build a clean object for clarity and to keep clientWilaya tied to a real string.
+    const payload: Parameters<typeof addOffer>[0] = {
+      clientName,
+      clientEmail,
+      serviceSlug: offer.slug,
+      serviceTitle: offer.title[lang],
+      units,
+      unitLabel: lang === "ar" ? offer.pricing.unitLabelAr : offer.pricing.unitLabel,
+      totalPrice: total,
+      adminCut,
+      creatorPayout: payout,
+      brief: brief.trim(),
+      matchingRoles: offer.matchingRoles,
+      advancePaid: false,
+      advanceAmount: advance,
+    };
+    const trimmedRef = referenceLink.trim();
+    if (trimmedRef) payload.referenceLink = trimmedRef;
+    if (deadline) payload.deadline = deadline;
+    if (clientWilaya && clientWilaya.trim()) {
+      payload.clientWilaya = clientWilaya.trim();
+      payload.wilayaFilter = clientWilaya.trim();
+    }
+
     try {
-      await addOffer({
-        clientName, clientEmail, clientWilaya: clientWilaya || undefined,
-        serviceSlug: offer.slug,
-        serviceTitle: offer.title[lang],
-        units,
-        unitLabel: lang === "ar" ? offer.pricing.unitLabelAr : offer.pricing.unitLabel,
-        totalPrice: total, adminCut, creatorPayout: payout,
-        brief: brief.trim(),
-        referenceLink: referenceLink.trim() || undefined,
-        deadline: deadline || undefined,
-        matchingRoles: offer.matchingRoles,
-        wilayaFilter: clientWilaya || undefined,
-        advancePaid: false, advanceAmount: advance,
-      });
+      await addOffer(payload);
       setStep("payment");
-    } catch { toast.error(lang === "ar" ? "حدث خطأ." : "Error occurred."); }
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error("[v0] addOffer failed:", err?.code, err?.message, err);
+      const detail = err?.message ? ` (${err.code || err.message})` : "";
+      toast.error((lang === "ar" ? "حدث خطأ — " : "Error — ") + (err?.code === "permission-denied"
+        ? (lang === "ar" ? "صلاحيات Firestore" : "Firestore permissions")
+        : (lang === "ar" ? "تعذّر إرسال المشروع" : "could not submit")) + detail);
+    }
   };
 
   const suggestions = offer ? (SUGGESTIONS[offer.slug]?.[lang] || []) : [];
@@ -180,6 +202,29 @@ export const PostProjectWizard = ({
             <div>
               <Label htmlFor="deadline">{lang === "ar" ? "الموعد النهائي (اختياري)" : "Deadline (optional)"}</Label>
               <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
+            </div>
+
+            {/* Location map preview */}
+            <div>
+              <Label className="flex items-center gap-1 mb-2">
+                <MapPin className="w-3.5 h-3.5 text-accent" />
+                {lang === "ar" ? "موقع المشروع" : "Project location"}
+              </Label>
+              {clientWilaya ? (
+                <>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    {lang === "ar" ? "📍 سيُعرض المشروع للعمال في" : "📍 Visible to creators in"}{" "}
+                    <span className="text-accent font-semibold">{clientWilaya}</span>
+                  </div>
+                  <OfferMap wilaya={clientWilaya} className="border border-border/40" />
+                </>
+              ) : (
+                <div className="glass rounded-xl p-3 text-xs text-muted-foreground border border-yellow-400/20">
+                  {lang === "ar"
+                    ? "لم تحدد ولايتك في ملفك الشخصي — سيُنشر المشروع بدون موقع. يمكنك إضافة الولاية من تبويب «ملفي»."
+                    : "No wilaya on your profile — the project will be posted without a location. Add your wilaya from the Profile tab."}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between pt-1">

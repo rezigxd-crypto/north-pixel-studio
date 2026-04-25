@@ -324,8 +324,10 @@ const AdminPortal = () => {
                       {(c.name || c.email || "?")[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm">{c.name || lang === "ar" ? "بدون اسم" : "No name"}</div>
-                      <div className="text-xs text-muted-foreground">{c.email}</div>
+                      <div className="font-semibold text-sm truncate">
+                        {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
                       {c.wilaya && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                           <MapPin className="w-3 h-3" />{c.wilaya}
