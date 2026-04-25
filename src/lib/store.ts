@@ -171,10 +171,15 @@ export function useUserCounts(): { clients: number; creators: number } {
       collection(db, "users"),
       (snap) => {
         const docs = snap.docs.map((d) => d.data());
-        setCounts({
+        const next = {
           clients: docs.filter((d) => d.role === "client").length,
           creators: docs.filter((d) => d.role === "creator").length,
-        });
+        };
+        setCounts(next);
+        // Mirror to /public/stats so unauthenticated homepage visitors see
+        // accurate counts (this also seeds counts for users who existed
+        // before the public counter was introduced).
+        setDoc(doc(db, "public", "stats"), next, { merge: true }).catch(() => {});
       },
       (err) => {
         // eslint-disable-next-line no-console
@@ -203,7 +208,17 @@ export function useAllUsers(): UserDoc[] {
     return onSnapshot(
       collection(db, "users"),
       (snap) => {
-        setData(snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc)));
+        const docs = snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc));
+        setData(docs);
+        // Whenever an admin (or any auth user with permission) loads /users,
+        // mirror the live count to /public/stats so visitors / unauthed
+        // homepage views see the correct number — this also backfills counts
+        // for users who signed up BEFORE the public stats counter existed.
+        const counts = {
+          clients:  docs.filter((d) => d.role === "client").length,
+          creators: docs.filter((d) => d.role === "creator").length,
+        };
+        setDoc(doc(db, "public", "stats"), counts, { merge: true }).catch(() => {});
       },
       (err) => {
         // Surface Firestore errors (most common: permission-denied because
