@@ -6,7 +6,7 @@ import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { OFFERS, UNIVERSITY_BUNDLE } from "@/lib/offers";
-import { useUserCounts } from "@/lib/store";
+import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
 import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check } from "lucide-react";
@@ -18,7 +18,7 @@ const EN_WORDS = ["professionalism", "creativity", "expertise", "innovation", "e
 
 const Index = () => {
   const { lang, auth } = useApp();
-  const userCounts = useUserCounts();
+  const userCounts = usePublicStats();
   const isLoggedIn = !!auth.role && !auth.loading;
 
   const animatedWords = lang === "ar" ? AR_WORDS : lang === "fr" ? FR_WORDS : EN_WORDS;
