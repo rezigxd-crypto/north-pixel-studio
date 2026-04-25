@@ -5,6 +5,7 @@ import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { HomepageDebug } from "@/components/HomepageDebug";
 import { OFFERS, UNIVERSITY_BUNDLE } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
@@ -187,7 +188,7 @@ const Index = () => {
               <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-primary-glow/15 blur-3xl" />
               <span className="text-xs uppercase tracking-widest text-accent">{lang === "ar" ? "للعلامات التجارية" : "For Brands"}</span>
               <h3 className="font-serif text-2xl sm:text-4xl font-bold mt-3 mb-4">{lang === "ar" ? "زوّدنا بالموجز. نحن نجمع الفريق." : "Brief us. We assemble the team."}</h3>
-              <p className="text-muted-foreground mb-7 text-sm">{lang === "ar" ? "أخبرنا بقصتك. نربطك بالفريق المناسب." : "Tell us your story. We match you with the right team."}</p>
+              <p className="text-muted-foreground mb-7 text-sm">{lang === "ar" ? "أخبرنا بقصتك. نر��طك بالفريق المناسب." : "Tell us your story. We match you with the right team."}</p>
               <Button asChild variant="royal" size="lg"><Link to="/auth/signup?role=client">{lang === "ar" ? "فتح حساب عميل" : "Open client account"}</Link></Button>
             </div>
             <div className="glass rounded-3xl p-7 sm:p-10 relative overflow-hidden">
@@ -202,6 +203,10 @@ const Index = () => {
       )}
 
       <SiteFooter />
+
+      {/* On-screen debug panel — only renders when ?debug=1 is in the URL.
+          Lets phone users diagnose homepage stats without DevTools. */}
+      <HomepageDebug />
     </div>
   );
 };
