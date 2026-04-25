@@ -167,13 +167,20 @@ export function useUserCounts(): { clients: number; creators: number } {
   const [counts, setCounts] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
     // Listen to users collection for real-time counts
-    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
-      const docs = snap.docs.map((d) => d.data());
-      setCounts(prev => ({
-        clients: docs.filter((d) => d.role === "client").length,
-        creators: docs.filter((d) => d.role === "creator").length,
-      }));
-    });
+    const unsubUsers = onSnapshot(
+      collection(db, "users"),
+      (snap) => {
+        const docs = snap.docs.map((d) => d.data());
+        setCounts({
+          clients: docs.filter((d) => d.role === "client").length,
+          creators: docs.filter((d) => d.role === "creator").length,
+        });
+      },
+      (err) => {
+        // eslint-disable-next-line no-console
+        console.error("[v0] useUserCounts error:", err.code, err.message);
+      }
+    );
     return unsubUsers;
   }, []);
   return counts;
@@ -193,9 +200,18 @@ export type UserDoc = {
 export function useAllUsers(): UserDoc[] {
   const [data, setData] = useState<UserDoc[]>([]);
   useEffect(() => {
-    return onSnapshot(collection(db, "users"), (snap) => {
-      setData(snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc)));
-    });
+    return onSnapshot(
+      collection(db, "users"),
+      (snap) => {
+        setData(snap.docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc)));
+      },
+      (err) => {
+        // Surface Firestore errors (most common: permission-denied because
+        // the deployed firestore.rules don't allow listing /users yet).
+        // eslint-disable-next-line no-console
+        console.error("[v0] useAllUsers error:", err.code, err.message);
+      }
+    );
   }, []);
   return data;
 }
