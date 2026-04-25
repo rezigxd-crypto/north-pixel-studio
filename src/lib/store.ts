@@ -166,13 +166,15 @@ export function useBidsForOffer(offerId: string): Bid[] {
 export function useUserCounts(): { clients: number; creators: number } {
   const [counts, setCounts] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
-    return onSnapshot(collection(db, "users"), (snap) => {
+    // Listen to users collection for real-time counts
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
       const docs = snap.docs.map((d) => d.data());
-      setCounts({
+      setCounts(prev => ({
         clients: docs.filter((d) => d.role === "client").length,
         creators: docs.filter((d) => d.role === "creator").length,
-      });
+      }));
     });
+    return unsubUsers;
   }, []);
   return counts;
 }
@@ -197,3 +199,49 @@ export function useAllUsers(): UserDoc[] {
   }, []);
   return data;
 }
+
+
+// ─── Public stats — works for visitors + logged in users ─────────────────
+// Reads from users/ if authenticated, falls back to public/stats doc
+export function usePublicStats(): { clients: number; creators: number } {
+  const [stats, setStats] = useState({ clients: 0, creators: 0 });
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    // Try users collection first (works when logged in)
+    unsub = onSnapshot(
+      collection(db, "users"),
+      (snap) => {
+        const docs = snap.docs.map((d) => d.data());
+        setStats({
+          clients: docs.filter((d) => d.role === "client").length,
+          creators: docs.filter((d) => d.role === "creator").length,
+        });
+      },
+      () => {
+        // Permission denied (visitor not logged in) — try public stats doc
+        unsub = onSnapshot(doc(db, "public", "stats"), (snap) => {
+          if (snap.exists()) {
+            const d = snap.data();
+            setStats({ clients: d.clients || 0, creators: d.creators || 0 });
+          }
+        }, () => { /* silent */ });
+      }
+    );
+    return () => { if (unsub) unsub(); };
+  }, []);
+  return stats;
+}
+
+// Call this after every successful registration to keep public stats in sync
+export const bumpPublicStats = async (role: "client" | "creator") => {
+  try {
+    const { increment } = await import("firebase/firestore");
+    const statsRef = doc(db, "public", "stats");
+    await updateDoc(statsRef, { [role === "client" ? "clients" : "creators"]: increment(1) });
+  } catch {
+    // Doc might not exist yet — create it
+    try {
+      await setDoc(doc(db, "public", "stats"), { clients: 0, creators: 0 });
+    } catch { /* silent */ }
+  }
+};

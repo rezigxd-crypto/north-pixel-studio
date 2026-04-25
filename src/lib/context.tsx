@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { bumpPublicStats } from "./store";
 import { type Lang, translations, type TranslationKey } from "./i18n";
 
 export type UserRole = "client" | "creator" | "admin" | null;
@@ -176,12 +177,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const registerClient = async (email: string, password: string, name: string, wilaya: string): Promise<string> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, role: "client", createdAt: new Date().toISOString() });
+    bumpPublicStats("client").catch(() => {});
     return cred.user.uid;
   };
 
   const registerCreator = async (email: string, password: string, name: string, wilaya: string): Promise<string> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, role: "creator", createdAt: new Date().toISOString() });
+    bumpPublicStats("creator").catch(() => {});
     return cred.user.uid;
   };
 
