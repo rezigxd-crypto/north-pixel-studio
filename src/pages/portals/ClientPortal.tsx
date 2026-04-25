@@ -7,6 +7,7 @@ import {
   Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { OfferMap } from "@/components/OfferMap";
 import { OFFERS, formatDZD } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
@@ -179,6 +180,11 @@ const ClientPortal = () => {
                           <span className="text-xs text-emerald-400 flex items-center gap-1">
                             <Gavel className="w-3 h-3" />{pendingBidCount} {lang === "ar" ? "عرض مستلم" : "bids received"}
                           </span>
+                        )}
+                        {p.clientWilaya && p.status === "open" && (
+                          <div className="mt-2 w-full">
+                            <OfferMap wilaya={p.clientWilaya} className="border border-border/40" />
+                          </div>
                         )}
                         {acceptedBid && (
                           <span className="text-xs text-blue-400 flex items-center gap-1">

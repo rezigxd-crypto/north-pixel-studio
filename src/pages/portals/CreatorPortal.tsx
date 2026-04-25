@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 import { useNavigate } from "react-router-dom";
+import { OfferMap } from "@/components/OfferMap";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
