@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Plus, FolderKanban, Clock, CheckCircle2, XCircle,
-  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2
+  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2,
+  Calendar, Package, ClipboardList
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { OFFERS, formatDZD } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
+import { CountdownTimer } from "@/components/CountdownTimer";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
 import { useApp } from "@/lib/context";
 import { useEffect, useState } from "react";
@@ -154,8 +156,10 @@ const ClientPortal = () => {
       {activeTab === "projects" && (
         <div className="space-y-3">
           {myOffers.length === 0 ? (
-            <div className="glass rounded-3xl p-12 text-center">
-              <div className="text-4xl mb-3">📋</div>
+            <div className="glass rounded-3xl p-12 text-center animate-fade-in-up">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30 flex items-center justify-center mx-auto mb-4">
+                <ClipboardList className="w-6 h-6 text-accent" />
+              </div>
               <p className="text-muted-foreground mb-4">{lang === "ar" ? "لم تنشر أي مشروع بعد." : "No projects posted yet."}</p>
               <PostProjectWizard
                 trigger={<Button variant="gold"><Plus className="w-4 h-4 me-1" />{lang === "ar" ? "انشر مشروعك الأول" : "Post first project"}</Button>}
@@ -163,23 +167,33 @@ const ClientPortal = () => {
               />
             </div>
           ) : (
-            myOffers.map((p) => {
+            myOffers.map((p, i) => {
               const offerBids = bids.filter((b) => b.offerId === p.id);
               const acceptedBid = offerBids.find((b) => b.status === "accepted");
               const deliveredBid = offerBids.find((b) => b.status === "delivered");
               const pendingBidCount = offerBids.filter((b) => b.status === "pending").length;
+              const biddingActive =
+                p.status === "open" && p.bidsCloseAt && Date.now() < p.bidsCloseAt;
               return (
-                <div key={p.id} className="glass rounded-2xl p-5 hover:border-accent/20 transition-smooth">
+                <div
+                  key={p.id}
+                  className="glass rounded-2xl p-5 hover:border-accent/30 transition-smooth animate-fade-in-up"
+                  style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
+                >
                   <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="font-semibold">{p.serviceTitle}</span>
-                        {p.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {p.clientWilaya}</span>}
+                        {p.clientWilaya && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5" />{p.clientWilaya}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">{p.brief}</p>
 
                       {p.referenceLink && (
-                        <a href={p.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1">
+                        <a href={p.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 inline-flex items-center gap-1">
                           <Link2 className="w-3 h-3" />{lang === "ar" ? "الرابط المرجعي" : "Reference link"}
                         </a>
                       )}
@@ -199,13 +213,25 @@ const ClientPortal = () => {
                         )}
                         {deliveredBid?.deliverableLink && (
                           <a href={deliveredBid.deliverableLink} target="_blank" rel="noreferrer"
-                            className="text-xs text-purple-400 underline flex items-center gap-1">
-                            📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
+                            className="text-xs text-purple-400 underline inline-flex items-center gap-1">
+                            <Package className="w-3 h-3" />{lang === "ar" ? "عرض التسليم" : "View deliverable"}
                           </a>
                         )}
                       </div>
 
-                      {/* Location map — shown for any project that has a wilaya, regardless of status */}
+                      {/* Live bidding countdown — animated, only while window is open */}
+                      {biddingActive && p.bidsCloseAt && (
+                        <div className="mt-3">
+                          <CountdownTimer
+                            target={p.bidsCloseAt}
+                            lang={lang}
+                            label={lang === "ar" ? "ينتهي استقبال العروض خلال" : "Bidding window closes in"}
+                            tone="gold"
+                          />
+                        </div>
+                      )}
+
+                      {/* Location map */}
                       {p.clientWilaya && (
                         <div className="mt-3">
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mb-1.5">
@@ -217,11 +243,17 @@ const ClientPortal = () => {
                         </div>
                       )}
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      {/* Only show total price — no cut breakdown */}
+                    <div className="text-end flex-shrink-0 sm:min-w-[110px]">
                       <div className="text-accent font-bold">{formatDZD(p.totalPrice)}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        {p.deadline ? `📅 ${p.deadline}` : lang === "ar" ? "بلا موعد" : "No deadline"}
+                      <div className="text-[11px] text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+                        {p.deadline ? (
+                          <>
+                            <Calendar className="w-3 h-3" />
+                            <span>{p.deadline}</span>
+                          </>
+                        ) : (
+                          <span>{lang === "ar" ? "بلا موعد" : "No deadline"}</span>
+                        )}
                       </div>
                     </div>
                   </div>

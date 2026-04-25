@@ -239,7 +239,14 @@ const AdminPortal = () => {
               <TrendingUp className="w-4 h-4 text-accent flex-shrink-0" />
             </button>
           )}
-          {notifications === 0 && <div className="glass rounded-2xl p-8 text-center"><div className="text-3xl mb-2">&#x2714;</div><p className="text-muted-foreground text-sm">{lang === "ar" ? "لا إشعارات جديدة." : "All clear."}</p></div>}
+          {notifications === 0 && (
+            <div className="glass rounded-2xl p-8 text-center animate-fade-in-up">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-400/15 border border-emerald-400/30 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-5 h-5 text-emerald-400" />
+              </div>
+              <p className="text-muted-foreground text-sm">{lang === "ar" ? "لا إشعارات جديدة." : "All clear."}</p>
+            </div>
+          )}
           {offers.length > 0 && (
             <div>
               <h3 className="font-serif text-lg font-bold mb-3 mt-2">{lang === "ar" ? "آخر المشاريع" : "Recent projects"}</h3>
@@ -274,13 +281,21 @@ const AdminPortal = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="text-xs font-bold uppercase tracking-widest text-accent">{o.serviceTitle}</span>
-                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
+                          {o.clientWilaya && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1">
+                              <MapPin className="w-2.5 h-2.5" />{o.clientWilaya}
+                            </span>
+                          )}
                           {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
                         </div>
                         <p className="font-semibold">{o.clientName}</p>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{o.brief}</p>
                         {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
-                        {o.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {o.deadline}</p>}
+                        {o.deadline && (
+                          <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3" />{o.deadline}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
                       </div>
                       <div className="glass rounded-xl p-3 bg-secondary/20 md:w-44 flex-shrink-0">
@@ -426,7 +441,9 @@ const AdminPortal = () => {
                   return (
                     <div key={c.id} className="glass rounded-2xl overflow-hidden">
                       <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/20 transition-smooth text-start" onClick={() => setExpandedCreator(expanded ? null : c.id)}>
-                        <div className="w-9 h-9 rounded-xl bg-secondary/60 flex items-center justify-center text-lg flex-shrink-0">{["🎥","✂️","🎨","🎙️","🎧","📸","🎬","🎨","✨","✍️","📱"][["Cinematographer","Video Editor","Motion Designer","Voice-Over Artist","Sound Designer","Photographer","Director","Colorist","VFX Artist","Ghost Writer","UGC Creator"].indexOf(c.role)] || "🎬"}</div>
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/25 to-accent/5 border border-accent/20 flex items-center justify-center flex-shrink-0">
+                          <Camera className="w-4 h-4 text-accent" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-sm">{c.fullName}</div>
                           <div className="text-xs text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[c.role] || c.role) : c.role} · {c.wilaya || "Algeria"}</div>
