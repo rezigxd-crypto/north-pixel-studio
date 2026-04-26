@@ -9,7 +9,11 @@ import {
   ChevronRight, Briefcase, DollarSign, X, Check, Plus,
   ExternalLink,
 } from "lucide-react";
-import { useOffers, useBids, useCreators, addBid, submitDeliverable, updateUserProfile } from "@/lib/store";
+import {
+  useOffers, useBids, useCreators, useAllUsers,
+  addBid, submitDeliverable, updateUserProfile, fetchTakenUsernames,
+} from "@/lib/store";
+import { generateUniqueUsername } from "@/lib/username";
 import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from "@/lib/offers";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -54,10 +58,36 @@ const CreatorPortal = () => {
   const offers = useOffers();
   const bids = useBids();
   const creators = useCreators();
+  const allUsers = useAllUsers();
 
   // Find this creator's application doc (used for the public profile +
   // completion-ring computation).
   const myApp = creators.find((c) => c.uid === auth.uid || c.email === auth.email);
+  const myUserDoc = allUsers.find((u) => u.uid === auth.uid);
+
+  /* ── Self-service username backfill ─────────────────────────────────────
+   * Creators who signed up before the public-profile feature land here
+   * without a `username` on their /users doc. Generate one + write it back
+   * (Firestore rules only allow a user to update their own doc, so this is
+   * the only place a backfill can succeed). Runs once per session per uid. */
+  useEffect(() => {
+    if (auth.role !== "creator") return;
+    if (!auth.uid) return;
+    if (!myUserDoc) return;          // user doc still loading
+    if (myUserDoc.username) return;  // already has one
+    let cancelled = false;
+    (async () => {
+      const taken = await fetchTakenUsernames();
+      if (cancelled) return;
+      const username = generateUniqueUsername(auth.name || "creator", taken);
+      try {
+        await updateUserProfile(auth.uid!, { username });
+      } catch {
+        /* transient — will retry on next session */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [auth.role, auth.uid, auth.name, myUserDoc?.username]);
 
   /* ── Profile completion ───────────────────────────────────────────────
    * Six fields, equal weight. Hits the gold ring at 100 %. */

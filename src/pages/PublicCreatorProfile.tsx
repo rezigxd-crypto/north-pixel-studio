@@ -39,12 +39,17 @@ const PublicCreatorProfile = () => {
   // sanitized profile) ships in a follow-up PR.
   const [user, setUser] = useState<UserDoc | null | "loading">("loading");
   useEffect(() => {
-    if (!auth.role) { setUser(null); return; }
+    if (!auth.role) {
+      // Don't clear user state while auth is still hydrating — leave it on
+      // "loading" so the spinner stays visible instead of flashing 404.
+      if (!auth.loading) setUser(null);
+      return;
+    }
     let alive = true;
     setUser("loading");
     getUserByUsername(username).then((u) => { if (alive) setUser(u); });
     return () => { alive = false; };
-  }, [username, auth.role]);
+  }, [username, auth.role, auth.loading]);
 
   // Find the matching creator application (by email or uid), filtered to approved-only.
   const creator: CreatorApplication | undefined = useMemo(() => {
@@ -219,7 +224,7 @@ const PublicCreatorProfile = () => {
               </div>
             </div>
             <Button asChild variant="gold" size="sm">
-              <Link to="/post-project">
+              <Link to={auth.role === "client" ? "/portal/client" : "/"}>
                 {lang === "ar" ? "اطلب الآن" : lang === "fr" ? "Lancer un projet" : "Hire via project"}
                 <ArrowRight className={`w-3.5 h-3.5 ms-1 ${lang === "ar" ? "rotate-180" : ""}`} />
               </Link>

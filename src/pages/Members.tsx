@@ -3,14 +3,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/lib/context";
-import {
-  useAllUsers, useCreators, useOffers,
-  updateUserProfile, fetchTakenUsernames,
-} from "@/lib/store";
+import { useAllUsers, useCreators, useOffers } from "@/lib/store";
 import { CREATOR_ROLE_AR, formatDZD } from "@/lib/offers";
-import { generateUniqueUsername } from "@/lib/username";
 import { ArrowRight, ExternalLink, MapPin, UserCheck, Users } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 
 type Mode = "clients" | "freelancers";
 
@@ -22,39 +18,8 @@ const Members = ({ mode }: { mode: Mode }) => {
 
   const clients = useMemo(() => allUsers.filter((u) => u.role === "client"), [allUsers]);
   const approvedCreators = useMemo(() => creators.filter((c) => c.status === "approved"), [creators]);
-
-  /* ── Lazy username backfill ──────────────────────────────────────────────
-   * Approved creators who signed up before the public-profile feature don't
-   * have a `username` field on their /users doc. Whenever this page renders
-   * an approved creator without one, generate a unique slug and write it
-   * back. Idempotent + skipped after the first successful write per session
-   * via `backfilledRef` so we don't loop on the live snapshot. */
-  const backfilledRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    if (mode !== "freelancers") return;
-    if (!auth.role) return;
-    const missing = approvedCreators.filter((c) => {
-      if (!c.uid) return false;
-      if (backfilledRef.current.has(c.uid)) return false;
-      const u = allUsers.find((x) => x.uid === c.uid);
-      return u && !u.username;
-    });
-    if (missing.length === 0) return;
-    (async () => {
-      const taken = await fetchTakenUsernames();
-      for (const c of missing) {
-        if (!c.uid) continue;
-        const username = generateUniqueUsername(c.fullName, taken);
-        taken.add(username);
-        backfilledRef.current.add(c.uid);
-        try {
-          await updateUserProfile(c.uid, { username });
-        } catch {
-          /* permission or transient error — try again next render */
-        }
-      }
-    })();
-  }, [mode, auth.role, approvedCreators, allUsers]);
+  // Username backfill for legacy creators happens in their own portal session
+  // (CreatorPortal), since Firestore rules only let a user write their own doc.
 
   const headline = mode === "clients"
     ? (lang === "ar" ? "العملاء على نورث بيكسل" : lang === "fr" ? "Les clients sur North Pixel" : "Clients on North Pixel")
