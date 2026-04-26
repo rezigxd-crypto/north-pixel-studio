@@ -8,7 +8,7 @@ import { addOffer } from "@/lib/store";
 import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD } from "@/lib/offers";
 import { ALGERIA_WILAYAS } from "@/lib/i18n";
 import * as Icons from "lucide-react";
-import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Phone, Hash, Shield, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 
@@ -222,12 +222,19 @@ export const PostProjectWizard = ({
   const [deadline, setDeadline] = useState("");
   const [referenceLink, setReferenceLink] = useState("");
   const [wilaya, setWilaya] = useState(clientWilaya || "");
+  const [shootAddress, setShootAddress] = useState("");
+  const [preferredShootDate, setPreferredShootDate] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [deliverableCount, setDeliverableCount] = useState(1);
+  const [usageRights, setUsageRights] = useState<"personal" | "commercial" | "broadcast">("personal");
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setStep("service"); setSelectedService(null); setSelections({});
     setBrief(""); setDeadline(""); setReferenceLink(""); setSubmitting(false);
     setWilaya(clientWilaya || "");
+    setShootAddress(""); setPreferredShootDate(""); setClientPhone("");
+    setDeliverableCount(1); setUsageRights("personal");
   };
 
   // ── Calculate price from selections ──────────────────────────────────────
@@ -308,6 +315,11 @@ export const PostProjectWizard = ({
       if (wilaya) { payload.clientWilaya = wilaya; payload.wilayaFilter = wilaya; }
       if (referenceLink.trim()) payload.referenceLink = referenceLink.trim();
       if (deadline) payload.deadline = deadline;
+      if (shootAddress.trim()) payload.shootAddress = shootAddress.trim();
+      if (preferredShootDate) payload.preferredShootDate = preferredShootDate;
+      if (clientPhone.trim()) payload.clientPhone = clientPhone.trim();
+      if (deliverableCount > 0) payload.deliverableCount = deliverableCount;
+      payload.usageRights = usageRights;
 
       await addOffer(payload as any);
       setStep("payment");
@@ -470,10 +482,88 @@ export const PostProjectWizard = ({
               <Input id="ref" type="url" value={referenceLink} onChange={(e) => setReferenceLink(e.target.value)} placeholder="https://..." className="mt-1" />
             </div>
 
-            {/* Deadline */}
+            {/* Detailed shoot address */}
             <div>
-              <Label htmlFor="deadline">{lang === "ar" ? "الموعد النهائي (اختياري)" : "Deadline (optional)"}</Label>
-              <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
+              <Label htmlFor="address" className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" />
+                {lang === "ar" ? "عنوان التصوير الدقيق (اختياري)" : "Detailed shoot address (optional)"}
+              </Label>
+              <Input
+                id="address"
+                value={shootAddress}
+                onChange={(e) => setShootAddress(e.target.value)}
+                placeholder={lang === "ar" ? "الحي، الشارع، رقم العمارة…" : "Neighborhood, street, building number…"}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Phone for direct coordination */}
+            <div>
+              <Label htmlFor="phone" className="flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5" />
+                {lang === "ar" ? "رقم هاتفك (يُشارُ فقط مع المبدع المختار)" : "Your phone (only shared with the chosen creator)"}
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="+213 XXX XXX XXX"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Preferred shoot date */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="shootDate" className="flex items-center gap-1">
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  {lang === "ar" ? "تاريخ التصوير المقترح" : "Preferred shoot date"}
+                </Label>
+                <Input id="shootDate" type="date" value={preferredShootDate} onChange={(e) => setPreferredShootDate(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="deadline">{lang === "ar" ? "الموعد النهائي للتسليم" : "Final delivery deadline"}</Label>
+                <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
+              </div>
+            </div>
+
+            {/* Deliverable count */}
+            <div>
+              <Label htmlFor="count" className="flex items-center gap-1">
+                <Hash className="w-3.5 h-3.5" />
+                {lang === "ar" ? "عدد التسليمات المتوقعة" : "Number of expected deliverables"}
+              </Label>
+              <Input
+                id="count" type="number" min={1} max={50} value={deliverableCount}
+                onChange={(e) => setDeliverableCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="mt-1 max-w-[160px]"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {lang === "ar"
+                  ? "مثال: 3 فيديوهات قصيرة، أو 10 صور معدّلة."
+                  : "e.g. 3 short videos, or 10 edited photos."}
+              </p>
+            </div>
+
+            {/* Usage rights */}
+            <div>
+              <Label className="flex items-center gap-1">
+                <Shield className="w-3.5 h-3.5" />
+                {lang === "ar" ? "حقوق الاستخدام" : "Usage rights"}
+              </Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {([
+                  { id: "personal", ar: "شخصي", en: "Personal" },
+                  { id: "commercial", ar: "تجاري", en: "Commercial" },
+                  { id: "broadcast", ar: "إذاعي", en: "Broadcast" },
+                ] as const).map((u) => (
+                  <button key={u.id} type="button" onClick={() => setUsageRights(u.id)}
+                    className={`px-3 py-2 rounded-lg border text-xs transition-smooth ${usageRights === u.id ? "border-accent bg-accent/10 text-foreground font-medium" : "border-border glass text-muted-foreground hover:border-accent/40"}`}>
+                    {lang === "ar" ? u.ar : u.en}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-between">

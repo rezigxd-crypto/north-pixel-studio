@@ -5,7 +5,7 @@ export type Offer = {
   description: { en: string; fr: string; ar: string };
   features: { en: string[]; fr: string[]; ar: string[] };
   process: { en: string[]; fr: string[]; ar: string[] };
-  startingPrice: string;
+  startingPrice: number;
   icon: string;
   accent: "royal" | "gold";
   image: string;
@@ -37,7 +37,7 @@ export const OFFERS: Offer[] = [
       fr: ["Appel de briefing créatif", "Traitement, casting & devis", "Journées de tournage", "Montage, étalonnage, son & livraison"],
       ar: ["جلسة تعارف وتحديد الفكرة", "كتابة المعالجة والكاستنغ مع عرض السعر", "أيام التصوير", "المونتاج وتدرّج الألوان والصوت ثم التسليم"],
     },
-    startingPrice: "من 15,000 دج",
+    startingPrice: 15000,
     icon: "Film", accent: "gold",
     image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80",
     pricing: { unit: "يوم تصوير", pricePerUnit: 15000, minUnits: 1, maxUnits: 7, unitLabel: "day", unitLabelPlural: "days", unitLabelAr: "يوم" },
@@ -58,7 +58,7 @@ export const OFFERS: Offer[] = [
       fr: ["Repérage & liste de plans", "Plan d'équipe & matériel", "Couverture le jour J", "Reel du jour + montage complet"],
       ar: ["زيارة الموقع ووضع قائمة اللقطات", "تجهيز الطاقم والمعدات", "التصوير يوم الفعالية", "مقطع سريع في نفس اليوم ثم المونتاج الكامل"],
     },
-    startingPrice: "من 8,000 دج",
+    startingPrice: 8000,
     icon: "Calendar", accent: "royal",
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
     pricing: { unit: "ساعة", pricePerUnit: 8000, minUnits: 1, maxUnits: 12, unitLabel: "hour", unitLabelPlural: "hours", unitLabelAr: "ساعة" },
@@ -79,7 +79,7 @@ export const OFFERS: Offer[] = [
       fr: ["Script & casting voix", "Enregistrement studio", "Mix, musique & SFX", "Master & livraison"],
       ar: ["تحضير النص واختيار الصوت", "التسجيل في الاستوديو", "المزج مع الموسيقى والمؤثرات", "الماسترينغ والتسليم"],
     },
-    startingPrice: "من 2,000 دج",
+    startingPrice: 2000,
     icon: "Mic", accent: "gold",
     image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&q=80",
     pricing: { unit: "30 ثانية", pricePerUnit: 500, minUnits: 4, maxUnits: 20, unitLabel: "× 30s", unitLabelPlural: "× 30s", unitLabelAr: "× 30 ث" },
@@ -100,7 +100,7 @@ export const OFFERS: Offer[] = [
       fr: ["Revue des rushes", "Premier montage & retours", "Motion + VFX + couleur", "Mix final & livraison"],
       ar: ["مراجعة اللقطات الخام", "مونتاج أولي مع تعديلات", "إضافة الحركة والمؤثرات وضبط الألوان", "المزج النهائي والتسليم"],
     },
-    startingPrice: "من 4,000 دج",
+    startingPrice: 4000,
     icon: "Scissors", accent: "royal",
     image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80",
     pricing: { unit: "دقيقة منتهية", pricePerUnit: 4000, minUnits: 1, maxUnits: 15, unitLabel: "minute", unitLabelPlural: "minutes", unitLabelAr: "دقيقة" },
@@ -121,7 +121,7 @@ export const OFFERS: Offer[] = [
       fr: ["Mood board & liste de plans", "Jour de shooting", "Sélection & retouche", "Livraison galerie"],
       ar: ["تحضير لوحة إلهام وقائمة اللقطات", "يوم التصوير", "اختيار الصور وتعديلها", "تسليم المعرض النهائي"],
     },
-    startingPrice: "من 3,000 دج",
+    startingPrice: 3000,
     icon: "Camera", accent: "gold",
     image: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&q=80",
     pricing: { unit: "صورة معدّلة", pricePerUnit: 3000, minUnits: 5, maxUnits: 100, unitLabel: "photo", unitLabelPlural: "photos", unitLabelAr: "صورة" },
@@ -142,7 +142,7 @@ export const OFFERS: Offer[] = [
       fr: ["Appel stratégie contenu", "Scripts & accroches", "Tournage & montage", "Livraison & itérations mensuelles"],
       ar: ["جلسة استراتيجية للمحتوى", "كتابة السيناريوهات والجذابات", "التصوير والمونتاج", "تسليم شهري وتحسين مستمر"],
     },
-    startingPrice: "من 3,000 دج",
+    startingPrice: 3000,
     icon: "Smartphone", accent: "royal",
     image: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80",
     pricing: { unit: "ريل", pricePerUnit: 3000, minUnits: 1, maxUnits: 30, unitLabel: "reel", unitLabelPlural: "reels", unitLabelAr: "ريل" },
@@ -163,7 +163,7 @@ export const OFFERS: Offer[] = [
       fr: ["Découverte de votre voix & ton", "Plan & recherches", "Rédaction & révisions", "Livraison finale"],
       ar: ["التعرّف على أسلوبك ونبرتك", "تحضير الخطة والأبحاث", "الكتابة والتعديلات", "تسليم النص النهائي"],
     },
-    startingPrice: "من 2,500 دج",
+    startingPrice: 2500,
     icon: "PenLine", accent: "royal",
     image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&q=80",
     pricing: { unit: "مقال", pricePerUnit: 2500, minUnits: 1, maxUnits: 30, unitLabel: "piece", unitLabelPlural: "pieces", unitLabelAr: "مقال" },
@@ -213,8 +213,29 @@ export const getRank = (completedJobs: number) =>
 export const ADMIN_COMMISSION = 0.20;
 export const CLIENT_ADVANCE_PCT = 0.10; // 10% advance from client
 
-export const formatDZD = (n: number) =>
-  `${new Intl.NumberFormat("ar-DZ").format(Math.round(n))} دج`;
+/**
+ * Format a DZD price with the suffix in the user's current language.
+ * Reads the language preference from localStorage (set by AppProvider).
+ * Pass `lang` explicitly when calling outside a React render path.
+ */
+export const formatDZD = (n: number, lang?: "ar" | "en" | "fr"): string => {
+  const resolved =
+    lang ||
+    ((typeof localStorage !== "undefined" && (localStorage.getItem("np.lang") as "ar" | "en" | "fr")) || "ar");
+  const locale = resolved === "ar" ? "ar-DZ" : resolved === "fr" ? "fr-DZ" : "en-DZ";
+  const suffix = resolved === "ar" ? "دج" : "DA";
+  return `${new Intl.NumberFormat(locale).format(Math.round(n))} ${suffix}`;
+};
+
+/**
+ * Localised "from X DA" label used on service cards.
+ */
+export const formatStartingPrice = (n: number, lang: "ar" | "en" | "fr"): string => {
+  const price = formatDZD(n, lang);
+  if (lang === "ar") return `من ${price}`;
+  if (lang === "fr") return `à partir de ${price}`;
+  return `from ${price}`;
+};
 
 export const getOffer = (slug: string) => OFFERS.find((o) => o.slug === slug);
 

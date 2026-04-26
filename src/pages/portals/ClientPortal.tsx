@@ -8,9 +8,12 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
-import { OFFERS, formatDZD } from "@/lib/offers";
+import { OFFERS, formatDZD, formatStartingPrice } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
+import { ProfilePicUpload } from "@/components/ProfilePicUpload";
+import { Countdown } from "@/components/Countdown";
+import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { useApp } from "@/lib/context";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -55,6 +58,11 @@ const ClientPortal = () => {
     if (!auth.loading && auth.role !== "client") navigate("/auth/login");
   }, [auth.loading, auth.role]);
 
+  useEffect(() => {
+    if (auth.avatar) setSelectedAvatar(auth.avatar);
+    if (auth.phone) setProfilePhone(auth.phone);
+  }, [auth.avatar, auth.phone]);
+
   const myOffers = offers.filter((o) => o.clientEmail === auth.email);
   const pending  = myOffers.filter((o) => o.status === "pending_admin").length;
   const live     = myOffers.filter((o) => o.status === "open").length;
@@ -89,8 +97,10 @@ const ClientPortal = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-royal flex items-center justify-center text-2xl flex-shrink-0">
-            {CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢"}
+          <div className="w-14 h-14 rounded-2xl bg-gradient-royal flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+            {auth.profilePic
+              ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
+              : (CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢")}
           </div>
           <div>
             <h1 className="font-serif text-xl font-bold">{auth.name}</h1>
@@ -193,7 +203,25 @@ const ClientPortal = () => {
                             📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
                           </a>
                         )}
+                        {p.deadline && (p.status === "open" || p.status === "assigned") && (
+                          <Countdown
+                            deadline={p.deadline}
+                            lang={lang}
+                            label={{ ar: "الموعد النهائي", en: "Deadline", fr: "Échéance" }}
+                            urgentMs={24 * 3600 * 1000}
+                          />
+                        )}
                       </div>
+
+                      {/* Workspace — appears once a creator is assigned. */}
+                      {acceptedBid && (
+                        <ProjectWorkspace
+                          offer={p}
+                          acceptedBid={acceptedBid}
+                          viewer="client"
+                          lang={lang}
+                        />
+                      )}
 
                       {/* Location map — shown for any project that has a wilaya, regardless of status */}
                       {p.clientWilaya && (
@@ -225,13 +253,31 @@ const ClientPortal = () => {
       {/* ══ PROFILE ══ */}
       {activeTab === "profile" && (
         <div className="space-y-5 max-w-lg">
+          {/* Profile picture upload */}
+          <div className="glass rounded-2xl p-5">
+            <h3 className="font-semibold mb-4">{lang === "ar" ? "الصورة الشخصية" : "Profile picture"}</h3>
+            <ProfilePicUpload
+              uid={auth.uid}
+              currentUrl={auth.profilePic}
+              fallback={<span>{CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢"}</span>}
+              onChange={refreshAuth}
+              lang={lang}
+              accent="royal"
+            />
+          </div>
+
           <div className="glass rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">{lang === "ar" ? "الصورة الرمزية" : "Avatar"}</h3>
+              <h3 className="font-semibold">{lang === "ar" ? "رمز احتياطي (إيموجي)" : "Fallback emoji"}</h3>
               <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
                 <Edit2 className="w-4 h-4" />
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              {lang === "ar"
+                ? "يُستخدم عندما لا تكون الصورة الشخصية مرفوعة."
+                : "Shown when no profile picture is uploaded."}
+            </p>
             <div className="flex gap-3 flex-wrap">
               {CLIENT_AVATARS.map((a) => (
                 <button key={a.id} onClick={() => editMode && setSelectedAvatar(a.id)}
@@ -281,7 +327,7 @@ const ClientPortal = () => {
                 <Link to={`/services/${o.slug}`} key={o.slug}
                   className="glass rounded-xl p-3 hover:border-accent/40 transition-smooth">
                   <div className="text-sm font-medium">{o.title[lang]}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{o.startingPrice}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{formatStartingPrice(o.startingPrice, lang)}</div>
                 </Link>
               ))}
             </div>

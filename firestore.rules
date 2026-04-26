@@ -39,5 +39,13 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow update: if request.auth != null;
     }
+
+    // MovieCollab quest applications — anyone can apply (logged in or visitor),
+    // but only authed users can read their list (admin will moderate).
+    match /questApplications/{docId} {
+      allow create: if true;
+      allow read: if request.auth != null;
+      allow update, delete: if request.auth != null;
+    }
   }
 }

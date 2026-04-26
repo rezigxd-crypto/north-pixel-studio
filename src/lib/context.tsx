@@ -18,6 +18,12 @@ interface AuthState {
   name: string;
   wilaya?: string;
   uid?: string;
+  /** Custom uploaded profile picture URL (Firebase Storage). */
+  profilePic?: string;
+  /** Selected emoji avatar id for clients (legacy). */
+  avatar?: string;
+  /** Phone number for client/creator coordination. */
+  phone?: string;
   loading: boolean;
 }
 
@@ -79,7 +85,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
         const data = snap.data();
-        setAuthState({ role: data.role as UserRole, email: user.email || "", name: data.name || user.displayName || "", wilaya: data.wilaya || "", uid: user.uid, loading: false });
+        setAuthState({
+          role: data.role as UserRole,
+          email: user.email || "",
+          name: data.name || user.displayName || "",
+          wilaya: data.wilaya || "",
+          uid: user.uid,
+          profilePic: data.profilePic || "",
+          avatar: data.avatar || "",
+          phone: data.phone || "",
+          loading: false,
+        });
       } else {
         setAuthState({ role: null, email: user.email || "", name: user.displayName || "", wilaya: "", uid: user.uid, loading: false });
       }

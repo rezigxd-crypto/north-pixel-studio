@@ -45,6 +45,10 @@ export type Bid = {
   amount: number;
   deliverableLink?: string;
   status: "pending" | "accepted" | "rejected" | "delivered";
+  /** ms timestamp when admin / client accepted the bid (used for 24h delivery countdown). */
+  acceptedAt?: number;
+  /** ms timestamp when creator must deliver by (acceptedAt + 24h by default). */
+  deliveryDeadline?: number;
   createdAt: number;
 };
 
@@ -53,6 +57,20 @@ export type ClientOffer = {
   clientName: string;
   clientEmail: string;
   clientWilaya?: string;
+  /** Detailed shoot/meeting address inside the wilaya (street, neighborhood). */
+  shootAddress?: string;
+  /** Preferred shoot date (YYYY-MM-DD). Different from final deadline. */
+  preferredShootDate?: string;
+  /** Phone number the creator can use to coordinate. */
+  clientPhone?: string;
+  /** Number of final deliverables (e.g. number of edited videos). */
+  deliverableCount?: number;
+  /** Usage rights: personal | commercial | broadcast. */
+  usageRights?: "personal" | "commercial" | "broadcast";
+  /** Optional video meeting URL (Google Meet / Zoom) for kickoff call. */
+  meetingUrl?: string;
+  /** Scheduled meeting time (ISO string). */
+  meetingAt?: string;
   serviceSlug: string;
   serviceTitle: string;
   units: number;
@@ -122,11 +140,25 @@ export const submitDeliverable = async (bidId: string, link: string) => {
   await updateDoc(doc(db, "bids", bidId), { deliverableLink: link, status: "delivered" });
 };
 export const acceptBid = async (bidId: string, offerId: string) => {
-  await updateDoc(doc(db, "bids", bidId), { status: "accepted" });
+  const acceptedAt = Date.now();
+  const deliveryDeadline = acceptedAt + 24 * 60 * 60 * 1000; // 24h to deliver
+  await updateDoc(doc(db, "bids", bidId), {
+    status: "accepted",
+    acceptedAt,
+    deliveryDeadline,
+  });
   await updateDoc(doc(db, "offers", offerId), { status: "assigned", acceptedBidId: bidId });
   const { getDocs, query: q, collection: col, where: w } = await import("firebase/firestore");
   const snap = await getDocs(q(col(db, "bids"), w("offerId", "==", offerId), w("status", "==", "pending")));
   await Promise.all(snap.docs.filter((d) => d.id !== bidId).map((d) => updateDoc(doc(db, "bids", d.id), { status: "rejected" })));
+};
+
+/** Update workspace fields on an offer (meeting URL, meeting time, address). */
+export const updateOfferWorkspace = async (
+  offerId: string,
+  data: Partial<Pick<ClientOffer, "meetingUrl" | "meetingAt" | "shootAddress" | "clientPhone">>,
+) => {
+  await updateDoc(doc(db, "offers", offerId), data as any);
 };
 
 // ─── Hooks ────────────────────────────────────────────────────────────────
