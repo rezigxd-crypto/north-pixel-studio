@@ -3,7 +3,13 @@ import { updateUserProfile } from "./store";
 const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const CLOUD_NAME = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined)?.trim();
+// Cloudinary cloud name. The cloud name is public (it appears in every asset URL),
+// so it's safe to commit as a default. Override at build time via the env var if
+// you ever migrate to a different Cloudinary account.
+const DEFAULT_CLOUD_NAME = "dj03ghe2y";
+const CLOUD_NAME =
+  (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined)?.trim() ||
+  DEFAULT_CLOUD_NAME;
 const UPLOAD_PRESET = "profile_pics";
 
 export type UploadResult = { url: string; path: string };
