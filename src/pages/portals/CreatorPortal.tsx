@@ -107,7 +107,10 @@ const CreatorPortal = () => {
       missing: checks.filter((c) => !c.ok).map((c) => c.key),
     };
   })();
-  const username = myApp?.username;
+  // Username lives on the /users doc (written for both email and Google
+  // signups + the self-backfill above). Fall back to the creator-app doc
+  // for resilience.
+  const username = myUserDoc?.username ?? myApp?.username;
 
   // ── State
   const [activeTab, setActiveTab] = useState<"home" | "bids" | "profile">("home");
