@@ -19,7 +19,7 @@ const GoogleIcon = () => (
 
 const Login = () => {
   const navigate = useNavigate();
-  const { t, loginWithEmail, loginWithGoogle, resetPassword } = useApp();
+  const { t, lang, loginWithEmail, loginWithGoogle, resetPassword } = useApp();
   const [tab, setTab] = useState<"client" | "creator">("client");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,7 +44,14 @@ const Login = () => {
       navigateByRole(role);
     } catch (err: any) {
       const c = err?.code;
-      toast.error(c === "auth/invalid-credential" || c === "auth/wrong-password" ? "كلمة مرور أو بريد إلكتروني خاطئ." : c === "auth/user-not-found" ? "لا يوجد حساب بهذا البريد." : "فشل تسجيل الدخول.");
+      const wrongCred = c === "auth/invalid-credential" || c === "auth/wrong-password";
+      const noUser = c === "auth/user-not-found";
+      const msg = lang === "ar"
+        ? (wrongCred ? "كلمة مرور أو بريد إلكتروني خاطئ." : noUser ? "لا يوجد حساب بهذا البريد." : "فشل تسجيل الدخول.")
+        : lang === "fr"
+        ? (wrongCred ? "E-mail ou mot de passe incorrect." : noUser ? "Aucun compte avec cet e-mail." : "Échec de la connexion.")
+        : (wrongCred ? "Wrong email or password." : noUser ? "No account with this email." : "Login failed.");
+      toast.error(msg);
     } finally { setLoading(false); }
   };
 
@@ -53,25 +60,30 @@ const Login = () => {
     try {
       const res = await loginWithGoogle(tab);
       if (res.status === "new") {
-        toast.info("خطوة أخيرة لإكمال تسجيلك");
+        toast.info(lang === "ar" ? "خطوة أخيرة لإكمال تسجيلك" : lang === "fr" ? "Une dernière étape pour terminer l'inscription" : "One last step to finish signing up");
         navigate("/auth/signup/complete", { state: { role: tab, email: res.email, name: res.name } });
       } else {
         toast.success(t("welcomeBack"));
         navigateByRole(res.role);
       }
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") toast.error("فشل تسجيل الدخول بجوجل.");
+      if (err?.code !== "auth/popup-closed-by-user") toast.error(lang === "ar" ? "فشل تسجيل الدخول بجوجل." : lang === "fr" ? "Échec de la connexion Google." : "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
   };
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) { toast.error("أدخل بريدك الإلكتروني أولًا."); return; }
+    if (!email) {
+      toast.error(lang === "ar" ? "أدخل بريدك الإلكتروني أولًا." : lang === "fr" ? "Entrez d'abord votre e-mail." : "Enter your email first.");
+      return;
+    }
     try {
       await resetPassword(email);
-      toast.success("تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني.");
+      toast.success(lang === "ar" ? "تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني." : lang === "fr" ? "Lien de réinitialisation envoyé à votre e-mail." : "Reset link sent to your email.");
       setShowReset(false);
-    } catch { toast.error("فشل الإرسال. تأكد من البريد الإلكتروني."); }
+    } catch {
+      toast.error(lang === "ar" ? "فشل الإرسال. تأكد من البريد الإلكتروني." : lang === "fr" ? "Échec de l'envoi. Vérifiez l'e-mail." : "Could not send. Check the email address.");
+    }
   };
 
   return (
@@ -89,13 +101,15 @@ const Login = () => {
               {(["client", "creator"] as const).map((r) => (
                 <button key={r} type="button" onClick={() => setTab(r)}
                   className={`py-2 rounded-full transition-smooth ${tab === r ? "bg-gradient-royal text-primary-foreground" : "text-muted-foreground"}`}>
-                  {r === "client" ? "أنا زبون" : "أنا عامل حر"}
+                  {r === "client"
+                    ? (lang === "ar" ? "أنا زبون" : lang === "fr" ? "Je suis client" : "I'm a client")
+                    : (lang === "ar" ? "أنا عامل حر" : lang === "fr" ? "Je suis freelance" : "I'm a freelancer")}
                 </button>
               ))}
             </div>
           )}
 
-          {isAdminMode && <div className="glass rounded-xl p-3 mb-4 text-xs border border-destructive/30 text-destructive">🔐 وضع المشرف</div>}
+          {isAdminMode && <div className="glass rounded-xl p-3 mb-4 text-xs border border-destructive/30 text-destructive">🔐 {lang === "ar" ? "وضع المشرف" : lang === "fr" ? "Mode administrateur" : "Admin mode"}</div>}
 
           {!isAdminMode && (
             <>
@@ -119,7 +133,7 @@ const Login = () => {
                 <Input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
               <button type="button" onClick={() => setShowReset(true)} className="text-xs text-accent hover:underline">
-                {t("lang") === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+                {lang === "ar" ? "نسيت كلمة المرور؟" : lang === "fr" ? "Mot de passe oublié ?" : "Forgot password?"}
               </button>
               <Button type="submit" variant="royal" className="w-full" size="lg" disabled={loading}>
                 {loading ? "..." : t("login")}
@@ -127,11 +141,11 @@ const Login = () => {
             </form>
           ) : (
             <form onSubmit={handleReset} className="space-y-4">
-              <p className="text-sm text-muted-foreground">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور.</p>
+              <p className="text-sm text-muted-foreground">{lang === "ar" ? "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور." : lang === "fr" ? "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation." : "Enter your email and we'll send you a reset link."}</p>
               <div><Label>{t("email")}</Label>
                 <Input type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-              <Button type="submit" variant="royal" className="w-full">إرسال رابط إعادة التعيين</Button>
+              <Button type="submit" variant="royal" className="w-full">{lang === "ar" ? "إرسال رابط إعادة التعيين" : lang === "fr" ? "Envoyer le lien" : "Send reset link"}</Button>
               <button type="button" onClick={() => setShowReset(false)} className="text-xs text-muted-foreground hover:text-accent w-full text-center">{t("back")}</button>
             </form>
           )}

@@ -5,7 +5,7 @@ import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { OFFERS, UNIVERSITY_BUNDLE } from "@/lib/offers";
+import { OFFERS, UNIVERSITY_BUNDLE, formatStartingPrice } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
@@ -119,7 +119,7 @@ const Index = () => {
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className={`absolute bottom-2.5 ${lang === "ar" ? "left-2.5" : "right-2.5"} text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm ${o.accent === "gold" ? "bg-accent/25 text-accent border border-accent/30" : "bg-primary/25 text-primary-foreground border border-primary/30"}`}>
-                      {o.startingPrice}
+                      {formatStartingPrice(o.startingPrice, lang)}
                     </div>
                   </div>
                   <div className="flex flex-col flex-1 p-4">

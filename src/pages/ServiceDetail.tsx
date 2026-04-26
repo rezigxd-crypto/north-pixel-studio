@@ -1,5 +1,5 @@
 import { Link, useParams, Navigate } from "react-router-dom";
-import { OFFERS } from "@/lib/offers";
+import { OFFERS, formatStartingPrice } from "@/lib/offers";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
@@ -97,7 +97,7 @@ const ServiceDetail = () => {
           {/* Sidebar */}
           <aside className="glass rounded-2xl p-6 sticky top-24">
             <span className="text-xs uppercase tracking-widest text-accent">{labels.investment}</span>
-            <div className="font-serif text-3xl font-bold mt-2 mb-1">{offer.startingPrice}</div>
+            <div className="font-serif text-3xl font-bold mt-2 mb-1">{formatStartingPrice(offer.startingPrice, lang)}</div>
             <p className="text-xs text-muted-foreground mb-5">{labels.customQuote}</p>
             <div className="border-t border-border mb-5" />
             <h3 className="font-semibold mb-3">{labels.process}</h3>

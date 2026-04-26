@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
-import { OFFERS, formatDZD } from "@/lib/offers";
+import { OFFERS, formatDZD, formatStartingPrice } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
@@ -327,7 +327,7 @@ const ClientPortal = () => {
                 <Link to={`/services/${o.slug}`} key={o.slug}
                   className="glass rounded-xl p-3 hover:border-accent/40 transition-smooth">
                   <div className="text-sm font-medium">{o.title[lang]}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{o.startingPrice}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{formatStartingPrice(o.startingPrice, lang)}</div>
                 </Link>
               ))}
             </div>
