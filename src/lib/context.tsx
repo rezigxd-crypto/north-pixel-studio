@@ -7,7 +7,8 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import { bumpPublicStats } from "./store";
+import { bumpPublicStats, fetchTakenUsernames } from "./store";
+import { generateUniqueUsername } from "./username";
 import { type Lang, translations, type TranslationKey } from "./i18n";
 
 export type UserRole = "client" | "creator" | "admin" | null;
@@ -178,9 +179,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
+    // Generate a public username for creators (used for /@username profile URLs).
+    let creatorUsername: string | undefined;
+    if (role === "creator") {
+      const taken = await fetchTakenUsernames();
+      creatorUsername = generateUniqueUsername(name, taken);
+    }
+
     await setDoc(doc(db, "users", user.uid), {
       name, email: user.email, wilaya, role,
       createdAt: new Date().toISOString(), provider: "google",
+      ...(creatorUsername ? { username: creatorUsername } : {}),
       ...(extra || {}),
     });
 
@@ -202,6 +211,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         createdAt: sts(),
         provider: "google",
         uid: user.uid,
+        ...(creatorUsername ? { username: creatorUsername } : {}),
       });
     }
     await loadUser(user);
@@ -217,7 +227,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const registerCreator = async (email: string, password: string, name: string, wilaya: string, phone: string): Promise<string> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, phone, role: "creator", createdAt: new Date().toISOString() });
+    const taken = await fetchTakenUsernames();
+    const username = generateUniqueUsername(name, taken);
+    await setDoc(doc(db, "users", cred.user.uid), {
+      name, email, wilaya, phone, role: "creator", username,
+      createdAt: new Date().toISOString(),
+    });
     bumpPublicStats("creator").catch(() => {});
     return cred.user.uid;
   };

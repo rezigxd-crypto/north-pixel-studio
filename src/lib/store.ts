@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   collection, doc, addDoc, updateDoc, onSnapshot,
-  query, orderBy, serverTimestamp, Timestamp, where, getDoc, setDoc
+  query, orderBy, serverTimestamp, Timestamp, where, getDoc, getDocs, setDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { generateUniqueUsername } from "./username";
 
 export type UserProfile = {
   uid: string;
@@ -17,6 +18,8 @@ export type UserProfile = {
   completedJobs?: number;
   roles?: string[];   // multiple roles for creators
   profilePic?: string;
+  /** Public URL slug for creator profile pages (`/@username`). */
+  username?: string;
   createdAt: string;
 };
 
@@ -34,6 +37,9 @@ export type CreatorApplication = {
   status: "pending" | "approved" | "rejected";
   createdAt: number;
   uid?: string;
+  /** Mirrors the `username` on the creator's user document. Optional because
+   *  legacy applications written before the public-profile feature don't have it. */
+  username?: string;
 };
 
 export type Bid = {
@@ -112,6 +118,52 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists() ? { uid: snap.id, ...snap.data() } as UserProfile : null;
+};
+
+// ─── Usernames ────────────────────────────────────────────────────────────
+/** Fetch the set of usernames currently in use, for collision-free generation. */
+export const fetchTakenUsernames = async (): Promise<Set<string>> => {
+  const taken = new Set<string>();
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    snap.forEach((d) => {
+      const u = (d.data() as UserDoc).username;
+      if (u) taken.add(u.toLowerCase());
+    });
+  } catch {
+    /* permission denied for anon — caller will retry post-auth */
+  }
+  return taken;
+};
+
+/**
+ * Generate a unique username for a freshly-signed-up creator and write it on
+ * the user document. Returns the username so the caller can also persist it
+ * onto the matching creator-application doc.
+ */
+export const provisionUsernameForCreator = async (
+  uid: string,
+  fullName: string,
+): Promise<string> => {
+  const taken = await fetchTakenUsernames();
+  const username = generateUniqueUsername(fullName, taken);
+  await updateUserProfile(uid, { username });
+  return username;
+};
+
+/** Look up a creator's full user doc by their public username. */
+export const getUserByUsername = async (username: string): Promise<UserDoc | null> => {
+  if (!username) return null;
+  try {
+    const snap = await getDocs(
+      query(collection(db, "users"), where("username", "==", username.toLowerCase()))
+    );
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { uid: d.id, ...d.data() } as UserDoc;
+  } catch {
+    return null;
+  }
 };
 
 // ─── Creators ─────────────────────────────────────────────────────────────
@@ -234,6 +286,7 @@ export type UserDoc = {
   bariMobAccount?: string;
   profilePic?: string;
   avatar?: string;
+  username?: string;
   createdAt?: string;
 };
 
