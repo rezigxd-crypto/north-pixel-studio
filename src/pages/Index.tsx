@@ -9,7 +9,7 @@ import { OFFERS, UNIVERSITY_BUNDLE, formatStartingPrice, formatDZD } from "@/lib
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
-import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart } from "lucide-react";
+import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart, FileText, Search, Send, ShieldCheck, Wallet, MapPin, Building2, Globe, Award } from "lucide-react";
 import { useApp } from "@/lib/context";
 
 const AR_WORDS = ["احترافية", "إبداع", "براعة", "ابتكار", "تألّق", "جودة", "خبرة"];
@@ -36,8 +36,12 @@ const Index = () => {
       {/* HERO */}
       <section className="relative pt-32 pb-24 px-4 sm:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-50 pointer-events-none" />
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity" />
+        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity np-ken-burns" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/75 to-background pointer-events-none" />
+
+        {/* Floating accent orbs (transform-only animation) */}
+        <div className="np-orb np-orb-gold pointer-events-none" style={{ width: 320, height: 320, top: "-100px", right: "-80px", opacity: 0.35 }} />
+        <div className="np-orb np-orb-royal pointer-events-none" style={{ width: 260, height: 260, bottom: "-80px", left: "-60px", opacity: 0.28, animationDelay: "-4s" }} />
 
         <div className="relative max-w-5xl mx-auto text-center">
           <span className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs uppercase tracking-widest text-accent mb-8">
@@ -81,8 +85,25 @@ const Index = () => {
             </Button>
           )}
 
+          {/* Trust chips (only when not logged in) */}
+          {!isLoggedIn && (
+            <div className="flex flex-wrap justify-center gap-2 mt-7">
+              {[
+                { Icon: Wallet,      ar: "بريدي موب\u00A0—\u00A0دفع جزائري",      fr: "Baridi Mob\u00A0\u00B7 paiement local", en: "Baridi Mob\u00A0\u00B7 local payments" },
+                { Icon: ShieldCheck, ar: "مبدعون موثوقون",                          fr: "Cr\u00E9ateurs v\u00E9rifi\u00E9s",       en: "Verified creators" },
+                { Icon: Building2,   ar: "استوديو\u00A0+\u00A0شبكة",               fr: "Studio\u00A0+\u00A0r\u00E9seau",         en: "Studio + network" },
+                { Icon: Globe,       ar: "3 لغات\u00A0\u00B7\u00A0كل الولايات",   fr: "3 langues\u00A0\u00B7 toutes wilayas",   en: "3 languages \u00B7 all wilayas" },
+              ].map((t, i) => (
+                <span key={i} className="glass rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground border border-border/50">
+                  <t.Icon className="w-3.5 h-3.5 text-accent" />
+                  <span>{lang === "ar" ? t.ar : lang === "fr" ? t.fr : t.en}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Stats — clickable directories */}
-          <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mt-14">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto mt-14">
             <Link
               to="/clients"
               className="glass rounded-2xl p-4 text-center transition-smooth hover:border-accent/50 hover:-translate-y-0.5 hover:shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.5)] focus:outline-none focus:ring-2 focus:ring-accent/40"
@@ -107,7 +128,76 @@ const Index = () => {
                 {lang === "ar" ? "تصفّح" : lang === "fr" ? "Voir" : "Browse"} <ArrowRight className="w-3 h-3" />
               </div>
             </Link>
+            {/* Static premium stats — Services live + Wilayas covered */}
+            <div className="glass rounded-2xl p-4 text-center border border-border/50">
+              <Sparkles className="w-5 h-5 text-accent mx-auto mb-2" />
+              <div className="font-serif text-3xl font-bold">{OFFERS.length}</div>
+              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "خدمة احترافية" : lang === "fr" ? "Services pro" : "Services live"}</div>
+              <div className="text-[10px] uppercase tracking-widest text-accent/80 mt-2">
+                {lang === "ar" ? "متاحة الآن" : lang === "fr" ? "Disponible" : "Available"}
+              </div>
+            </div>
+            <div className="glass rounded-2xl p-4 text-center border border-border/50">
+              <MapPin className="w-5 h-5 text-accent mx-auto mb-2" />
+              <div className="font-serif text-3xl font-bold">58</div>
+              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "ولاية مغطّاة" : lang === "fr" ? "Wilayas couvertes" : "Wilayas covered"}</div>
+              <div className="text-[10px] uppercase tracking-widest text-accent/80 mt-2">
+                {lang === "ar" ? "جميع الجزائر" : lang === "fr" ? "Toute l'Alg\u00E9rie" : "All Algeria"}
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS — 3 step flow */}
+      <section className="px-4 sm:px-6 py-16 max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="text-xs uppercase tracking-[0.3em] text-accent">{lang === "ar" ? "كيف تعمل المنصّة" : lang === "fr" ? "Comment \u00E7a marche" : "How it works"}</span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold mt-3">
+            {lang === "ar" ? "ثلاث خطوات فقط." : lang === "fr" ? "Trois \u00E9tapes, c'est tout." : "Just three steps."}
+          </h2>
+          <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-sm">
+            {lang === "ar" ? "من الفكرة إلى التسليم بأفضل طريقة."
+             : lang === "fr" ? "De l'id\u00E9e \u00E0 la livraison, simplement."
+             : "From idea to delivery, the right way."}
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 np-stagger">
+          {[
+            {
+              Icon: FileText,
+              ar: { t: "اكتب الموجز", d: "صف مشروعك في دقائق، وحدد المدة والميزانية." },
+              fr: { t: "R\u00E9digez le brief", d: "D\u00E9crivez le projet en quelques minutes : dur\u00E9e, livrables, budget." },
+              en: { t: "Post your brief",      d: "Describe the project in minutes \u2014 timeline, deliverables, budget." },
+            },
+            {
+              Icon: Search,
+              ar: { t: "اختر المبدع", d: "تصلك عروض من مبدعين جزائريين موثوقين." },
+              fr: { t: "Choisissez l'artiste", d: "Recevez des propositions de cr\u00E9ateurs alg\u00E9riens v\u00E9rifi\u00E9s." },
+              en: { t: "Pick the creator",     d: "Get bids from verified Algerian creators \u2014 compare and pick." },
+            },
+            {
+              Icon: Send,
+              ar: { t: "استلم العمل", d: "متابعة لحظيّة، تسليم في الأجل المتّفق عليه." },
+              fr: { t: "Recevez le rendu",     d: "Suivi en direct, livraison dans le d\u00E9lai convenu." },
+              en: { t: "Receive delivery",     d: "Live progress tracking, delivery on the agreed deadline." },
+            },
+          ].map((s, i) => (
+            <div key={i} className="np-hover-lift gold relative glass rounded-2xl p-6 border border-border/50">
+              <div className="absolute -top-3 start-5 w-7 h-7 rounded-full bg-gradient-gold text-accent-foreground flex items-center justify-center text-xs font-bold">
+                {i + 1}
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-gradient-gold/20 border border-accent/30 flex items-center justify-center mb-4">
+                <s.Icon className="w-5 h-5 text-accent" />
+              </div>
+              <h3 className="font-serif text-lg font-bold mb-2">
+                {(lang === "ar" ? s.ar : lang === "fr" ? s.fr : s.en).t}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {(lang === "ar" ? s.ar : lang === "fr" ? s.fr : s.en).d}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -147,6 +237,67 @@ const Index = () => {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* ABOUT / STUDIO IDENTITY */}
+      <section id="about-studio" className="px-4 sm:px-6 py-16 max-w-6xl mx-auto">
+        <div className="relative glass rounded-3xl overflow-hidden border border-border/50">
+          <div className="np-orb np-orb-gold pointer-events-none" style={{ width: 280, height: 280, top: "-80px", left: "-60px", opacity: 0.25 }} />
+          <div className="np-orb np-orb-royal pointer-events-none" style={{ width: 240, height: 240, bottom: "-60px", right: "-60px", opacity: 0.22, animationDelay: "-5s" }} />
+
+          <div className="relative grid md:grid-cols-[1fr_1.1fr] gap-8 p-6 sm:p-10 md:p-14">
+            <div>
+              <span className="text-xs uppercase tracking-[0.3em] text-accent">
+                {lang === "ar" ? "عن الاستوديو" : lang === "fr" ? "\u00C0 propos du studio" : "About the studio"}
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold mt-3 mb-5 leading-tight">
+                {lang === "ar"
+                  ? "بُني للرواة الجزائريين."
+                  : lang === "fr"
+                  ? "Con\u00E7u pour les conteurs alg\u00E9riens."
+                  : "Built for Algeria's storytellers."}
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                {lang === "ar"
+                  ? "نورث بيكسل استوديو ليس مجرّد سوق، بل فريق إبداعي جزائري مدعوم بشبكة من أفضل المبدعين. نجمع الجودة الستوديويّة والثقة في مكان واحد."
+                  : lang === "fr"
+                  ? "North Pixel Studio n'est pas qu'une marketplace : c'est une \u00E9quipe cr\u00E9ative alg\u00E9rienne soutenue par un r\u00E9seau des meilleurs talents. Qualit\u00E9 studio et confiance, au m\u00EAme endroit."
+                  : "North Pixel Studio isn't just a marketplace \u2014 it's an Algerian creative team backed by a network of vetted talent. Studio-grade quality and trust, in one place."}
+              </p>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+                {lang === "ar"
+                  ? "من حفلات الزفاف إلى التعليق الصوتي وتصوير 360°، نحوّل الفكرة إلى عمل جاهز للعرض."
+                  : lang === "fr"
+                  ? "Du mariage au voice-over en passant par les visites 360\u00B0, on transforme l'id\u00E9e en livrable pr\u00EAt-\u00E0-publier."
+                  : "From weddings to voice-overs to 360\u00B0 tours, we turn the brief into a ready-to-publish asset."}
+              </p>
+              <Button asChild variant="glass" size="lg">
+                <Link to="/#offers">{lang === "ar" ? "شاهد خدماتنا" : lang === "fr" ? "Voir nos services" : "See our services"} <ArrowRight className="ms-2 w-4 h-4" /></Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 self-stretch np-stagger">
+              {[
+                { Icon: ShieldCheck, ar: { t: "رسوم شفّافة",     d: "عمولة واحدة واضحة منذ البداية." }, fr: { t: "Frais transparents", d: "Une seule commission claire d\u00E8s le d\u00E9part." }, en: { t: "Transparent fees", d: "One clear commission from the start." } },
+                { Icon: Wallet,      ar: { t: "بريدي موب جاهز",  d: "دفع جزائري 100\u066A، بلا رسوم دولية." }, fr: { t: "Baridi Mob pr\u00EAt", d: "Paiement local, z\u00E9ro frais internationaux." }, en: { t: "Baridi-Mob ready", d: "100% local payment \u2014 no FX fees." } },
+                { Icon: Award,       ar: { t: "جودة استوديو",        d: "فريق داخلي\u00A0+\u00A0شبكة مختارة." },        fr: { t: "Qualit\u00E9 studio", d: "\u00C9quipe interne + r\u00E9seau s\u00E9lectionn\u00E9." }, en: { t: "Studio quality",   d: "In-house team + curated network." } },
+                { Icon: Globe,       ar: { t: "3 لغات\u060c كل الولايات", d: "عربي وفرنسي وإنجليزي، 58 ولاية." }, fr: { t: "3 langues, 58 wilayas", d: "AR\u00A0\u00B7\u00A0FR\u00A0\u00B7\u00A0EN, partout en Alg\u00E9rie." }, en: { t: "3 langs, 58 wilayas", d: "AR \u00B7 FR \u00B7 EN, everywhere in Algeria." } },
+              ].map((v, i) => (
+                <div key={i} className="np-hover-lift gold glass rounded-2xl p-4 border border-border/50">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-gold/20 border border-accent/30 flex items-center justify-center mb-3">
+                    <v.Icon className="w-4 h-4 text-accent" />
+                  </div>
+                  <div className="font-serif text-sm font-bold mb-1">
+                    {(lang === "ar" ? v.ar : lang === "fr" ? v.fr : v.en).t}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground leading-snug">
+                    {(lang === "ar" ? v.ar : lang === "fr" ? v.fr : v.en).d}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
