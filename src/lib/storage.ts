@@ -66,3 +66,54 @@ export const uploadProfilePic = async (uid: string, file: File): Promise<UploadR
 export const removeProfilePic = async (uid: string, _oldPath?: string) => {
   await updateUserProfile(uid, { profilePic: "" });
 };
+
+// ─── Project file uploads (PDF scripts, briefs, etc.) ─────────────────────────
+const PROJECT_PRESET = "project_files";
+const PROJECT_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const PROJECT_ALLOWED = ["application/pdf"];
+
+export type ProjectFileResult = { url: string; publicId: string; fileName: string; bytes: number };
+
+/**
+ * Upload a project document (e.g. a voiceover script PDF) to Cloudinary.
+ * Uses the `auto/upload` endpoint so PDFs and images both work through the same
+ * unsigned preset. The returned `secure_url` is stored on the offer document.
+ */
+export const uploadProjectScript = async (clientUid: string, file: File): Promise<ProjectFileResult> => {
+  if (!PROJECT_ALLOWED.includes(file.type)) {
+    throw new Error("Only PDF files are allowed for the script.");
+  }
+  if (file.size > PROJECT_MAX_BYTES) {
+    throw new Error("Script must be under 10 MB.");
+  }
+  if (!CLOUD_NAME) {
+    throw new Error("Cloudinary is not configured.");
+  }
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", PROJECT_PRESET);
+  form.append("folder", `project_files/${clientUid}`);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Upload failed (${res.status}). ${body.slice(0, 200)}`);
+  }
+
+  const data = (await res.json()) as { secure_url?: string; public_id?: string; bytes?: number; original_filename?: string };
+  if (!data.secure_url || !data.public_id) {
+    throw new Error("Cloudinary returned an unexpected response.");
+  }
+
+  return {
+    url: data.secure_url,
+    publicId: data.public_id,
+    fileName: file.name || `${data.original_filename || "script"}.pdf`,
+    bytes: data.bytes || file.size,
+  };
+};

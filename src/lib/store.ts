@@ -67,6 +67,12 @@ export type ClientOffer = {
   deliverableCount?: number;
   /** Usage rights: personal | commercial | broadcast. */
   usageRights?: "personal" | "commercial" | "broadcast";
+  /** Preferred voice gender for voice-over / dubbing offers. */
+  voiceGender?: "male" | "female" | "any";
+  /** Cloudinary URL for an attached script PDF (voice-over briefs). */
+  scriptUrl?: string;
+  /** Original filename of the script for display. */
+  scriptName?: string;
   /** Optional video meeting URL (Google Meet / Zoom) for kickoff call. */
   meetingUrl?: string;
   /** Scheduled meeting time (ISO string). */

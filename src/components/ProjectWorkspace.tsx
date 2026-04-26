@@ -295,7 +295,41 @@ export const ProjectWorkspace = ({ offer, acceptedBid, viewer, creatorPhone, lan
               </span>
             </div>
           )}
+          {offer.voiceGender && (
+            <div className="text-xs text-muted-foreground">
+              {t(lang, "نوع الصوت:", "Voice gender:")}{" "}
+              <span className="text-foreground font-semibold">
+                {offer.voiceGender === "male"
+                  ? t(lang, "ذكر", "Male")
+                  : offer.voiceGender === "female"
+                    ? t(lang, "أنثى", "Female")
+                    : t(lang, "لا تفضيل", "No preference")}
+              </span>
+            </div>
+          )}
         </div>
+
+        {offer.scriptUrl && (
+          <div className="mt-4 pt-4 border-t border-border/60">
+            <div className="text-[10px] uppercase tracking-widest text-accent mb-2">
+              {t(lang, "السيناريو", "Script")}
+            </div>
+            <a
+              href={offer.scriptUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="glass border border-accent/30 rounded-xl p-3 flex items-center gap-3 bg-accent/5 hover:bg-accent/10 hover:border-accent/60 transition-smooth"
+            >
+              <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0 ring-1 ring-accent/30">
+                <ExternalLink className="w-4 h-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-accent truncate">{offer.scriptName || "script.pdf"}</div>
+                <div className="text-[11px] text-muted-foreground">{t(lang, "اضغط للفتح / التنزيل", "Tap to open / download")}</div>
+              </div>
+            </a>
+          </div>
+        )}
       </div>
 
       {canEdit && (

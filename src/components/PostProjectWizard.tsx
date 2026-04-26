@@ -8,7 +8,8 @@ import { addOffer } from "@/lib/store";
 import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD } from "@/lib/offers";
 import { ALGERIA_WILAYAS } from "@/lib/i18n";
 import * as Icons from "lucide-react";
-import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Phone, Hash, Shield, CalendarClock } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Phone, Hash, Shield, CalendarClock, FileText, Loader2, Upload, X, Mic2 } from "lucide-react";
+import { uploadProjectScript } from "@/lib/storage";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 
@@ -227,6 +228,11 @@ export const PostProjectWizard = ({
   const [clientPhone, setClientPhone] = useState("");
   const [deliverableCount, setDeliverableCount] = useState(1);
   const [usageRights, setUsageRights] = useState<"personal" | "commercial" | "broadcast">("personal");
+  const [voiceGender, setVoiceGender] = useState<"male" | "female" | "any">("any");
+  const [scriptFile, setScriptFile] = useState<File | null>(null);
+  const [scriptUploading, setScriptUploading] = useState(false);
+  const [scriptUrl, setScriptUrl] = useState<string>("");
+  const [scriptName, setScriptName] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
@@ -235,6 +241,41 @@ export const PostProjectWizard = ({
     setWilaya(clientWilaya || "");
     setShootAddress(""); setPreferredShootDate(""); setClientPhone("");
     setDeliverableCount(1); setUsageRights("personal");
+    setVoiceGender("any"); setScriptFile(null); setScriptUrl(""); setScriptName(""); setScriptUploading(false);
+  };
+
+  const needsVoice = !!selectedService && selectedService.matchingRoles.includes("Voice-Over Artist");
+
+  const handleScriptUpload = async (file: File) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error(lang === "ar" ? "جرب ملف PDF فقط." : lang === "fr" ? "Uniquement des fichiers PDF." : "Only PDF files are allowed.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(lang === "ar" ? "حجم الملف يجب أن يكون أقل من 10 ميغا." : "PDF must be under 10 MB.");
+      return;
+    }
+    setScriptFile(file);
+    setScriptUploading(true);
+    try {
+      const result = await uploadProjectScript(clientEmail || "anon", file);
+      setScriptUrl(result.url);
+      setScriptName(result.fileName || file.name);
+      toast.success(lang === "ar" ? "تم رفع السيناريو" : lang === "fr" ? "Script téléversé" : "Script uploaded");
+    } catch (err: any) {
+      console.error("Script upload error:", err);
+      toast.error(err?.message || (lang === "ar" ? "فشل الرفع. حاول مرة أخرى." : "Upload failed. Try again."));
+      setScriptFile(null);
+    } finally {
+      setScriptUploading(false);
+    }
+  };
+
+  const removeScript = () => {
+    setScriptFile(null);
+    setScriptUrl("");
+    setScriptName("");
   };
 
   // ── Calculate price from selections ──────────────────────────────────────
@@ -320,6 +361,13 @@ export const PostProjectWizard = ({
       if (clientPhone.trim()) payload.clientPhone = clientPhone.trim();
       if (deliverableCount > 0) payload.deliverableCount = deliverableCount;
       payload.usageRights = usageRights;
+      if (needsVoice) {
+        payload.voiceGender = voiceGender;
+        if (scriptUrl) {
+          payload.scriptUrl = scriptUrl;
+          payload.scriptName = scriptName || "script.pdf";
+        }
+      }
 
       await addOffer(payload as any);
       setStep("payment");
@@ -566,9 +614,85 @@ export const PostProjectWizard = ({
               </div>
             </div>
 
+            {/* Voice-over specific block */}
+            {needsVoice && (
+              <div className="glass rounded-2xl p-4 space-y-4 border border-accent/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-royal flex items-center justify-center ring-1 ring-accent/30">
+                    <Mic2 className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">{lang === "ar" ? "تفاصيل التسجيل الصوتي" : lang === "fr" ? "Détails de la voix-off" : "Voice-over details"}</div>
+                    <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "تساعد المؤديين على فهم احتياجاتك بدقة." : lang === "fr" ? "Aide les artistes à proposer le bon ton." : "Helps voice artists pitch the right tone."}</div>
+                  </div>
+                </div>
+
+                {/* Voice gender */}
+                <div>
+                  <Label className="mb-2 block text-xs">{lang === "ar" ? "نوع الصوت المطلوب" : lang === "fr" ? "Genre de voix souhaité" : "Voice gender"}</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { id: "male", ar: "ذكر", en: "Male", fr: "Homme" },
+                      { id: "female", ar: "أنثى", en: "Female", fr: "Femme" },
+                      { id: "any", ar: "لا تفضيل", en: "No preference", fr: "Indifférent" },
+                    ] as const).map((g) => (
+                      <button key={g.id} type="button" onClick={() => setVoiceGender(g.id)}
+                        className={`px-3 py-2 rounded-lg border text-xs transition-smooth ${voiceGender === g.id ? "border-accent bg-accent/10 text-foreground font-medium" : "border-border glass text-muted-foreground hover:border-accent/40"}`}>
+                        {lang === "ar" ? g.ar : lang === "fr" ? g.fr : g.en}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Script PDF */}
+                <div>
+                  <Label className="mb-2 block text-xs flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5" />
+                    {lang === "ar" ? "السيناريو (PDF — اختياري، 10 ميغا كحد أقصى)" : lang === "fr" ? "Script (PDF — optionnel, 10 Mo max)" : "Script (PDF — optional, 10 MB max)"}
+                  </Label>
+                  {!scriptUrl && !scriptUploading && (
+                    <label className="block">
+                      <div className="glass border border-dashed border-accent/30 rounded-xl p-5 text-center cursor-pointer hover:border-accent/60 hover:bg-accent/5 transition-smooth">
+                        <Upload className="w-5 h-5 text-accent mx-auto mb-2" />
+                        <div className="text-sm font-medium">{lang === "ar" ? "اضغط لرفع PDF" : lang === "fr" ? "Cliquez pour téléverser un PDF" : "Tap to upload a PDF"}</div>
+                        <div className="text-[11px] text-muted-foreground mt-1">{lang === "ar" ? "يبقى خاصًا حتى يقبل المؤدي المختار" : lang === "fr" ? "Privé jusqu'à l'acceptation de l'artiste" : "Private until the chosen artist is accepted"}</div>
+                      </div>
+                      <input
+                        type="file" accept="application/pdf" className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleScriptUpload(f); e.target.value = ""; }}
+                      />
+                    </label>
+                  )}
+                  {scriptUploading && (
+                    <div className="glass border border-accent/30 rounded-xl p-4 flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 text-accent animate-spin flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{scriptFile?.name || "script.pdf"}</div>
+                        <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "جارٍ الرفع…" : lang === "fr" ? "Téléversement…" : "Uploading…"}</div>
+                      </div>
+                    </div>
+                  )}
+                  {scriptUrl && !scriptUploading && (
+                    <div className="glass border border-accent/30 rounded-xl p-3 flex items-center gap-3 bg-accent/5">
+                      <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <a href={scriptUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-accent hover:text-accent/80 truncate block">{scriptName || "script.pdf"}</a>
+                        <div className="text-[11px] text-muted-foreground">{lang === "ar" ? "تم الرفع — اضغط الاسم للمعاينة" : lang === "fr" ? "Téléversé — cliquez pour voir" : "Uploaded — tap name to preview"}</div>
+                      </div>
+                      <button type="button" onClick={removeScript} className="p-2 hover:bg-destructive/15 rounded-md text-muted-foreground hover:text-destructive transition-smooth flex-shrink-0">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <Button variant="ghost" onClick={() => setStep("configure")}><ArrowLeft className="w-4 h-4 me-1" />{lang === "ar" ? "رجوع" : "Back"}</Button>
-              <Button variant="gold" onClick={submit} disabled={submitting}>
+              <Button variant="gold" onClick={submit} disabled={submitting || scriptUploading}>
                 <Send className="w-4 h-4 me-1" />{submitting ? "..." : lang === "ar" ? "إرسال المشروع" : "Submit Project"}
               </Button>
             </div>
