@@ -18,8 +18,6 @@ const Members = ({ mode }: { mode: Mode }) => {
 
   const clients = useMemo(() => allUsers.filter((u) => u.role === "client"), [allUsers]);
   const approvedCreators = useMemo(() => creators.filter((c) => c.status === "approved"), [creators]);
-  // Username backfill for legacy creators happens in their own portal session
-  // (CreatorPortal), since Firestore rules only let a user write their own doc.
 
   const headline = mode === "clients"
     ? (lang === "ar" ? "العملاء على نورث بيكسل" : lang === "fr" ? "Les clients sur North Pixel" : "Clients on North Pixel")
@@ -27,7 +25,7 @@ const Members = ({ mode }: { mode: Mode }) => {
 
   const subheadline = mode === "clients"
     ? (lang === "ar" ? "علامات وفرق وصنّاع نشروا مشاريع على المنصة." : lang === "fr" ? "Marques, équipes et créateurs qui publient des projets ici." : "Brands, teams, and creators posting projects on the platform.")
-    : (lang === "ar" ? "مبدعون موثّقون ومعتمدون. اضغط على أي ملف لرؤية أعمالهم." : lang === "fr" ? "Créateurs vérifiés et approuvés. Cliquez sur un profil pour voir leurs travaux." : "Verified, approved creators. Tap any profile to see their work.");
+    : (lang === "ar" ? "مبدعون موثّقون ومعتمدون." : lang === "fr" ? "Créateurs vérifiés et approuvés." : "Verified, approved creators.");
 
   if (!auth.role && !auth.loading) {
     // Not logged in — Firestore rules block /users + /creators read for anon.
@@ -115,17 +113,9 @@ const Members = ({ mode }: { mode: Mode }) => {
               {approvedCreators.map((c) => {
                 const userMatch = allUsers.find((u) => u.email === c.email);
                 const profilePic = (userMatch as any)?.profilePic;
-                const username = userMatch?.username;
                 const roleLabel = lang === "ar" ? (CREATOR_ROLE_AR[c.role] || c.role) : c.role;
-                // Privacy: cards in the directory show first name + last initial
-                // and link to the public profile page. Full name + portfolio
-                // links are only revealed inside the profile page.
-                const parts = (c.fullName || "").trim().split(/\s+/).filter(Boolean);
-                const displayName = parts.length <= 1
-                  ? (parts[0] || "Creator")
-                  : `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-                const card = (
-                  <div className="glass rounded-2xl p-5 transition-smooth hover:border-accent/40 hover:-translate-y-0.5 flex flex-col h-full">
+                return (
+                  <div key={c.id} className="glass rounded-2xl p-5 transition-smooth hover:border-accent/40 hover:-translate-y-0.5 flex flex-col h-full">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground text-lg flex-shrink-0 ring-1 ring-accent/30 overflow-hidden">
                         {profilePic
@@ -133,7 +123,7 @@ const Members = ({ mode }: { mode: Mode }) => {
                           : (c.fullName || "?")[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{displayName}</div>
+                        <div className="font-semibold text-sm truncate">{c.fullName}</div>
                         <div className="text-xs text-muted-foreground truncate">{roleLabel}</div>
                         {c.wilaya && (
                           <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
@@ -148,16 +138,31 @@ const Members = ({ mode }: { mode: Mode }) => {
                       </div>
                     )}
                     {c.portfolio.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5"><ExternalLink className="w-3 h-3 text-accent/80" />{c.portfolio.length} {lang === "ar" ? "أعمال في الملف" : lang === "fr" ? "éléments" : "portfolio items"}</span>
-                        <span className="text-accent">{lang === "ar" ? "عرض الملف" : lang === "fr" ? "Voir le profil" : "View profile"} →</span>
+                      <div className="mt-4 pt-4 border-t border-border/60 space-y-1.5">
+                        <div className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+                          <ExternalLink className="w-3 h-3 text-accent/80" />
+                          {c.portfolio.length} {lang === "ar" ? "أعمال" : lang === "fr" ? "éléments" : "portfolio items"}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {c.portfolio.slice(0, 3).map((p, i) => (
+                            <a
+                              key={i}
+                              href={p}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] text-accent hover:underline truncate max-w-[140px]"
+                            >
+                              {(() => { try { return new URL(p).hostname.replace(/^www\./, ""); } catch { return "link"; } })()}
+                            </a>
+                          ))}
+                          {c.portfolio.length > 3 && (
+                            <span className="text-[11px] text-muted-foreground">+{c.portfolio.length - 3}</span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
                 );
-                return username
-                  ? <Link key={c.id} to={`/@${username}`} className="block">{card}</Link>
-                  : <div key={c.id}>{card}</div>;
               })}
             </div>
           )
