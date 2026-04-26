@@ -5,7 +5,8 @@ import {
   Home, Sparkles, GraduationCap, Clapperboard, Users, UserCheck, User, ArrowRight, Mail,
 } from "lucide-react";
 import { useState, useRef } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useApp } from "@/lib/context";
 import { toast } from "sonner";
 import type { Lang } from "@/lib/i18n";
@@ -100,9 +101,23 @@ export const SiteHeader = () => {
           </SheetTrigger>
           <SheetContent
             side={lang === "ar" ? "left" : "right"}
-            className="bg-background border-border w-80 sm:w-96 p-0 overflow-y-auto"
+            className="bg-background border-border w-80 sm:w-96 p-0 overflow-hidden"
           >
-            {/* Decorative drifting orbs (transform-only animation) */}
+            {/* Accessible (screen-reader-only) title + description — required by Radix Dialog */}
+            <VisuallyHidden>
+              <SheetTitle>
+                {lang === "ar" ? "قائمة التنقّل" : lang === "fr" ? "Menu de navigation" : "Navigation menu"}
+              </SheetTitle>
+              <SheetDescription>
+                {lang === "ar"
+                  ? "تصفّح الأقسام، غيّر اللغة، أو سجّل الدخول."
+                  : lang === "fr"
+                  ? "Parcourez les sections, changez de langue ou connectez-vous."
+                  : "Browse sections, switch language, or sign in."}
+              </SheetDescription>
+            </VisuallyHidden>
+
+            {/* Decorative drifting orbs (transform-only animation, clipped by overflow-hidden above) */}
             <div
               className="np-orb np-orb-gold pointer-events-none"
               style={{ width: 220, height: 220, top: "-80px", right: "-60px", opacity: 0.28 }}
@@ -112,7 +127,7 @@ export const SiteHeader = () => {
               style={{ width: 180, height: 180, bottom: "-60px", left: "-40px", opacity: 0.22, animationDelay: "-5s" }}
             />
 
-            <div className="relative flex flex-col h-full px-5 py-6 gap-5">
+            <div className="relative flex flex-col h-full px-5 py-6 gap-5 overflow-y-auto">
               {/* ── Identity / brand card ────────────────────────────────── */}
               {isLoggedIn ? (
                 <Link
@@ -193,7 +208,11 @@ export const SiteHeader = () => {
                           <n.Icon className="w-4 h-4 text-accent" />
                         </div>
                         <span className="flex-1">{lang === "ar" ? n.ar : lang === "fr" ? n.fr : n.en}</span>
-                        <ArrowRight className={`w-3.5 h-3.5 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-smooth ${lang === "ar" ? "rotate-180 group-hover:-translate-x-0.5" : ""}`} />
+                        <ArrowRight
+                          className={`w-3.5 h-3.5 text-muted-foreground group-hover:text-accent transition-smooth ${
+                            lang === "ar" ? "rotate-180 group-hover:-translate-x-0.5" : "group-hover:translate-x-0.5"
+                          }`}
+                        />
                       </Link>
                     </li>
                   ))}
