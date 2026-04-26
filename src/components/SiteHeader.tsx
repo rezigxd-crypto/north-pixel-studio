@@ -42,7 +42,7 @@ export const SiteHeader = () => {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 glass">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <nav className="relative max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} onClick={flipLogo} className="flex items-center gap-3 flex-shrink-0">
@@ -59,6 +59,19 @@ export const SiteHeader = () => {
             <div className="text-[10px] uppercase tracking-widest text-accent">Studio</div>
           </div>
         </Link>
+
+        {/* Parent-brand label (centered absolutely so it doesn't disturb the
+            flex layout on either side). Pointer events disabled on the
+            wrapper so the controls behind it stay clickable on tight screens. */}
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
+          <span
+            className="np-title-shimmer-gold font-serif font-bold uppercase tracking-[0.18em] text-[11px] sm:text-xs md:text-sm whitespace-nowrap select-none"
+            aria-label="The Algerian Studio"
+            title="The Algerian Studio"
+          >
+            The Algerian Studio
+          </span>
+        </div>
 
         {/* Desktop controls */}
         <div className="hidden md:flex items-center gap-2 ms-auto">
