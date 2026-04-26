@@ -129,6 +129,20 @@
 
   .transition-smooth { transition: var(--transition-smooth); }
 
+  /* Theme-flip kill-switch: applied to <html> for two frames around a
+     light/dark toggle so every element swaps colours instantly instead of
+     animating in lockstep (which produced a visible jank on lower-end
+     phones). All transitions and CSS animations are disabled while this
+     class is active. */
+  .np-no-transitions,
+  .np-no-transitions *,
+  .np-no-transitions *::before,
+  .np-no-transitions *::after {
+    transition: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+
   /* ── Animations — GPU-only, no layout thrash ── */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
