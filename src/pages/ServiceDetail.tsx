@@ -25,6 +25,7 @@ const ServiceDetail = () => {
   if (!offer) return <Navigate to="/" replace />;
   const Icon = (Icons as any)[offer.icon] ?? Icons.Sparkles;
   const isGold = offer.accent === "gold";
+  const accent = isGold ? "gold" : "royal";
 
   const title = offer.title[lang];
   const tagline = offer.tagline[lang];
@@ -55,15 +56,39 @@ const ServiceDetail = () => {
           <ArrowLeft className="w-4 h-4" /> {labels.allServices}
         </Link>
 
-        {/* Hero image */}
-        <div className="relative h-52 sm:h-72 rounded-2xl overflow-hidden mb-8">
-          <img src={offer.image} alt={title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        {/* Premium hero — Ken Burns image, drifting orbs, shimmering title */}
+        <div className="relative h-60 sm:h-80 rounded-2xl overflow-hidden mb-8 isolate">
+          {/* Image layer with slow Ken Burns zoom */}
+          <img
+            src={offer.image}
+            alt={title}
+            loading="eager"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover np-ken-burns"
+          />
+
+          {/* Decorative drifting orbs (transform-only) */}
+          <div
+            className={`np-orb np-orb-${accent}`}
+            style={{ width: 220, height: 220, top: "-60px", right: "-40px", animationDelay: "0s" }}
+          />
+          <div
+            className={`np-orb np-orb-${accent}`}
+            style={{ width: 160, height: 160, bottom: "-30px", left: "-20px", animationDelay: "-6s", opacity: 0.35 }}
+          />
+
+          {/* Vignette + bottom dark gradient for legibility */}
+          <div className="np-hero-vignette" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+
+          {/* Foreground content */}
           <div className="absolute bottom-5 left-5 right-5">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${isGold ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 shadow-elevated ${isGold ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
               <Icon className="w-5 h-5" />
             </div>
-            <h1 className="font-serif text-3xl sm:text-5xl font-bold">{title}</h1>
+            <h1 className={`font-serif text-3xl sm:text-5xl font-bold leading-tight np-title-shimmer-${accent}`}>
+              {title}
+            </h1>
           </div>
         </div>
 
@@ -73,10 +98,13 @@ const ServiceDetail = () => {
             <p className="text-foreground/85 leading-relaxed mb-8">{description}</p>
 
             <h2 className="font-serif text-2xl font-bold mb-4">{labels.included}</h2>
-            <ul className="grid sm:grid-cols-2 gap-3 mb-8">
+            <ul className="grid sm:grid-cols-2 gap-3 mb-8 np-stagger">
               {features.map((f) => (
-                <li key={f} className="flex items-start gap-3 glass rounded-xl p-4">
-                  <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <li
+                  key={f}
+                  className={`np-hover-lift ${accent} flex items-start gap-3 glass rounded-xl p-4`}
+                >
+                  <Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGold ? "text-accent" : "text-primary-glow"}`} />
                   <span className="text-sm">{f}</span>
                 </li>
               ))}
@@ -101,11 +129,17 @@ const ServiceDetail = () => {
             <p className="text-xs text-muted-foreground mb-5">{labels.customQuote}</p>
             <div className="border-t border-border mb-5" />
             <h3 className="font-semibold mb-3">{labels.process}</h3>
-            <ol className="space-y-3">
+            <ol className="space-y-3 np-stagger">
               {process.map((step, i) => (
                 <li key={i} className="flex gap-3 items-start">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${isGold ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}>
+                  <span
+                    className={`relative w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 ${isGold ? "bg-gradient-gold text-accent-foreground" : "bg-gradient-royal text-primary-foreground"}`}
+                  >
                     {i + 1}
+                    <span
+                      className={`np-step-ring ${isGold ? "text-accent" : "text-primary-glow"}`}
+                      style={{ animationDelay: `${i * 0.4}s` }}
+                    />
                   </span>
                   <span className="text-sm text-muted-foreground leading-snug">{step}</span>
                 </li>

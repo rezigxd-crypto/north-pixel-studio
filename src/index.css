@@ -231,3 +231,121 @@ select { color-scheme: dark; }
 .np-logo-flip:active {
   animation: np-logo-flip 0.5s ease;
 }
+
+/* ─── Service detail premium hero — GPU-only animations ─────────────── */
+
+/* Ken Burns slow zoom — transform only, single composited layer */
+@keyframes kenBurns {
+  0%   { transform: scale(1)    translate3d(0, 0, 0); }
+  50%  { transform: scale(1.08) translate3d(-1.2%, -0.8%, 0); }
+  100% { transform: scale(1)    translate3d(0, 0, 0); }
+}
+.np-ken-burns {
+  animation: kenBurns 22s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Floating decorative orb — pure transform, no shadow recalculation */
+@keyframes orbDrift {
+  0%   { transform: translate3d(0, 0, 0)        scale(1); }
+  50%  { transform: translate3d(18px, -22px, 0) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0)        scale(1); }
+}
+.np-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: orbDrift 12s ease-in-out infinite;
+}
+.np-orb-gold  { background: radial-gradient(circle, hsl(41 67% 60% / 0.7), transparent 70%); }
+.np-orb-royal { background: radial-gradient(circle, hsl(207 75% 55% / 0.7), transparent 70%); }
+
+/* Title shimmer — background-position only, very cheap */
+@keyframes shimmerSlide {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.np-title-shimmer-gold {
+  background: linear-gradient(110deg,
+    hsl(41 51% 64%) 0%,
+    hsl(41 80% 80%) 35%,
+    hsl(0 0% 100%)  50%,
+    hsl(41 80% 80%) 65%,
+    hsl(41 51% 64%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmerSlide 8s linear infinite;
+}
+.np-title-shimmer-royal {
+  background: linear-gradient(110deg,
+    hsl(207 70% 55%) 0%,
+    hsl(207 80% 70%) 35%,
+    hsl(0 0% 100%)   50%,
+    hsl(207 80% 70%) 65%,
+    hsl(207 70% 55%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmerSlide 8s linear infinite;
+}
+
+/* Hover lift — transform only, no box-shadow recalc on hover */
+.np-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s ease;
+  will-change: transform;
+}
+.np-hover-lift:hover { transform: translate3d(0, -3px, 0); }
+.np-hover-lift.gold:hover  { border-color: hsl(41 60% 55% / 0.55); }
+.np-hover-lift.royal:hover { border-color: hsl(207 67% 50% / 0.55); }
+
+/* Step number ring with idle pulse — opacity-only */
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1;    }
+}
+.np-step-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  animation: ringPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Vignette overlay for hero — single fixed gradient, no animation */
+.np-hero-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 100%, hsl(222 47% 5% / 0.95), transparent 65%),
+    radial-gradient(ellipse at 50% 0%,   hsl(222 47% 5% / 0.45), transparent 60%);
+  pointer-events: none;
+}
+
+/* Stagger fade-in for content blocks (no JS) */
+.np-stagger > * { opacity: 0; animation: fadeIn 0.5s ease forwards; }
+.np-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.np-stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.np-stagger > *:nth-child(3) { animation-delay: 0.20s; }
+.np-stagger > *:nth-child(4) { animation-delay: 0.28s; }
+.np-stagger > *:nth-child(5) { animation-delay: 0.36s; }
+.np-stagger > *:nth-child(6) { animation-delay: 0.44s; }
+.np-stagger > *:nth-child(7) { animation-delay: 0.52s; }
+.np-stagger > *:nth-child(8) { animation-delay: 0.60s; }
+
+/* Respect users who don't want motion */
+@media (prefers-reduced-motion: reduce) {
+  .np-ken-burns,
+  .np-orb,
+  .np-title-shimmer-gold,
+  .np-title-shimmer-royal,
+  .np-step-ring,
+  .np-stagger > * { animation: none !important; }
+  .np-stagger > * { opacity: 1; }
+}
