@@ -228,12 +228,12 @@ const SERVICES = [
       length: {
         label: { ar: "مدة / طول النص", en: "Length", fr: "Longueur" },
         choices: [
-          { id: "30s", label: { ar: "حتى 30 ثانية", en: "Up to 30 seconds", fr: "Jusqu'à 30 sec" }, price: 3000 },
-          { id: "60s", label: { ar: "حتى 60 ثانية", en: "Up to 60 seconds", fr: "Jusqu'à 60 sec" }, price: 5000 },
-          { id: "2min", label: { ar: "حتى 2 دقيقة", en: "Up to 2 minutes", fr: "Jusqu'à 2 min" }, price: 8000 },
-          { id: "5min", label: { ar: "حتى 5 دقائق", en: "Up to 5 minutes", fr: "Jusqu'à 5 min" }, price: 14000 },
-          { id: "10min", label: { ar: "حتى 10 دقائق", en: "Up to 10 minutes", fr: "Jusqu'à 10 min" }, price: 22000 },
-          { id: "long", label: { ar: "أكثر من 10 دقائق", en: "More than 10 minutes", fr: "Plus de 10 min" }, price: 35000 },
+          { id: "30s", label: { ar: "حتى 30 ثانية", en: "Up to 30 seconds", fr: "Jusqu'à 30 sec" }, price: 1000 },
+          { id: "60s", label: { ar: "حتى 60 ثانية", en: "Up to 60 seconds", fr: "Jusqu'à 60 sec" }, price: 2000 },
+          { id: "2min", label: { ar: "حتى 2 دقيقة", en: "Up to 2 minutes", fr: "Jusqu'à 2 min" }, price: 4000 },
+          { id: "5min", label: { ar: "حتى 5 دقائق", en: "Up to 5 minutes", fr: "Jusqu'à 5 min" }, price: 10000 },
+          { id: "10min", label: { ar: "حتى 10 دقائق", en: "Up to 10 minutes", fr: "Jusqu'à 10 min" }, price: 20000 },
+          { id: "long", label: { ar: "أكثر من 10 دقائق", en: "More than 10 minutes", fr: "Plus de 10 min" }, price: 25000 },
         ],
       },
       language: {
