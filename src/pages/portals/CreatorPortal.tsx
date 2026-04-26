@@ -6,9 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Gavel, TrendingUp, MapPin, Edit2, Save,
   Phone, CreditCard, Upload, Star, Trophy,
-  ChevronRight, Briefcase, DollarSign, X, Check, Plus
+  ChevronRight, Briefcase, DollarSign, X, Check, Plus,
+  ExternalLink,
 } from "lucide-react";
-import { useOffers, useBids, addBid, submitDeliverable, updateUserProfile } from "@/lib/store";
+import {
+  useOffers, useBids, useCreators, useAllUsers,
+  addBid, submitDeliverable, updateUserProfile, fetchTakenUsernames,
+} from "@/lib/store";
+import { generateUniqueUsername } from "@/lib/username";
 import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from "@/lib/offers";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -16,6 +21,8 @@ import { useApp } from "@/lib/context";
 import { useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
+import { ProfileCompletionRing } from "@/components/ProfileCompletionRing";
+import { Link } from "react-router-dom";
 import { Countdown } from "@/components/Countdown";
 import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -50,6 +57,60 @@ const CreatorPortal = () => {
 
   const offers = useOffers();
   const bids = useBids();
+  const creators = useCreators();
+  const allUsers = useAllUsers();
+
+  // Find this creator's application doc (used for the public profile +
+  // completion-ring computation).
+  const myApp = creators.find((c) => c.uid === auth.uid || c.email === auth.email);
+  const myUserDoc = allUsers.find((u) => u.uid === auth.uid);
+
+  /* ── Self-service username backfill ─────────────────────────────────────
+   * Creators who signed up before the public-profile feature land here
+   * without a `username` on their /users doc. Generate one + write it back
+   * (Firestore rules only allow a user to update their own doc, so this is
+   * the only place a backfill can succeed). Runs once per session per uid. */
+  useEffect(() => {
+    if (auth.role !== "creator") return;
+    if (!auth.uid) return;
+    if (!myUserDoc) return;          // user doc still loading
+    if (myUserDoc.username) return;  // already has one
+    let cancelled = false;
+    (async () => {
+      const taken = await fetchTakenUsernames();
+      if (cancelled) return;
+      const username = generateUniqueUsername(auth.name || "creator", taken);
+      try {
+        await updateUserProfile(auth.uid!, { username });
+      } catch {
+        /* transient — will retry on next session */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [auth.role, auth.uid, auth.name, myUserDoc?.username]);
+
+  /* ── Profile completion ───────────────────────────────────────────────
+   * Six fields, equal weight. Hits the gold ring at 100 %. */
+  const completion = (() => {
+    if (!myApp) return { pct: 0, missing: [] as string[] };
+    const checks: { ok: boolean; key: string }[] = [
+      { ok: !!auth.profilePic, key: lang === "ar" ? "الصورة الشخصية" : lang === "fr" ? "Photo de profil" : "Profile picture" },
+      { ok: (myApp.bio || "").trim().length >= 30, key: lang === "ar" ? "نبذة (30 حرفًا على الأقل)" : lang === "fr" ? "Bio (30+ caractères)" : "Bio (30+ chars)" },
+      { ok: !!myApp.wilaya, key: lang === "ar" ? "الولاية" : "Wilaya" },
+      { ok: !!myApp.role, key: lang === "ar" ? "التخصص" : lang === "fr" ? "Spécialité" : "Specialty" },
+      { ok: (myApp.rate || 0) > 0, key: lang === "ar" ? "سعر الساعة" : lang === "fr" ? "Tarif horaire" : "Hourly rate" },
+      { ok: (myApp.portfolio?.length || 0) > 0, key: lang === "ar" ? "رابط أعمال واحد على الأقل" : lang === "fr" ? "Au moins un lien portfolio" : "At least one portfolio link" },
+    ];
+    const filled = checks.filter((c) => c.ok).length;
+    return {
+      pct: Math.round((filled / checks.length) * 100),
+      missing: checks.filter((c) => !c.ok).map((c) => c.key),
+    };
+  })();
+  // Username lives on the /users doc (written for both email and Google
+  // signups + the self-backfill above). Fall back to the creator-app doc
+  // for resilience.
+  const username = myUserDoc?.username ?? myApp?.username;
 
   // ── State
   const [activeTab, setActiveTab] = useState<"home" | "bids" | "profile">("home");
@@ -166,13 +227,15 @@ const CreatorPortal = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-gold flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-            {auth.profilePic
-              ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
-              : (ROLE_AVATARS[primaryRole] || "🎬")}
-          </div>
-          <div>
-            <h1 className="font-serif text-xl md:text-2xl font-bold">{auth.name}</h1>
+          <ProfileCompletionRing pct={completion.pct} size={64} stroke={3}>
+            <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-2xl">
+              {auth.profilePic
+                ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
+                : (ROLE_AVATARS[primaryRole] || "🎬")}
+            </div>
+          </ProfileCompletionRing>
+          <div className="min-w-0">
+            <h1 className="font-serif text-xl md:text-2xl font-bold truncate">{auth.name}</h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <RankBadge jobs={completedJobs} lang={lang} />
               {creatorWilaya && (
@@ -181,6 +244,18 @@ const CreatorPortal = () => {
                 </span>
               )}
             </div>
+            {username && myApp?.status === "approved" && (
+              <Link
+                to={`/@${username}`}
+                className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 mt-1.5 group"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span className="font-mono">@{username}</span>
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity ms-1">
+                  {lang === "ar" ? "عرض الملف العام" : lang === "fr" ? "Profil public" : "view public profile"}
+                </span>
+              </Link>
+            )}
           </div>
         </div>
         {/* Stats strip */}
@@ -415,21 +490,60 @@ const CreatorPortal = () => {
         <div className="space-y-6 max-w-xl">
           {/* Avatar + name header */}
           <div className="glass rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-gold flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden">
-              {auth.profilePic
-                ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
-                : (ROLE_AVATARS[primaryRole] || "🎬")}
-            </div>
+            <ProfileCompletionRing pct={completion.pct} size={72} stroke={3} showLabel>
+              <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-3xl">
+                {auth.profilePic
+                  ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
+                  : (ROLE_AVATARS[primaryRole] || "🎬")}
+              </div>
+            </ProfileCompletionRing>
             <div className="flex-1 min-w-0">
-              <div className="font-serif text-xl font-bold">{auth.name}</div>
-              <div className="text-sm text-muted-foreground">{auth.email}</div>
+              <div className="font-serif text-xl font-bold truncate">{auth.name}</div>
+              <div className="text-sm text-muted-foreground truncate">{auth.email}</div>
               <div className="mt-1 flex items-center gap-2 flex-wrap">
                 <RankBadge jobs={completedJobs} lang={lang} />
               </div>
+              {username && myApp?.status === "approved" && (
+                <Link to={`/@${username}`} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent/80 mt-2">
+                  <ExternalLink className="w-3 h-3" /><span className="font-mono">@{username}</span>
+                </Link>
+              )}
             </div>
             <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
               {editMode ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
             </Button>
+          </div>
+
+          {/* Profile completion checklist */}
+          <div className="glass rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-semibold">
+                {lang === "ar" ? "اكتمال الملف الشخصي" : lang === "fr" ? "Profil complété" : "Profile completion"}
+              </div>
+              <span className={`text-sm font-bold ${completion.pct >= 100 ? "text-accent" : ""}`}>
+                {completion.pct}%
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-border/50 overflow-hidden mb-3">
+              <div
+                className={`h-full transition-all duration-700 ${completion.pct >= 100 ? "bg-gradient-gold" : "bg-gradient-royal"}`}
+                style={{ width: `${completion.pct}%` }}
+              />
+            </div>
+            {completion.missing.length > 0 ? (
+              <ul className="space-y-1.5 text-xs text-muted-foreground">
+                {completion.missing.map((m) => (
+                  <li key={m} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />{m}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-accent flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                {lang === "ar" ? "ملفك مكتمل ١٠٠٪ — جاهز لجذب العملاء." : lang === "fr" ? "Profil 100 % complet — prêt à attirer des clients." : "100% complete — ready to attract clients."}
+              </p>
+            )}
           </div>
 
           {/* Profile picture upload */}

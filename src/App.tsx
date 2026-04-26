@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import ServiceDetail from "./pages/ServiceDetail.tsx";
 import Quest from "./pages/Quest.tsx";
 import Members from "./pages/Members.tsx";
+import PublicCreatorProfile from "./pages/PublicCreatorProfile.tsx";
 import Login from "./pages/auth/Login.tsx";
 import SignupChoice from "./pages/auth/SignupChoice.tsx";
 import ClientSignup from "./pages/auth/ClientSignup.tsx";
@@ -32,6 +33,8 @@ const App = () => (
           <Route path="/quest" element={<Quest />} />
           <Route path="/clients" element={<Members mode="clients" />} />
           <Route path="/freelancers" element={<Members mode="freelancers" />} />
+          {/* Public creator profile — `/@username` (the `@` is part of the URL). */}
+          <Route path="/@:username" element={<PublicCreatorProfile />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/signup" element={<SignupChoice />} />
           <Route path="/auth/signup/client" element={<ClientSignup />} />
