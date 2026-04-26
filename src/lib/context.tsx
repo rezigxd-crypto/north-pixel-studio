@@ -64,7 +64,25 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.setAttribute("lang", l);
   };
 
-  const toggleDark = () => setDark((d) => { const n = !d; localStorage.setItem("np.dark", String(n)); return n; });
+  const toggleDark = () => {
+    // Disable all CSS transitions for the duration of the theme flip so the
+    // colour/border/background swap is instant on every element instead of
+    // animating in lockstep (which causes a visible jank on lower-end phones).
+    const root = document.documentElement;
+    root.classList.add("np-no-transitions");
+    setDark((d) => {
+      const n = !d;
+      localStorage.setItem("np.dark", String(n));
+      return n;
+    });
+    // Wait two frames: one for React to commit the class swap, one for the
+    // browser to paint with the new variables, then re-enable transitions.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove("np-no-transitions");
+      });
+    });
+  };
 
   useEffect(() => {
     document.documentElement.classList.toggle("theme-light", !dark);
