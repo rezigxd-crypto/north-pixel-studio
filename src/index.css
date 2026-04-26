@@ -294,6 +294,20 @@ select { color-scheme: dark; }
   color: transparent;
   animation: shimmerSlide 8s linear infinite;
 }
+/* Light-mode: drop the white midpoint (it disappears on a light background)
+   and shift to deeper gold so the shimmer stays readable. */
+.theme-light .np-title-shimmer-gold {
+  background: linear-gradient(110deg,
+    hsl(38 70% 38%) 0%,
+    hsl(41 78% 50%) 35%,
+    hsl(45 90% 62%) 50%,
+    hsl(41 78% 50%) 65%,
+    hsl(38 70% 38%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .np-title-shimmer-royal {
   background: linear-gradient(110deg,
     hsl(207 70% 55%) 0%,
