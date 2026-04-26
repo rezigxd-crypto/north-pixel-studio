@@ -16,6 +16,10 @@ npm run dev
    - Password: admin123
 4. Go to Firestore Database → Create database (start in test mode)
 5. Go to Firestore → Rules → paste contents of `firestore.rules`
+6. Go to **Storage** → click "Get started" → choose a location (e.g. `eur3`)
+   then go to Storage → Rules → paste contents of `storage.rules`.
+   This enables free profile-picture hosting (5 GB free / 1 GB downloads/day).
+   Bucket: `northpixelsstudio.firebasestorage.app`.
 
 ## Deploy to Vercel
 

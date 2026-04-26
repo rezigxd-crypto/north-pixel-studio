@@ -15,6 +15,9 @@ import { toast } from "sonner";
 import { useApp } from "@/lib/context";
 import { useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
+import { ProfilePicUpload } from "@/components/ProfilePicUpload";
+import { Countdown } from "@/components/Countdown";
+import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -163,8 +166,10 @@ const CreatorPortal = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-gold flex items-center justify-center text-2xl flex-shrink-0">
-            {ROLE_AVATARS[primaryRole] || "🎬"}
+          <div className="w-14 h-14 rounded-2xl bg-gradient-gold flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+            {auth.profilePic
+              ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
+              : (ROLE_AVATARS[primaryRole] || "🎬")}
           </div>
           <div>
             <h1 className="font-serif text-xl md:text-2xl font-bold">{auth.name}</h1>
@@ -335,6 +340,15 @@ const CreatorPortal = () => {
                     <div>
                       <div className="font-semibold">{offer?.serviceTitle || "—"}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">{offer?.brief?.slice(0, 80)}…</div>
+                      {bid.status === "accepted" && bid.deliveryDeadline && (
+                        <div className="mt-2">
+                          <Countdown
+                            deadline={bid.deliveryDeadline}
+                            lang={lang}
+                            label={{ ar: "تسليم خلال", en: "Deliver in", fr: "Livrer dans" }}
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="text-accent font-bold">{formatDZD(bid.amount)}</div>
@@ -351,6 +365,11 @@ const CreatorPortal = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Workspace appears as soon as the bid is accepted/delivered. */}
+                  {(bid.status === "accepted" || bid.status === "delivered") && offer && (
+                    <ProjectWorkspace offer={offer} acceptedBid={bid} viewer="creator" lang={lang} />
+                  )}
 
                   {/* Deliverable upload for accepted bids */}
                   {bid.status === "accepted" && !bid.deliverableLink && (
@@ -384,8 +403,10 @@ const CreatorPortal = () => {
         <div className="space-y-6 max-w-xl">
           {/* Avatar + name header */}
           <div className="glass rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-gold flex items-center justify-center text-3xl flex-shrink-0">
-              {ROLE_AVATARS[primaryRole] || "🎬"}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-gold flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden">
+              {auth.profilePic
+                ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
+                : (ROLE_AVATARS[primaryRole] || "🎬")}
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-serif text-xl font-bold">{auth.name}</div>
@@ -397,6 +418,19 @@ const CreatorPortal = () => {
             <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
               {editMode ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
             </Button>
+          </div>
+
+          {/* Profile picture upload */}
+          <div className="glass rounded-2xl p-5">
+            <h3 className="font-semibold mb-4">{lang === "ar" ? "الصورة الشخصية" : "Profile picture"}</h3>
+            <ProfilePicUpload
+              uid={auth.uid}
+              currentUrl={auth.profilePic}
+              fallback={<span>{ROLE_AVATARS[primaryRole] || "🎬"}</span>}
+              onChange={refreshAuth}
+              lang={lang}
+              accent="gold"
+            />
           </div>
 
           {/* Rank progress */}

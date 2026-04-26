@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ServiceDetail from "./pages/ServiceDetail.tsx";
+import Quest from "./pages/Quest.tsx";
 import Login from "./pages/auth/Login.tsx";
 import SignupChoice from "./pages/auth/SignupChoice.tsx";
 import ClientSignup from "./pages/auth/ClientSignup.tsx";
@@ -27,6 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
+          <Route path="/quest" element={<Quest />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/signup" element={<SignupChoice />} />
           <Route path="/auth/signup/client" element={<ClientSignup />} />

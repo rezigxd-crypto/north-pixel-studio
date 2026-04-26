@@ -9,7 +9,7 @@ import { OFFERS, UNIVERSITY_BUNDLE } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
-import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check } from "lucide-react";
+import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart } from "lucide-react";
 import { useApp } from "@/lib/context";
 
 const AR_WORDS = ["احترافية", "إبداع", "براعة", "ابتكار", "تألّق", "جودة", "خبرة"];
@@ -175,6 +175,70 @@ const Index = () => {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* MOVIECOLLAB QUEST */}
+      <section id="quest" className="px-4 sm:px-6 py-16 max-w-6xl mx-auto">
+        <div className="relative glass rounded-3xl overflow-hidden border border-accent/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background/85 to-primary/15 pointer-events-none" />
+          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+
+          <div className="relative p-6 sm:p-10 md:p-14">
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center flex-shrink-0">
+                <Clapperboard className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <span className="glass px-4 py-1.5 rounded-full text-xs uppercase tracking-widest text-accent">
+                {lang === "ar" ? "MovieCollab — مجانًا" : "MovieCollab — Free Quest"}
+              </span>
+            </div>
+
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold mb-4 max-w-3xl leading-snug">
+              {lang === "ar"
+                ? "نجمع مبدعي الجزائر، نصنع فيلمًا قصيرًا في 40 يومًا — ونثبت أنّ السينما الجزائرية تستحقّ."
+                : "We gather Algeria's creators and make a short film in 40 days — proving Algerian cinema is great."}
+            </h2>
+
+            <p className="text-muted-foreground text-sm mb-6 max-w-2xl leading-relaxed">
+              {lang === "ar"
+                ? "كلّ شهر تبدأ مهمّة جديدة: 10 أيام لتكوين الفريق، 30 يومًا للصنع. ممثلون، أصوات، مونتيرون، كتّاب — كلّ من يحبّ الفنّ مكانه هنا. الجمهور يصوّت على العنوان، ثم نبيع الفيلم — والعائد يُعيد تمويل المهمّة القادمة."
+                : "Each month a new quest opens: 10 days to gather the crew, 30 days to make the film. Actors, voices, editors, writers — everyone who lives for art belongs. The public votes on the title, then we sell the film — and revenue funds the next quest."}
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-3 mb-7 max-w-3xl">
+              {[
+                { Icon: Users, ar: "10 أيام تجميع", en: "10 days gather" },
+                { Icon: Vote, ar: "تصويت على العنوان", en: "Public title vote" },
+                { Icon: Heart, ar: "كلّ المبدعين مرحَّب بهم", en: "Every creator welcome" },
+              ].map((p) => (
+                <div key={p.en} className="glass rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center flex-shrink-0">
+                    <p.Icon className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <span className="text-sm">{lang === "ar" ? p.ar : p.en}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-sm italic text-accent mb-6 max-w-2xl">
+              {lang === "ar"
+                ? "«قد لا أكون كبيرًا مثلك… لكن الجمهور يعرف أنّني أفضل.»"
+                : "“I might not be as big as you — but the public knows I'm better.”"}
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="gold" size="lg">
+                <Link to="/quest#join">
+                  {lang === "ar" ? "انضمّ لطاقمنا الآن!" : "Join our crew now!"} <ArrowRight className="ms-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/quest">{lang === "ar" ? "اعرف أكثر" : "Learn more"}</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
