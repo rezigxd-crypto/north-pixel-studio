@@ -31,6 +31,7 @@ const CompleteSignup = () => {
 
   const [name, setName] = useState(state.name || auth.name || "");
   const [wilaya, setWilaya] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,13 +51,15 @@ const CompleteSignup = () => {
     e.preventDefault();
     if (!name.trim() || name.trim().length < 2) { toast.error("من فضلك أدخل اسمك."); return; }
     if (!wilaya) { toast.error("اختر ولايتك."); return; }
+    if (!phone.trim()) { toast.error("رقم الهاتف مطلوب."); return; }
+    if (phone.replace(/\D/g, "").length < 8) { toast.error("أدخل رقمًا صحيحًا (8 أرقام على الأقل)."); return; }
     const err = strongPassword(password);
     if (err) { toast.error(err); return; }
     if (password !== confirm) { toast.error("كلمتا المرور غير متطابقتين."); return; }
 
     setLoading(true);
     try {
-      await completeGoogleSignup({ role, name: name.trim(), password, wilaya });
+      await completeGoogleSignup({ role, name: name.trim(), password, wilaya, extra: { phone: phone.trim() } });
       toast.success("✓ تم إكمال التسجيل");
       navigate(role === "creator" ? "/auth/pending" : "/portal/client", { state: { email, name } });
     } catch {
@@ -110,6 +113,12 @@ const CompleteSignup = () => {
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="phone">رقم الهاتف *</Label>
+              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+213 5 55 12 34 56" maxLength={20} className="mt-1" dir="ltr" required />
+              <p className="text-xs text-muted-foreground mt-1">نستخدمه فقط للتواصل حول مشاريعك، ولا نشاركه إلا مع الفريق المعتمد على مشروعك.</p>
             </div>
 
             <div>

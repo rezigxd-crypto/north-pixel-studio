@@ -226,6 +226,8 @@ export type UserDoc = {
   wilaya?: string;
   phone?: string;
   bariMobAccount?: string;
+  profilePic?: string;
+  avatar?: string;
   createdAt?: string;
 };
 
@@ -250,23 +252,36 @@ export function useAllUsers(): UserDoc[] {
 
 
 // ─── Public stats — works for visitors + logged in users ─────────────────
-// Reads from users/ if authenticated, falls back to public/stats doc
+// Strategy:
+//   • Logged-in users read /users directly (live, accurate).
+//   • While reading, reconcile /public/stats so visitors see the same numbers.
+//     This is what backfills users that signed up before bumpPublicStats existed.
+//   • Anonymous visitors fall back to /public/stats (always readable).
 export function usePublicStats(): { clients: number; creators: number } {
   const [stats, setStats] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
     let unsub: (() => void) | undefined;
-    // Try users collection first (works when logged in)
+    let lastSync = "";
     unsub = onSnapshot(
       collection(db, "users"),
       (snap) => {
         const docs = snap.docs.map((d) => d.data());
-        setStats({
+        const next = {
           clients: docs.filter((d) => d.role === "client").length,
           creators: docs.filter((d) => d.role === "creator").length,
-        });
+        };
+        setStats(next);
+        // Mirror the live count into /public/stats so anonymous visitors
+        // see the same numbers. Only write when the snapshot actually changed
+        // to avoid pointless churn.
+        const sig = `${next.clients}:${next.creators}`;
+        if (sig !== lastSync) {
+          lastSync = sig;
+          setDoc(doc(db, "public", "stats"), next, { merge: true }).catch(() => { /* silent */ });
+        }
       },
       () => {
-        // Permission denied (visitor not logged in) — try public stats doc
+        // Anonymous visitor — read the mirror doc.
         unsub = onSnapshot(doc(db, "public", "stats"), (snap) => {
           if (snap.exists()) {
             const d = snap.data();

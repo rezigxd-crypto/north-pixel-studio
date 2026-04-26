@@ -41,8 +41,8 @@ interface AppCtx {
   loginWithEmail: (email: string, password: string) => Promise<UserRole>;
   loginWithGoogle: (role: "client" | "creator") => Promise<GoogleSignupResult>;
   completeGoogleSignup: (args: { role: "client" | "creator"; name: string; password: string; wilaya: string; extra?: Record<string, unknown> }) => Promise<UserRole>;
-  registerClient: (email: string, password: string, name: string, wilaya: string) => Promise<string>;
-  registerCreator: (email: string, password: string, name: string, wilaya: string) => Promise<string>;
+  registerClient: (email: string, password: string, name: string, wilaya: string, phone: string) => Promise<string>;
+  registerCreator: (email: string, password: string, name: string, wilaya: string, phone: string) => Promise<string>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -190,16 +190,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return role;
   };
 
-  const registerClient = async (email: string, password: string, name: string, wilaya: string): Promise<string> => {
+  const registerClient = async (email: string, password: string, name: string, wilaya: string, phone: string): Promise<string> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, role: "client", createdAt: new Date().toISOString() });
+    await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, phone, role: "client", createdAt: new Date().toISOString() });
     bumpPublicStats("client").catch(() => {});
     return cred.user.uid;
   };
 
-  const registerCreator = async (email: string, password: string, name: string, wilaya: string): Promise<string> => {
+  const registerCreator = async (email: string, password: string, name: string, wilaya: string, phone: string): Promise<string> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, role: "creator", createdAt: new Date().toISOString() });
+    await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, phone, role: "creator", createdAt: new Date().toISOString() });
     bumpPublicStats("creator").catch(() => {});
     return cred.user.uid;
   };

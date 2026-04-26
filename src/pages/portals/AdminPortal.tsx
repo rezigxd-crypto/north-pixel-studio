@@ -1,5 +1,5 @@
 import { PortalShell } from "@/components/PortalShell";
-import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid } from "@/lib/store";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS } from "@/lib/offers";
@@ -9,14 +9,45 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const StatCard = ({ icon: Icon, value, label, color = "accent" }: { icon: React.ElementType; value: string; label: string; color?: string }) => (
-  <div className="glass rounded-2xl p-4 flex flex-col gap-2 hover:border-accent/30 transition-smooth">
-    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color === "green" ? "bg-emerald-500/15 text-emerald-400" : color === "yellow" ? "bg-yellow-400/15 text-yellow-400" : color === "blue" ? "bg-primary/20 text-primary-foreground" : color === "red" ? "bg-destructive/15 text-destructive" : "bg-accent/15 text-accent"}`}>
+  <div className="glass rounded-2xl p-4 flex flex-col gap-2 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-[0_0_30px_-12px_hsl(41_67%_60%/0.5)] transition-smooth">
+    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ring-1 ${color === "green" ? "bg-emerald-500/15 text-emerald-400 ring-emerald-400/20" : color === "yellow" ? "bg-yellow-400/15 text-yellow-400 ring-yellow-400/20" : color === "blue" ? "bg-primary/20 text-primary-foreground ring-primary/30" : color === "red" ? "bg-destructive/15 text-destructive ring-destructive/20" : "bg-accent/15 text-accent ring-accent/30"}`}>
       <Icon className="w-4 h-4" />
     </div>
     <div className="font-serif text-xl md:text-2xl font-bold leading-none">{value}</div>
     <div className="text-[11px] text-muted-foreground">{label}</div>
   </div>
 );
+
+const SectionHeader = ({ title, count, color = "accent" }: { title: string; count?: number; color?: "accent" | "blue" | "green" }) => (
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-3">
+      <span className={`block w-1 h-5 rounded-full ${color === "blue" ? "bg-primary" : color === "green" ? "bg-emerald-400" : "bg-gradient-to-b from-accent to-accent/30"}`} />
+      <h2 className="font-serif text-xl font-bold">{title}</h2>
+    </div>
+    {typeof count === "number" && count > 0 && <Pill color={color === "blue" ? "blue" : color === "green" ? "green" : "accent"}>{count}</Pill>}
+  </div>
+);
+
+const Avatar = ({ src, fallback, ring = true }: { src?: string; fallback: string; ring?: boolean }) => (
+  <div className={`w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-lg overflow-hidden ${ring ? "ring-1 ring-accent/30" : ""}`}>
+    {src
+      ? <img src={src} alt="" className="w-full h-full object-cover" />
+      : (fallback || "?").trim().charAt(0).toUpperCase() || "?"}
+  </div>
+);
+
+const Field = ({ icon: Icon, label, value, href }: { icon: React.ElementType; label: string; value?: string; href?: string }) => {
+  if (!value) return null;
+  const inner = (
+    <div className="flex items-center gap-2 text-xs">
+      <Icon className="w-3.5 h-3.5 text-accent/80 flex-shrink-0" />
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium truncate">{value}</span>
+    </div>
+  );
+  if (href) return <a href={href} className="hover:text-accent transition-smooth" dir="ltr">{inner}</a>;
+  return inner;
+};
 
 const Pill = ({ children, color }: { children: React.ReactNode; color: string }) => (
   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${color === "red" ? "bg-destructive/20 text-destructive" : color === "green" ? "bg-emerald-400/20 text-emerald-400" : color === "yellow" ? "bg-yellow-400/20 text-yellow-400" : color === "blue" ? "bg-primary/20 text-primary-foreground" : "bg-accent/20 text-accent"}`}>{children}</span>
@@ -52,6 +83,7 @@ const AdminPortal = () => {
   const notifications = pendingCreators.length + pendingOffers.length;
 
   const clients = allUsers.filter((u) => u.role === "client");
+  const userByEmail = (email: string) => allUsers.find((u) => u.email === email);
   const pendingBids = (offerId: string) => bids.filter((b) => b.offerId === offerId && b.status === "pending");
   const creatorJobs = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").length;
   const creatorEarned = (email: string) => bids.filter((b) => b.creatorEmail === email && b.status === "accepted").reduce((s, b) => s + b.amount, 0);
@@ -239,65 +271,97 @@ const AdminPortal = () => {
 
       {/* CREATORS */}
       {activeTab === "creators" && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Pending */}
           <div>
-            <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "طلبات معلقة" : "Pending"}</h2>{pendingCreators.length > 0 && <Pill color="accent">{pendingCreators.length}</Pill>}</div>
+            <SectionHeader title={lang === "ar" ? "طلبات معلقة" : "Pending"} count={pendingCreators.length} color="accent" />
             {pendingCreators.length === 0 ? <Empty msg={lang === "ar" ? "لا طلبات معلقة." : "No pending."} /> : (
               <div className="space-y-3">
-                {pendingCreators.map((p) => (
-                  <div key={p.id} className="glass rounded-2xl p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-lg">{p.fullName[0]}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold">{p.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[p.role] || p.role) : p.role} · {p.wilaya || "Algeria"} · {formatDZD(p.rate)}/h</div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio}</p>
-                        <div className="flex flex-wrap gap-2 mt-2">{p.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-[200px]">{l}</a>)}</div>
+                {pendingCreators.map((p) => {
+                  const u = userByEmail(p.email);
+                  return (
+                    <div key={p.id} className="glass rounded-2xl p-5 hover:border-accent/30 transition-smooth">
+                      <div className="flex items-start gap-4">
+                        <Avatar src={u?.profilePic} fallback={p.fullName} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold">{p.fullName}</div>
+                          <div className="text-sm text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[p.role] || p.role) : p.role} · {p.wilaya || "Algeria"} · {formatDZD(p.rate, lang)}/h</div>
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{p.bio}</p>
+                          <div className="grid sm:grid-cols-2 gap-2 mt-3">
+                            <Field icon={Phone} label={lang === "ar" ? "الهاتف" : "Phone"} value={u?.phone} href={u?.phone ? `tel:${u.phone}` : undefined} />
+                            <Field icon={Wallet} label="BaridiMob" value={u?.bariMobAccount} />
+                          </div>
+                          {p.portfolio.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {p.portfolio.map((l) => (
+                                <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent hover:text-accent/80 underline-offset-2 hover:underline truncate max-w-[220px] inline-flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" /><span className="truncate">{l.replace(/^https?:\/\//, "")}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4 justify-end">
+                        <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
+                        <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}</Button>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4 justify-end">
-                      <Button variant="destructive" size="sm" onClick={() => rejectCreator(p.id, p.fullName)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
-                      <Button variant="royal" size="sm" onClick={() => approveCreator(p.id, p.fullName)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "موافقة" : "Approve"}</Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
           {/* Approved */}
           {approvedCreators.length > 0 && (
             <div>
-              <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "الموافق عليهم" : "Approved"}</h2><Pill color="green">{approvedCreators.length}</Pill></div>
+              <SectionHeader title={lang === "ar" ? "الموافق عليهم" : "Approved"} count={approvedCreators.length} color="green" />
               <div className="space-y-2">
                 {approvedCreators.map((c) => {
                   const jobs = creatorJobs(c.email);
                   const earned = creatorEarned(c.email);
                   const rank = getRank(jobs);
                   const expanded = expandedCreator === c.id;
+                  const u = userByEmail(c.email);
                   return (
-                    <div key={c.id} className="glass rounded-2xl overflow-hidden">
+                    <div key={c.id} className={`glass rounded-2xl overflow-hidden transition-smooth ${expanded ? "border-accent/50 shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.4)]" : "hover:border-accent/30"}`}>
                       <button className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/20 transition-smooth text-start" onClick={() => setExpandedCreator(expanded ? null : c.id)}>
-                        <div className="w-9 h-9 rounded-xl bg-secondary/60 flex items-center justify-center text-lg flex-shrink-0">{["🎥","✂️","🎨","🎙️","🎧","📸","🎬","🎨","✨","✍️","📱"][["Cinematographer","Video Editor","Motion Designer","Voice-Over Artist","Sound Designer","Photographer","Director","Colorist","VFX Artist","Ghost Writer","UGC Creator"].indexOf(c.role)] || "🎬"}</div>
+                        <Avatar src={u?.profilePic} fallback={c.fullName} />
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-sm">{c.fullName}</div>
                           <div className="text-xs text-muted-foreground">{lang === "ar" ? (CREATOR_ROLE_AR[c.role] || c.role) : c.role} · {c.wilaya || "Algeria"}</div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: rank.color, backgroundColor: rank.color + "20" }}>{lang === "ar" ? rank.labelAr : rank.label}</span>
-                          <div className="text-right hidden sm:block"><div className="text-xs font-semibold text-accent">{jobs} {lang === "ar" ? "مهمة" : "jobs"}</div><div className="text-[10px] text-muted-foreground">{formatDZD(earned)}</div></div>
+                          <div className="text-right hidden sm:block"><div className="text-xs font-semibold text-accent">{jobs} {lang === "ar" ? "مهمة" : "jobs"}</div><div className="text-[10px] text-muted-foreground">{formatDZD(earned, lang)}</div></div>
                           {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                         </div>
                       </button>
                       {expanded && (
-                        <div className="px-4 pb-4 pt-2 border-t border-border space-y-3">
+                        <div className="px-4 pb-5 pt-3 border-t border-accent/15 space-y-4">
                           <div className="grid grid-cols-3 gap-3">
-                            <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg">{jobs}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مهام" : "Jobs"}</div></div>
-                            <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg text-accent">{formatDZD(earned)}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مكتسبات" : "Earned"}</div></div>
-                            <div className="glass rounded-xl p-3 text-center"><div className="font-bold text-lg">{c.rate > 0 ? formatDZD(c.rate) : "—"}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "أجر/ساعة" : "Rate/h"}</div></div>
+                            <div className="glass rounded-xl p-3 text-center ring-1 ring-accent/10"><div className="font-bold text-lg">{jobs}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مهام" : "Jobs"}</div></div>
+                            <div className="glass rounded-xl p-3 text-center ring-1 ring-accent/10"><div className="font-bold text-lg text-accent">{formatDZD(earned, lang)}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "مكتسبات" : "Earned"}</div></div>
+                            <div className="glass rounded-xl p-3 text-center ring-1 ring-accent/10"><div className="font-bold text-lg">{c.rate > 0 ? formatDZD(c.rate, lang) : "—"}</div><div className="text-[11px] text-muted-foreground">{lang === "ar" ? "أجر/ساعة" : "Rate/h"}</div></div>
                           </div>
-                          {c.bio && <p className="text-sm text-muted-foreground">{c.bio}</p>}
-                          <div className="flex flex-wrap gap-2">{c.portfolio.map((l) => <a key={l} href={l} target="_blank" rel="noreferrer" className="text-xs text-accent underline truncate max-w-xs">{l}</a>)}</div>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            <Field icon={Phone} label={lang === "ar" ? "الهاتف" : "Phone"} value={u?.phone} href={u?.phone ? `tel:${u.phone}` : undefined} />
+                            <Field icon={Wallet} label="BaridiMob" value={u?.bariMobAccount} />
+                            <Field icon={MapPin} label={lang === "ar" ? "الولاية" : "Wilaya"} value={c.wilaya} />
+                          </div>
+                          {c.bio && <p className="text-sm text-muted-foreground leading-relaxed">{c.bio}</p>}
+                          {c.portfolio.length > 0 && (
+                            <div>
+                              <div className="text-[10px] uppercase tracking-widest text-accent/80 mb-2">{lang === "ar" ? "أعماله" : lang === "fr" ? "Portfolio" : "Portfolio"}</div>
+                              <div className="grid sm:grid-cols-2 gap-2">
+                                {c.portfolio.map((l) => (
+                                  <a key={l} href={l} target="_blank" rel="noreferrer" className="glass rounded-lg px-3 py-2 text-xs text-accent hover:text-accent/80 hover:border-accent/40 transition-smooth inline-flex items-center gap-2 truncate ring-1 ring-accent/10">
+                                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" /><span className="truncate">{l.replace(/^https?:\/\//, "")}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <div className="flex justify-end"><Button variant="destructive" size="sm" onClick={() => rejectCreator(c.id, c.fullName)}><X className="w-3 h-3 me-1" />{lang === "ar" ? "إلغاء الموافقة" : "Revoke"}</Button></div>
                         </div>
                       )}
@@ -313,31 +377,54 @@ const AdminPortal = () => {
       {/* CLIENTS */}
       {activeTab === "clients" && (
         <div>
-          <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "جميع العملاء" : "All Clients"}</h2><Pill color="blue">{clients.length}</Pill></div>
+          <SectionHeader title={lang === "ar" ? "جميع العملاء" : "All Clients"} count={clients.length} color="blue" />
           {clients.length === 0 ? <Empty msg={lang === "ar" ? "لا عملاء مسجلون بعد." : "No clients registered yet."} /> : (
             <div className="space-y-2">
               {clients.map((c) => {
                 const numOffers = clientOffers(c.email);
+                const expanded = expandedCreator === `client-${c.uid}`;
+                const hasDetails = !!(c.phone || c.bariMobAccount);
                 return (
-                  <div key={c.uid} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-royal flex items-center justify-center font-bold text-primary-foreground flex-shrink-0 text-sm">
-                      {(c.name || c.email || "?")[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">
-                        {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">{c.email}</div>
-                      {c.wilaya && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                          <MapPin className="w-3 h-3" />{c.wilaya}
+                  <div key={c.uid} className={`glass rounded-2xl overflow-hidden transition-smooth ${expanded ? "border-accent/50 shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.4)]" : "hover:border-accent/30"}`}>
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/20 transition-smooth text-start"
+                      onClick={() => setExpandedCreator(expanded ? null : `client-${c.uid}`)}
+                    >
+                      <Avatar src={c.profilePic} fallback={c.name || c.email} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">
+                          {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
                         </div>
-                      )}
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-semibold text-accent">{numOffers}</div>
-                      <div className="text-[10px] text-muted-foreground">{lang === "ar" ? "مشاريع" : "projects"}</div>
-                    </div>
+                        <div className="text-xs text-muted-foreground truncate" dir="ltr">{c.email}</div>
+                        {c.wilaya && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                            <MapPin className="w-3 h-3 text-accent/80" />{c.wilaya}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0 flex items-center gap-2">
+                        <div>
+                          <div className="text-sm font-semibold text-accent">{numOffers}</div>
+                          <div className="text-[10px] text-muted-foreground">{lang === "ar" ? "مشاريع" : "projects"}</div>
+                        </div>
+                        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </div>
+                    </button>
+                    {expanded && (
+                      <div className="px-4 pb-4 pt-3 border-t border-accent/15 space-y-2">
+                        {hasDetails ? (
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            <Field icon={Phone} label={lang === "ar" ? "الهاتف" : "Phone"} value={c.phone} href={c.phone ? `tel:${c.phone}` : undefined} />
+                            <Field icon={Wallet} label="BaridiMob" value={c.bariMobAccount} />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground italic">
+                            {lang === "ar" ? "لم يضف العميل تفاصيل اتصال بعد." : lang === "fr" ? "Aucun détail de contact ajouté par ce client." : "This client hasn't added contact details yet."}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
