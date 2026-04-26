@@ -205,6 +205,60 @@ const SERVICES = [
       },
     },
   },
+  {
+    slug: "voice-over",
+    icon: "Mic2",
+    accent: "gold" as const,
+    title: { ar: "تسجيل صوتي / تعليق", en: "Voice-Over", fr: "Voix-Off" },
+    matchingRoles: ["Voice-Over Artist"],
+    options: {
+      useCase: {
+        label: { ar: "نوع التسجيل", en: "Use case", fr: "Type" },
+        choices: [
+          { id: "ad", label: { ar: "إعلان (TVC / راديو)", en: "Ad (TVC / radio)", fr: "Pub (TVC / radio)" } },
+          { id: "video", label: { ar: "تعليق على فيديو", en: "Video commentary", fr: "Commentaire vidéo" } },
+          { id: "ugc", label: { ar: "محتوى UGC", en: "UGC content", fr: "Contenu UGC" } },
+          { id: "explainer", label: { ar: "فيديو شرحي", en: "Explainer video", fr: "Vidéo explicative" } },
+          { id: "documentary", label: { ar: "وثائقي / تعليق سرد", en: "Documentary narration", fr: "Narration documentaire" } },
+          { id: "dubbing", label: { ar: "دبلجة", en: "Dubbing", fr: "Doublage" } },
+          { id: "ivr", label: { ar: "نظام مكالمات (IVR)", en: "IVR / phone system", fr: "Serveur vocal (IVR)" } },
+          { id: "audiobook", label: { ar: "كتاب صوتي", en: "Audiobook", fr: "Livre audio" } },
+        ],
+      },
+      length: {
+        label: { ar: "مدة / طول النص", en: "Length", fr: "Longueur" },
+        choices: [
+          { id: "30s", label: { ar: "حتى 30 ثانية", en: "Up to 30 seconds", fr: "Jusqu'à 30 sec" }, price: 3000 },
+          { id: "60s", label: { ar: "حتى 60 ثانية", en: "Up to 60 seconds", fr: "Jusqu'à 60 sec" }, price: 5000 },
+          { id: "2min", label: { ar: "حتى 2 دقيقة", en: "Up to 2 minutes", fr: "Jusqu'à 2 min" }, price: 8000 },
+          { id: "5min", label: { ar: "حتى 5 دقائق", en: "Up to 5 minutes", fr: "Jusqu'à 5 min" }, price: 14000 },
+          { id: "10min", label: { ar: "حتى 10 دقائق", en: "Up to 10 minutes", fr: "Jusqu'à 10 min" }, price: 22000 },
+          { id: "long", label: { ar: "أكثر من 10 دقائق", en: "More than 10 minutes", fr: "Plus de 10 min" }, price: 35000 },
+        ],
+      },
+      language: {
+        label: { ar: "اللغة المطلوبة", en: "Language", fr: "Langue" },
+        choices: [
+          { id: "ar-fos7a", label: { ar: "العربية الفصحى", en: "Modern Standard Arabic", fr: "Arabe standard" } },
+          { id: "ar-dz", label: { ar: "الدارجة الجزائرية", en: "Algerian Darija", fr: "Darija algérienne" } },
+          { id: "fr", label: { ar: "الفرنسية", en: "French", fr: "Français" } },
+          { id: "en", label: { ar: "الإنجليزية", en: "English", fr: "Anglais" } },
+          { id: "tamazight", label: { ar: "الأمازيغية", en: "Tamazight", fr: "Tamazight" } },
+          { id: "multi", label: { ar: "أكثر من لغة", en: "Multiple languages", fr: "Plusieurs langues" } },
+        ],
+      },
+      tone: {
+        label: { ar: "نبرة الأداء", en: "Tone", fr: "Ton" },
+        choices: [
+          { id: "energetic", label: { ar: "حماسية", en: "Energetic", fr: "Énergique" } },
+          { id: "warm", label: { ar: "دافئة / ودودة", en: "Warm / friendly", fr: "Chaleureux" } },
+          { id: "corporate", label: { ar: "رسمية", en: "Corporate / formal", fr: "Corporate" } },
+          { id: "dramatic", label: { ar: "درامية", en: "Dramatic", fr: "Dramatique" } },
+          { id: "narrator", label: { ar: "راوي / حكواتي", en: "Narrator", fr: "Narrateur" } },
+        ],
+      },
+    },
+  },
 ] as const;
 
 type ServiceSlug = typeof SERVICES[number]["slug"];
