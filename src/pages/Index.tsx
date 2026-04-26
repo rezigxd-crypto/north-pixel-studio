@@ -174,7 +174,7 @@ const Index = () => {
               Icon: Search,
               ar: { t: "اختر المبدع", d: "تصلك عروض من مبدعين جزائريين موثوقين." },
               fr: { t: "Choisissez l'artiste", d: "Recevez des propositions de cr\u00E9ateurs alg\u00E9riens v\u00E9rifi\u00E9s." },
-              en: { t: "Pick the creator",     d: "Get bids from verified Algerian creators \u2014 compare and pick." },
+              en: { t: "Pick the creator",     d: "Receive proposals from verified Algerian creators \u2014 compare and pick." },
             },
             {
               Icon: Send,
