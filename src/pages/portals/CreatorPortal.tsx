@@ -268,6 +268,18 @@ const CreatorPortal = () => {
                           )}
                         </div>
                         <p className="font-semibold mt-1">{offer.brief.slice(0, 120)}{offer.brief.length > 120 ? "…" : ""}</p>
+                        {offer.voiceGender && offer.voiceGender !== "any" && (
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent mt-2">
+                            🎙️ {offer.voiceGender === "male"
+                              ? (lang === "ar" ? "صوت ذكوري" : lang === "fr" ? "Voix masculine" : "Male voice")
+                              : (lang === "ar" ? "صوت أنثوي" : lang === "fr" ? "Voix féminine" : "Female voice")}
+                          </span>
+                        )}
+                        {offer.scriptUrl && (
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground mt-2 ms-2">
+                            📄 {lang === "ar" ? "السيناريو متوفر للمختار" : lang === "fr" ? "Script fourni à l'élu" : "Script provided after pick"}
+                          </span>
+                        )}
                         {offer.referenceLink && (
                           <a href={offer.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 block">
                             🔗 {lang === "ar" ? "رابط مرجعي" : "Reference"}

@@ -198,6 +198,16 @@ const AdminPortal = () => {
                         <p className="font-semibold">{o.clientName}</p>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{o.brief}</p>
                         {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
+                        {o.scriptUrl && (
+                          <a href={o.scriptUrl} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1">
+                            <ExternalLink className="w-3 h-3" />
+                            {lang === "ar" ? "السيناريو (PDF)" : lang === "fr" ? "Script (PDF)" : "Script (PDF)"}
+                            {o.scriptName ? ` — ${o.scriptName}` : ""}
+                          </a>
+                        )}
+                        {o.voiceGender && o.voiceGender !== "any" && (
+                          <p className="text-xs text-muted-foreground mt-1">🎙️ <span className="text-foreground">{o.voiceGender === "male" ? (lang === "ar" ? "صوت ذكوري" : lang === "fr" ? "Voix masculine" : "Male voice") : (lang === "ar" ? "صوت أنثوي" : lang === "fr" ? "Voix féminine" : "Female voice")}</span></p>
+                        )}
                         {o.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {o.deadline}</p>}
                         <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
                       </div>
