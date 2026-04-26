@@ -24,13 +24,14 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const schema = z.object({
+const buildSchema = (t: (k: any) => string) => z.object({
   fullName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
   password: z.string().min(8).max(100).regex(/[A-Z]/, "كلمة المرور يجب أن تحتوي على حرف كبير").regex(/[0-9]/, "كلمة المرور يجب أن تحتوي على رقم"),
   wilaya: z.string().min(1, "اختر ولايتك"),
   city: z.string().trim().max(60).optional().or(z.literal("")),
   role: z.string().min(1, "اختر تخصصك"),
+  phone: z.string().trim().min(1, t("phoneRequired")).refine((v) => v.replace(/\D/g, "").length >= 8, { message: t("phoneInvalid") }),
   bio: z.string().trim().min(20, "أخبرنا أكثر (20 حرف على الأقل)").max(500),
   rate: z.coerce.number().min(1, "حدد أجرك بالساعة").max(1000000),
 });
@@ -74,14 +75,15 @@ const CreatorSignup = () => {
       password: String(f.get("password") || ""),
       wilaya, city: String(f.get("city") || ""),
       role, bio: String(f.get("bio") || ""), rate: f.get("rate"),
+      phone: String(f.get("phone") || ""),
     };
-    const r = schema.safeParse(data);
+    const r = buildSchema(t).safeParse(data);
     if (!r.success) { toast.error(r.error.issues[0].message); return; }
     const validLinks = portfolio.map((l) => l.trim()).filter(Boolean);
     if (validLinks.length === 0) { toast.error("أضف رابط واحد على الأقل لأعمالك."); return; }
     setLoading(true);
     try {
-      await registerCreator(r.data.email, r.data.password, r.data.fullName, r.data.wilaya);
+      await registerCreator(r.data.email, r.data.password, r.data.fullName, r.data.wilaya, r.data.phone);
       await addCreator({
         fullName: r.data.fullName, email: r.data.email, country: "Algeria",
         wilaya: r.data.wilaya, city: r.data.city || undefined,
@@ -127,6 +129,7 @@ const CreatorSignup = () => {
                 <div><Label htmlFor="email">{t("email")}</Label><Input id="email" name="email" type="email" required /></div>
                 <div><Label htmlFor="password">{t("password")}</Label><Input id="password" name="password" type="password" required minLength={8} /></div>
                 <div><Label htmlFor="rate">{t("hourlyRate")}</Label><Input id="rate" name="rate" type="number" min={1} required /></div>
+                <div className="md:col-span-2"><Label htmlFor="phone">{t("phone")}</Label><Input id="phone" name="phone" type="tel" required maxLength={20} placeholder={t("phonePlaceholder")} dir="ltr" /></div>
               </div>
 
               <div>

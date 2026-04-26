@@ -81,18 +81,32 @@ const Index = () => {
             </Button>
           )}
 
-          {/* Stats */}
+          {/* Stats — clickable directories */}
           <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mt-14">
-            <div className="glass rounded-2xl p-4 text-center">
+            <Link
+              to="/clients"
+              className="glass rounded-2xl p-4 text-center transition-smooth hover:border-accent/50 hover:-translate-y-0.5 hover:shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.5)] focus:outline-none focus:ring-2 focus:ring-accent/40"
+              aria-label={lang === "ar" ? "تصفّح العملاء" : lang === "fr" ? "Parcourir les clients" : "Browse clients"}
+            >
               <Users className="w-5 h-5 text-accent mx-auto mb-2" />
               <div className="font-serif text-3xl font-bold">{userCounts.clients}</div>
-              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "عميل مسجّل" : "Clients"}</div>
-            </div>
-            <div className="glass rounded-2xl p-4 text-center">
+              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "عميل مسجّل" : lang === "fr" ? "Clients" : "Clients"}</div>
+              <div className="text-[10px] uppercase tracking-widest text-accent/80 mt-2 inline-flex items-center gap-1">
+                {lang === "ar" ? "تصفّح" : lang === "fr" ? "Voir" : "Browse"} <ArrowRight className="w-3 h-3" />
+              </div>
+            </Link>
+            <Link
+              to="/freelancers"
+              className="glass rounded-2xl p-4 text-center transition-smooth hover:border-accent/50 hover:-translate-y-0.5 hover:shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.5)] focus:outline-none focus:ring-2 focus:ring-accent/40"
+              aria-label={lang === "ar" ? "تصفّح المبدعين" : lang === "fr" ? "Parcourir les créateurs" : "Browse freelancers"}
+            >
               <UserCheck className="w-5 h-5 text-accent mx-auto mb-2" />
               <div className="font-serif text-3xl font-bold">{userCounts.creators}</div>
-              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "عامل حر" : "Freelancers"}</div>
-            </div>
+              <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "عامل حر" : lang === "fr" ? "Freelances" : "Freelancers"}</div>
+              <div className="text-[10px] uppercase tracking-widest text-accent/80 mt-2 inline-flex items-center gap-1">
+                {lang === "ar" ? "تصفّح" : lang === "fr" ? "Voir" : "Browse"} <ArrowRight className="w-3 h-3" />
+              </div>
+            </Link>
           </div>
         </div>
       </section>

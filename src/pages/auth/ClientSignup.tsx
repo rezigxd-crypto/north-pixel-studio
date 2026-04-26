@@ -24,13 +24,14 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const schema = z.object({
+const buildSchema = (t: (k: any) => string) => z.object({
   fullName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
   password: z.string().min(8).max(100).regex(/[A-Z]/, "كلمة المرور يجب أن تحتوي على حرف كبير").regex(/[0-9]/, "كلمة المرور يجب أن تحتوي على رقم"),
   org: z.string().trim().max(100),
   type: z.string().min(1, "اختر نوع حسابك"),
   wilaya: z.string().min(1, "اختر ولايتك"),
+  phone: z.string().trim().min(1, t("phoneRequired")).refine((v) => v.replace(/\D/g, "").length >= 8, { message: t("phoneInvalid") }),
   about: z.string().trim().max(500),
 });
 
@@ -68,13 +69,14 @@ const ClientSignup = () => {
       password: String(f.get("password") || ""),
       org: String(f.get("org") || ""),
       type, wilaya,
+      phone: String(f.get("phone") || ""),
       about: String(f.get("about") || ""),
     };
-    const r = schema.safeParse(data);
+    const r = buildSchema(t).safeParse(data);
     if (!r.success) { toast.error(r.error.issues[0].message); return; }
     setLoading(true);
     try {
-      await registerClient(r.data.email, r.data.password, r.data.fullName, r.data.wilaya);
+      await registerClient(r.data.email, r.data.password, r.data.fullName, r.data.wilaya, r.data.phone);
       toast.success("✓ " + t("createClientAccount"));
       navigate("/portal/client");
     } catch (err: any) {
@@ -140,6 +142,7 @@ const ClientSignup = () => {
                 <div><Label htmlFor="fullName">{t("fullName")}</Label><Input id="fullName" name="fullName" required maxLength={100} /></div>
                 <div><Label htmlFor="org">{t("organization")}</Label><Input id="org" name="org" maxLength={100} /></div>
                 <div><Label htmlFor="email">{t("email")}</Label><Input id="email" name="email" type="email" required /></div>
+                <div><Label htmlFor="phone">{t("phone")}</Label><Input id="phone" name="phone" type="tel" required maxLength={20} placeholder={t("phonePlaceholder")} dir="ltr" /></div>
                 <div>
                 <Label htmlFor="password">{t("password")}</Label>
                 <Input id="password" name="password" type="password" required minLength={8} placeholder="Aa1••••••" />
