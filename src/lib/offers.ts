@@ -169,6 +169,56 @@ export const OFFERS: Offer[] = [
     pricing: { unit: "مقال", pricePerUnit: 2500, minUnits: 1, maxUnits: 30, unitLabel: "piece", unitLabelPlural: "pieces", unitLabelAr: "مقال" },
     matchingRoles: ["Ghost Writer"],
   },
+  {
+    slug: "wedding",
+    title: { en: "Wedding Day", fr: "Mariage", ar: "يوم العرس" },
+    tagline: { en: "50 photos + signature wedding films, 4K. Make great memories.", fr: "50 photos + films signature, en 4K. Créez de grands souvenirs.", ar: "50 صورة + أفلام مميزة ليوم زفافك بدقة 4K. اصنعوا ذكريات عظيمة." },
+    description: {
+      en: "Cinematic wedding coverage by a dedicated team — 4K photo + video, signature edits, drone shots and a same-day reel for sharing. Built around your day, not a checklist.",
+      fr: "Couverture de mariage cinématique par une équipe dédiée — photo + vidéo 4K, montage signature, prises de drone, et un reel le jour même.",
+      ar: "تغطية سينمائية لحفل الزفاف بفريق مخصص — صور وفيديو بدقة 4K، مونتاج مميز، لقطات بالطائرة، ومقطع للسوشيال في نفس اليوم.",
+    },
+    features: {
+      en: ["50 retouched 4K photos", "Cinematic 4K wedding film", "Drone aerial shots", "Same-day social reel", "Optional second shooter & engagement session"],
+      fr: ["50 photos 4K retouchées", "Film de mariage 4K cinématique", "Prises de drone", "Reel le jour même", "2e photographe & séance fiançailles en option"],
+      ar: ["50 صورة بدقة 4K مع تعديل احترافي", "فيلم زفاف سينمائي بدقة 4K", "لقطات جوية بالدرون", "مقطع للسوشيال في نفس اليوم", "مصور ثاني وجلسة خطوبة (اختياري)"],
+    },
+    process: {
+      en: ["Discovery call & shot list", "Engagement / save-the-date (optional)", "Wedding-day coverage", "Editing, color, sound & full delivery"],
+      fr: ["Appel de découverte & liste de plans", "Séance fiançailles (optionnel)", "Couverture le jour J", "Montage, étalonnage & livraison"],
+      ar: ["جلسة تعارف ووضع قائمة اللقطات", "جلسة خطوبة (اختياري)", "التصوير يوم الزفاف", "المونتاج وتدرّج الألوان والتسليم الكامل"],
+    },
+    startingPrice: 35000,
+    icon: "Heart", accent: "gold",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    pricing: { unit: "حزمة", pricePerUnit: 35000, minUnits: 1, maxUnits: 3, unitLabel: "package", unitLabelPlural: "packages", unitLabelAr: "حزمة" },
+    matchingRoles: ["Photographer", "Cinematographer", "Video Editor"],
+  },
+  {
+    slug: "real-estate-360",
+    title: { en: "360° Real Estate Shots", fr: "Prises Immobilières à 360°", ar: "لقطات عقارية بزاوية 360°" },
+    tagline: { en: "Virtual tours, drone exteriors and listing-grade photos.", fr: "Visites virtuelles, vues drone et photos de qualité agence.", ar: "جولات افتراضية ولقطات جوية وصور بمستوى وكالات العقار." },
+    description: {
+      en: "Sell or rent faster — immersive 360° walkthroughs, drone exteriors and HDR interior photography. Hosted virtual-tour links you can drop straight into your listing.",
+      fr: "Louez ou vendez plus vite — visites 360° immersives, drones d'extérieur et photos HDR. Lien de visite virtuelle prêt pour votre annonce.",
+      ar: "بيع أو تأجير أسرع — جولات تفاعلية 360°، لقطات جوية، وصور داخلية بتقنية HDR. رابط جولة افتراضية جاهز للنشر مع إعلانك.",
+    },
+    features: {
+      en: ["360° interior walkthrough", "HDR listing photos", "Drone exterior shots", "Virtual tour link (Matterport-style)", "Floor plan render (optional)"],
+      fr: ["Visite intérieure 360°", "Photos HDR pour annonces", "Prises drone d'extérieur", "Lien de visite virtuelle", "Plan d'étage (optionnel)"],
+      ar: ["جولة داخلية 360°", "صور إعلانية بتقنية HDR", "لقطات خارجية بالدرون", "رابط جولة افتراضية", "مخطط طابقي (اختياري)"],
+    },
+    process: {
+      en: ["Property walkthrough & shot plan", "On-site shoot (interior + drone)", "Stitching & HDR processing", "Virtual tour link delivery"],
+      fr: ["Repérage du bien & plan de prise", "Tournage sur site", "Stitching & HDR", "Livraison du lien de visite"],
+      ar: ["زيارة العقار ووضع الخطة", "التصوير في الموقع (داخلي + درون)", "تجميع اللقطات ومعالجة HDR", "تسليم رابط الجولة الافتراضية"],
+    },
+    startingPrice: 12000,
+    icon: "Home", accent: "royal",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+    pricing: { unit: "عقار", pricePerUnit: 12000, minUnits: 1, maxUnits: 20, unitLabel: "property", unitLabelPlural: "properties", unitLabelAr: "عقار" },
+    matchingRoles: ["Photographer", "Cinematographer"],
+  },
 ];
 
 export const CLIENT_TYPES = [
@@ -251,4 +301,47 @@ export const UNIVERSITY_BUNDLE = {
     fr: ["Couverture événements universitaires", "Épisodes podcast (étudiants, profs, chercheurs)", "Enregistrement de cours & archivage numérique", "Production de vidéos promotionnelles"],
   },
   image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80",
+  // Monthly partnership — for universities that prefer a continuous engagement
+  // rather than a per-event quote. Each tier is a flat monthly retainer for
+  // the deliverables listed.
+  monthlyTiers: [
+    {
+      id: "essential",
+      monthlyPrice: 80000,
+      title: { ar: "الباقة الأساسية", en: "Essential", fr: "Essentielle" },
+      tagline: { ar: "بداية مثالية للجامعات", en: "Ideal entry tier", fr: "Idéal pour démarrer" },
+      includes: {
+        ar: ["تغطية فعالية واحدة شهريًا", "10 صور احترافية + 4 ريلز", "حلقة بودكاست شهريًا", "تسليم في 72 ساعة"],
+        en: ["1 event coverage / month", "10 photos + 4 reels", "1 podcast episode / month", "72-hour delivery"],
+        fr: ["1 événement couvert / mois", "10 photos + 4 reels", "1 épisode de podcast / mois", "Livraison 72h"],
+      },
+    },
+    {
+      id: "campus",
+      monthlyPrice: 150000,
+      title: { ar: "باقة الحرم", en: "Campus", fr: "Campus" },
+      tagline: { ar: "الأكثر طلبًا — حضور رقمي ثابت", en: "Most popular — full digital presence", fr: "Le plus populaire" },
+      includes: {
+        ar: ["تغطية فعاليتين شهريًا", "20 صورة + 8 ريلز", "حلقتا بودكاست", "تصوير محاضرة كل أسبوع", "تسليم في 24 ساعة للريلز"],
+        en: ["2 events / month", "20 photos + 8 reels", "2 podcast episodes / month", "Weekly lecture recording", "24-hour reel turnaround"],
+        fr: ["2 événements / mois", "20 photos + 8 reels", "2 podcasts / mois", "Cours filmé chaque semaine", "Reels en 24h"],
+      },
+    },
+    {
+      id: "flagship",
+      monthlyPrice: 250000,
+      title: { ar: "الباقة الرائدة", en: "Flagship", fr: "Flagship" },
+      tagline: { ar: "غرفة إعلام داخل الجامعة", en: "Your in-house media room", fr: "Votre salle média intégrée" },
+      includes: {
+        ar: ["تغطية غير محدودة (4 فعاليات شهريًا)", "40 صورة + 15 ريل", "4 حلقات بودكاست", "أرشفة كاملة للمحاضرات", "فيلم ترويجي فصلي", "مدير حساب مخصص"],
+        en: ["Up to 4 events / month", "40 photos + 15 reels", "4 podcast episodes", "Full lecture archive", "Quarterly hero film", "Dedicated account manager"],
+        fr: ["Jusqu'à 4 événements / mois", "40 photos + 15 reels", "4 podcasts", "Archive complète des cours", "Film phare trimestriel", "Chargé de compte dédié"],
+      },
+    },
+  ],
+  contractTerms: {
+    ar: ["عقد شهري قابل للتجديد", "إمكانية الإيقاف بإشعار 30 يومًا", "خصم 10% للالتزام السنوي", "فاتورة رسمية مطابقة لمعايير الإدارة الجزائرية"],
+    en: ["Renewable monthly contract", "Cancel with 30-day notice", "10% off for an annual commitment", "Official invoice compliant with Algerian admin standards"],
+    fr: ["Contrat mensuel renouvelable", "Résiliation avec préavis 30 jours", "-10% pour un engagement annuel", "Facture officielle conforme à l'administration algérienne"],
+  },
 };

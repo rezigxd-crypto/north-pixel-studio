@@ -5,7 +5,7 @@ import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { OFFERS, UNIVERSITY_BUNDLE, formatStartingPrice } from "@/lib/offers";
+import { OFFERS, UNIVERSITY_BUNDLE, formatStartingPrice, formatDZD } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
@@ -176,6 +176,54 @@ const Index = () => {
                 </div>
               ))}
             </div>
+            {/* Monthly partnership tiers */}
+            <div className="mt-2 mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-semibold">
+                  {lang === "ar" ? "عقد شهري بين فريقنا وجامعتكم" : lang === "fr" ? "Contrat mensuel — équipe & université" : "Monthly partnership"}
+                </span>
+                <div className="flex-1 h-px bg-accent/20" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {ub.monthlyTiers.map((tier, idx) => (
+                  <div
+                    key={tier.id}
+                    className={`relative glass rounded-2xl p-5 transition-smooth hover:-translate-y-0.5 hover:shadow-[0_0_30px_-12px_hsl(41_67%_60%/0.4)] ${
+                      idx === 1 ? "border-2 border-accent/60 ring-1 ring-accent/20" : "border border-border/50"
+                    }`}
+                  >
+                    {idx === 1 && (
+                      <span className="absolute -top-3 start-4 text-[10px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full bg-gradient-gold text-accent-foreground">
+                        {lang === "ar" ? "الأكثر طلبًا" : lang === "fr" ? "Populaire" : "Most popular"}
+                      </span>
+                    )}
+                    <div className="font-serif text-lg font-bold mb-1">{tier.title[lang]}</div>
+                    <div className="text-[11px] text-muted-foreground mb-3">{tier.tagline[lang]}</div>
+                    <div className="flex items-baseline gap-1 mb-4">
+                      <span className="font-serif text-2xl font-bold text-accent">{formatDZD(tier.monthlyPrice, lang)}</span>
+                      <span className="text-[11px] text-muted-foreground">/ {lang === "ar" ? "شهر" : lang === "fr" ? "mois" : "month"}</span>
+                    </div>
+                    <ul className="space-y-2">
+                      {tier.includes[lang].map((line, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs">
+                          <Check className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                          <span className="leading-snug">{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2 mt-4">
+                {ub.contractTerms[lang].map((term, i) => (
+                  <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                    <Check className="w-3 h-3 text-accent flex-shrink-0 mt-0.5" />
+                    <span>{term}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Hide CTA when logged in as non-client */}
             {(!isLoggedIn || auth.role === "client") && (
               <div className="flex flex-wrap gap-3">

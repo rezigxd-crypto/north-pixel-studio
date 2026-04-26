@@ -259,6 +259,78 @@ const SERVICES = [
       },
     },
   },
+  {
+    slug: "wedding",
+    icon: "Heart",
+    accent: "gold" as const,
+    title: { ar: "يوم العرس", en: "Wedding Day", fr: "Mariage" },
+    matchingRoles: ["Photographer", "Cinematographer", "Video Editor"],
+    options: {
+      package: {
+        label: { ar: "نوع الباقة", en: "Package", fr: "Forfait" },
+        choices: [
+          { id: "half-day", label: { ar: "نصف يوم (4 ساعات)", en: "Half day (4 hours)", fr: "Demi-journée (4h)" }, price: 35000 },
+          { id: "full-day", label: { ar: "يوم كامل", en: "Full day", fr: "Journée complète" }, price: 60000 },
+          { id: "two-day", label: { ar: "يومان (خطوبة + زفاف)", en: "2 days (engagement + wedding)", fr: "2 jours (fiançailles + mariage)" }, price: 95000 },
+          { id: "premium", label: { ar: "باكدج بريميام (3 أيام)", en: "Premium (3 days)", fr: "Premium (3 jours)" }, price: 140000 },
+        ],
+      },
+      coverage: {
+        label: { ar: "نوع التغطية", en: "Coverage", fr: "Couverture" },
+        choices: [
+          { id: "photo-only", label: { ar: "صور فقط", en: "Photos only", fr: "Photos seulement" } },
+          { id: "video-only", label: { ar: "فيديو فقط", en: "Video only", fr: "Vidéo seulement" } },
+          { id: "photo-video", label: { ar: "صور + فيديو", en: "Photo + Video", fr: "Photo + Vidéo" } },
+          { id: "full", label: { ar: "صور + فيديو + درون", en: "Photo + Video + Drone", fr: "Photo + Vidéo + Drone" } },
+        ],
+      },
+      photoCount: {
+        label: { ar: "عدد الصور المعدّلة", en: "Edited photos", fr: "Photos retouchées" },
+        choices: [
+          { id: "50", label: { ar: "50 صورة", en: "50 photos", fr: "50 photos" } },
+          { id: "100", label: { ar: "100 صورة", en: "100 photos", fr: "100 photos" } },
+          { id: "200", label: { ar: "200 صورة", en: "200 photos", fr: "200 photos" } },
+        ],
+      },
+    },
+  },
+  {
+    slug: "real-estate-360",
+    icon: "Home",
+    accent: "royal" as const,
+    title: { ar: "لقطات عقارية 360°", en: "360° Real Estate", fr: "Immobilier 360°" },
+    matchingRoles: ["Photographer", "Cinematographer"],
+    options: {
+      propertyType: {
+        label: { ar: "نوع العقار", en: "Property type", fr: "Type de bien" },
+        choices: [
+          { id: "apartment", label: { ar: "شقة", en: "Apartment", fr: "Appartement" } },
+          { id: "villa", label: { ar: "فيلا", en: "Villa", fr: "Villa" } },
+          { id: "commercial", label: { ar: "محل / مكتب تجاري", en: "Commercial space", fr: "Local commercial" } },
+          { id: "hotel", label: { ar: "فندق / إيواء", en: "Hotel / lodging", fr: "Hôtel / hébergement" } },
+          { id: "off-plan", label: { ar: "مشروع تحت الإنشاء", en: "Off-plan project", fr: "Projet en construction" } },
+        ],
+      },
+      size: {
+        label: { ar: "المساحة", en: "Size", fr: "Surface" },
+        choices: [
+          { id: "small", label: { ar: "حتى 80 م²", en: "Up to 80 m²", fr: "Jusqu'à 80 m²" }, price: 12000 },
+          { id: "medium", label: { ar: "80 – 150 م²", en: "80 – 150 m²", fr: "80 – 150 m²" }, price: 18000 },
+          { id: "large", label: { ar: "150 – 300 م²", en: "150 – 300 m²", fr: "150 – 300 m²" }, price: 28000 },
+          { id: "xl", label: { ar: "أكبر من 300 م²", en: "More than 300 m²", fr: "Plus de 300 m²" }, price: 45000 },
+        ],
+      },
+      extras: {
+        label: { ar: "إضافات", en: "Extras", fr: "Extras" },
+        choices: [
+          { id: "tour-only", label: { ar: "جولة 360° فقط", en: "360° tour only", fr: "Visite 360° uniquement" } },
+          { id: "tour-photos", label: { ar: "جولة + صور HDR", en: "Tour + HDR photos", fr: "Visite + photos HDR" } },
+          { id: "tour-photos-drone", label: { ar: "جولة + صور + درون", en: "Tour + photos + drone", fr: "Visite + photos + drone" } },
+          { id: "complete", label: { ar: "الباقة الكاملة (يشمل المخطط)", en: "Complete (with floor plan)", fr: "Complet (avec plan)" } },
+        ],
+      },
+    },
+  },
 ] as const;
 
 type ServiceSlug = typeof SERVICES[number]["slug"];
