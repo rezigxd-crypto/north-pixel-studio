@@ -7,7 +7,6 @@ import {
   Gavel, TrendingUp, MapPin, Edit2, Save,
   Phone, CreditCard, Upload, Star, Trophy,
   ChevronRight, Briefcase, DollarSign, X, Check, Plus,
-  ExternalLink,
 } from "lucide-react";
 import {
   useOffers, useBids, useCreators, useAllUsers,
@@ -22,7 +21,6 @@ import { useNavigate } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
 import { ProfileCompletionRing } from "@/components/ProfileCompletionRing";
-import { Link } from "react-router-dom";
 import { Countdown } from "@/components/Countdown";
 import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -107,10 +105,6 @@ const CreatorPortal = () => {
       missing: checks.filter((c) => !c.ok).map((c) => c.key),
     };
   })();
-  // Username lives on the /users doc (written for both email and Google
-  // signups + the self-backfill above). Fall back to the creator-app doc
-  // for resilience.
-  const username = myUserDoc?.username ?? myApp?.username;
 
   // ── State
   const [activeTab, setActiveTab] = useState<"home" | "bids" | "profile">("home");
@@ -244,18 +238,6 @@ const CreatorPortal = () => {
                 </span>
               )}
             </div>
-            {username && myApp?.status === "approved" && (
-              <Link
-                to={`/@${username}`}
-                className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 mt-1.5 group"
-              >
-                <ExternalLink className="w-3 h-3" />
-                <span className="font-mono">@{username}</span>
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity ms-1">
-                  {lang === "ar" ? "عرض الملف العام" : lang === "fr" ? "Profil public" : "view public profile"}
-                </span>
-              </Link>
-            )}
           </div>
         </div>
         {/* Stats strip */}
@@ -503,11 +485,6 @@ const CreatorPortal = () => {
               <div className="mt-1 flex items-center gap-2 flex-wrap">
                 <RankBadge jobs={completedJobs} lang={lang} />
               </div>
-              {username && myApp?.status === "approved" && (
-                <Link to={`/@${username}`} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent/80 mt-2">
-                  <ExternalLink className="w-3 h-3" /><span className="font-mono">@{username}</span>
-                </Link>
-              )}
             </div>
             <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}>
               {editMode ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
