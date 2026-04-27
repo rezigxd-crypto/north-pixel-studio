@@ -57,9 +57,9 @@ const CreatorSignup = () => {
       const res = await loginWithGoogle("creator");
       if (res.status === "new") {
         toast.info("خطوة أخيرة لإكمال تسجيلك");
-        navigate("/auth/signup/complete", { state: { role: "creator", email: res.email, name: res.name } });
+        navigate("/auth/signup/complete", { state: { role: "creator", email: res.email, name: res.name }, replace: true });
       } else {
-        navigate("/auth/pending", { state: { email: res.role === "creator" ? "" : "", name: "" } });
+        navigate("/auth/pending", { state: { email: res.role === "creator" ? "" : "", name: "" }, replace: true });
       }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }
@@ -89,7 +89,7 @@ const CreatorSignup = () => {
         wilaya: r.data.wilaya, city: r.data.city || undefined,
         role: r.data.role, bio: r.data.bio, rate: r.data.rate, portfolio: validLinks,
       });
-      navigate("/auth/pending", { state: { email: r.data.email, name: r.data.fullName } });
+      navigate("/auth/pending", { state: { email: r.data.email, name: r.data.fullName }, replace: true });
     } catch (err: any) {
       toast.error(err?.code === "auth/email-already-in-use" ? "هذا البريد الإلكتروني مسجل مسبقًا." : "فشل التسجيل. حاول مرة أخرى.");
     } finally { setLoading(false); }

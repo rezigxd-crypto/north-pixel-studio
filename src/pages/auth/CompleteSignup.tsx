@@ -61,7 +61,7 @@ const CompleteSignup = () => {
     try {
       await completeGoogleSignup({ role, name: name.trim(), password, wilaya, extra: { phone: phone.trim() } });
       toast.success("✓ تم إكمال التسجيل");
-      navigate(role === "creator" ? "/auth/pending" : "/portal/client", { state: { email, name } });
+      navigate(role === "creator" ? "/auth/pending" : "/portal/client", { state: { email, name }, replace: true });
     } catch {
       toast.error("فشل إكمال التسجيل. حاول مرة أخرى.");
     } finally { setLoading(false); }

@@ -30,9 +30,12 @@ const Login = () => {
   const isAdminMode = adminClicks >= 3;
 
   const navigateByRole = (role: string | null) => {
-    if (role === "admin") navigate("/portal/admin");
-    else if (role === "creator") navigate("/portal/creator");
-    else navigate("/portal/client");
+    // `replace: true` removes /auth/login from the history stack so the
+    // native back button doesn't land the user back on the login screen
+    // (which feels like an accidental logout).
+    if (role === "admin") navigate("/portal/admin", { replace: true });
+    else if (role === "creator") navigate("/portal/creator", { replace: true });
+    else navigate("/portal/client", { replace: true });
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -61,7 +64,7 @@ const Login = () => {
       const res = await loginWithGoogle(tab);
       if (res.status === "new") {
         toast.info(lang === "ar" ? "خطوة أخيرة لإكمال تسجيلك" : lang === "fr" ? "Une dernière étape pour terminer l'inscription" : "One last step to finish signing up");
-        navigate("/auth/signup/complete", { state: { role: tab, email: res.email, name: res.name } });
+        navigate("/auth/signup/complete", { state: { role: tab, email: res.email, name: res.name }, replace: true });
       } else {
         toast.success(t("welcomeBack"));
         navigateByRole(res.role);

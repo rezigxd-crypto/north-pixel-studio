@@ -51,9 +51,9 @@ const ClientSignup = () => {
       const res = await loginWithGoogle("client");
       if (res.status === "new") {
         toast.info("خطوة أخيرة لإكمال تسجيلك");
-        navigate("/auth/signup/complete", { state: { role: "client", email: res.email, name: res.name } });
+        navigate("/auth/signup/complete", { state: { role: "client", email: res.email, name: res.name }, replace: true });
       } else {
-        navigate("/portal/client");
+        navigate("/portal/client", { replace: true });
       }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }
@@ -78,7 +78,7 @@ const ClientSignup = () => {
     try {
       await registerClient(r.data.email, r.data.password, r.data.fullName, r.data.wilaya, r.data.phone);
       toast.success("✓ " + t("createClientAccount"));
-      navigate("/portal/client");
+      navigate("/portal/client", { replace: true });
     } catch (err: any) {
       toast.error(err?.code === "auth/email-already-in-use" ? "هذا البريد الإلكتروني مسجل مسبقًا." : "فشل التسجيل. حاول مرة أخرى.");
     } finally { setLoading(false); }
