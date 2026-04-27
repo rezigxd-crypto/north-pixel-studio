@@ -64,10 +64,17 @@ service cloud.firestore {
                     && request.resource.data.read == false;
       allow read: if request.auth != null
                   && resource.data.recipientUid == request.auth.uid;
+      // The only legitimate mutation is flipping `read` from false to true.
+      // Pin every other field so the recipient can't rewrite history (meta,
+      // link, createdAt) or reset the dot back to unread.
       allow update: if request.auth != null
                     && resource.data.recipientUid == request.auth.uid
                     && request.resource.data.recipientUid == resource.data.recipientUid
-                    && request.resource.data.type == resource.data.type;
+                    && request.resource.data.type == resource.data.type
+                    && request.resource.data.meta == resource.data.meta
+                    && request.resource.data.link == resource.data.link
+                    && request.resource.data.createdAt == resource.data.createdAt
+                    && request.resource.data.read == true;
       allow delete: if request.auth != null
                     && resource.data.recipientUid == request.auth.uid;
     }
