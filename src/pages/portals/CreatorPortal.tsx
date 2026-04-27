@@ -151,6 +151,17 @@ const CreatorPortal = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Seed the edit-form inputs from the loaded user doc so that (a) opening
+  // edit mode shows the user's existing phone / Baridi-Mob instead of
+  // blanks, and (b) saving the profile (even for an unrelated field) does
+  // not overwrite stored values with empty strings.
+  useEffect(() => {
+    const phone = myUserDoc?.phone || auth.phone || "";
+    const bariMob = myUserDoc?.bariMobAccount || "";
+    if (phone) setProfilePhone(phone);
+    if (bariMob) setProfileBariMob(bariMob);
+  }, [myUserDoc?.phone, myUserDoc?.bariMobAccount, auth.phone]);
+
   // ── Computed
   const creatorEmail = auth.email;
   const creatorWilaya = auth.wilaya || "";
