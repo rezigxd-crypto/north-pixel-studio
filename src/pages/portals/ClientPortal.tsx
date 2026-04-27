@@ -63,9 +63,16 @@ const ClientPortal = () => {
   const [selectedAvatar, setSelectedAvatar] = useState("brand");
   const [saving, setSaving] = useState(false);
 
+  // Auth guard. If the authed user's role doesn't match this portal, send
+  // them to the portal that actually belongs to them (e.g. a creator who
+  // lands on /portal/client is rerouted to /portal/creator) rather than
+  // bouncing them to the login screen. Only unauthenticated visitors go
+  // back to /auth/login.
   useEffect(() => {
-    if (!auth.loading && auth.role !== "client") navigate("/auth/login");
-  }, [auth.loading, auth.role]);
+    if (auth.loading) return;
+    if (!auth.role) { navigate("/auth/login"); return; }
+    if (auth.role !== "client") navigate(`/portal/${auth.role}`);
+  }, [auth.loading, auth.role, navigate]);
 
   useEffect(() => {
     if (auth.avatar) setSelectedAvatar(auth.avatar);
