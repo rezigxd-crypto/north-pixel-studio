@@ -123,8 +123,8 @@ async function ensureSignedUpAndIn(email, password) {
   }
 }
 
-async function findExistingByEmail(coll, email) {
-  const snap = await getDocs(query(collection(db, coll), where("email", "==", email)));
+async function findExistingByEmail(coll, email, field = "email") {
+  const snap = await getDocs(query(collection(db, coll), where(field, "==", email)));
   return snap.docs[0]?.id ?? null;
 }
 
@@ -153,7 +153,9 @@ async function main() {
 
   // 2. Project (offer) — created as the client, pre-approved (status="open")
   console.log("\n[2/4] Demo project (offer)");
-  let offerId = await findExistingByEmail("offers", CLIENT.email);
+  // Offers store the client's email under `clientEmail`, not `email`,
+  // so the lookup needs to target that field for idempotency.
+  let offerId = await findExistingByEmail("offers", CLIENT.email, "clientEmail");
   if (offerId) {
     console.log("  • offer already exists: " + offerId);
   } else {
