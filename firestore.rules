@@ -51,10 +51,13 @@ service cloud.firestore {
     // Public config — small key/value store used to publish things like the
     // admin UID so other clients can route notifications to the admin.
     //   • read: any authed user.
-    //   • write: any authed user (the admin self-publishes on login;
-    //     constraining further would require custom claims which we don't use).
+    //   • write: ONLY the admin (verified by email claim). Without this,
+    //     any authed user could overwrite /publicConfig/admin and hijack
+    //     bundle_request_new notification routing.
     match /publicConfig/{docId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.token.email == "rezig@admin.np";
     }
 
     // Bundle subscriptions — B2B / B2G monthly retainers.
