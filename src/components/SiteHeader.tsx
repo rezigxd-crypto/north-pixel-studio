@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Menu, Sun, Moon, Globe, LogOut, LayoutDashboard,
-  Home, Sparkles, GraduationCap, Clapperboard, Users, UserCheck, User, ArrowRight, Mail, Lightbulb,
+  Home, Sparkles, GraduationCap, Clapperboard, Users, UserCheck, User, ArrowRight, Mail, Lightbulb, Compass,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
@@ -210,6 +210,7 @@ export const SiteHeader = () => {
                 <ul className="np-stagger flex flex-col gap-1.5">
                   {[
                     { Icon: Home,         to: "/",                                   ar: "الرئيسية",     fr: "Accueil",         en: "Home" },
+                    { Icon: Compass,      to: "/about",                              ar: "من نحن",        fr: "À propos",        en: "About" },
                     { Icon: Sparkles,     to: "/#offers",                            ar: "الخدمات",      fr: "Services",        en: "Services" },
                     { Icon: GraduationCap, to: "/#university",                       ar: "عرض الجامعات", fr: "Universités",     en: "University" },
                     { Icon: Clapperboard, to: "/quest",                              ar: "MovieCollab",  fr: "MovieCollab",     en: "MovieCollab" },

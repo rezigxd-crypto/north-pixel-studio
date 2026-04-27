@@ -22,6 +22,7 @@ export const SiteFooter = () => {
           <ul className="space-y-2 text-muted-foreground text-xs">
             <li><Link to="/#offers" className="hover:text-foreground transition-smooth">{lang === "ar" ? "جميع الخدمات" : "All services"}</Link></li>
             <li><Link to="/#university" className="hover:text-foreground transition-smooth">{lang === "ar" ? "عرض الجامعات" : "University offer"}</Link></li>
+            <li><Link to="/about" className="hover:text-foreground transition-smooth">{lang === "ar" ? "من نحن" : lang === "fr" ? "À propos" : "About us"}</Link></li>
             <li><Link to="/innovation" className="hover:text-foreground transition-smooth">{lang === "ar" ? "الابتكار" : lang === "fr" ? "Innovation" : "Innovation"}</Link></li>
             <li><Link to="/quest" className="hover:text-foreground transition-smooth">MovieCollab</Link></li>
           </ul>
