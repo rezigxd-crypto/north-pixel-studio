@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/spotlight-card";
 import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { OFFERS, BUNDLES, formatStartingPrice, formatDZD } from "@/lib/offers";
+import { BundleRequestModal } from "@/components/BundleRequestModal";
+import { OFFERS, BUNDLES, formatStartingPrice, formatDZD, type Bundle } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
@@ -18,8 +20,29 @@ const EN_WORDS = ["professionalism", "creativity", "expertise", "innovation", "e
 
 const Index = () => {
   const { lang, auth } = useApp();
+  const navigate = useNavigate();
   const userCounts = usePublicStats();
   const isLoggedIn = !!auth.role && !auth.loading;
+
+  // Bundle request modal state — opens when a client clicks "Request" on
+  // any tier card. Unauthenticated visitors are redirected to signup first.
+  const [bundleModalOpen, setBundleModalOpen] = useState(false);
+  const [bundleModalBundle, setBundleModalBundle] = useState<Bundle | null>(null);
+  const [bundleModalTier, setBundleModalTier] = useState<string>("");
+  const openBundleRequest = (bundle: Bundle, tierId: string) => {
+    if (!isLoggedIn) {
+      navigate(`/auth/signup?role=client&next=/#${bundle.slug}`);
+      return;
+    }
+    if (auth.role && auth.role !== "client") {
+      // Creators / admins can't subscribe to bundles — they're for clients only.
+      navigate("/portal/" + auth.role);
+      return;
+    }
+    setBundleModalBundle(bundle);
+    setBundleModalTier(tierId);
+    setBundleModalOpen(true);
+  };
 
   const animatedWords = lang === "ar" ? AR_WORDS : lang === "fr" ? FR_WORDS : EN_WORDS;
   const heroPrefix =
@@ -355,7 +378,7 @@ const Index = () => {
                           <span className="font-serif text-2xl font-bold text-accent">{formatDZD(tier.monthlyPrice, lang)}</span>
                           <span className="text-[11px] text-muted-foreground">/ {lang === "ar" ? "شهر" : lang === "fr" ? "mois" : "month"}</span>
                         </div>
-                        <ul className="space-y-2">
+                        <ul className="space-y-2 mb-4">
                           {tier.includes[lang].map((line, i) => (
                             <li key={i} className="flex items-start gap-2 text-xs">
                               <Check className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
@@ -363,6 +386,17 @@ const Index = () => {
                             </li>
                           ))}
                         </ul>
+                        {(!isLoggedIn || auth.role === "client") && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={idx === 1 ? "royal" : "outline"}
+                            className="w-full"
+                            onClick={() => openBundleRequest(bundle, tier.id)}
+                          >
+                            {lang === "ar" ? "اطلب هذه الباقة" : lang === "fr" ? "Demander cette formule" : "Request this tier"}
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -379,10 +413,18 @@ const Index = () => {
                 {/* Hide CTA when logged in as non-client */}
                 {(!isLoggedIn || auth.role === "client") && (
                   <div className="flex flex-wrap gap-3">
-                    <Button asChild variant="royal" size="lg">
-                      <Link to={isLoggedIn ? "/portal/client" : "/auth/signup?role=client"}>
-                        {lang === "ar" ? "طلب العرض" : lang === "fr" ? "Demander l'offre" : "Request offer"} <ArrowRight className="ms-2 w-4 h-4" />
-                      </Link>
+                    <Button
+                      type="button"
+                      variant="royal"
+                      size="lg"
+                      onClick={() =>
+                        openBundleRequest(
+                          bundle,
+                          bundle.monthlyTiers[Math.floor(bundle.monthlyTiers.length / 2)]?.id || bundle.monthlyTiers[0]?.id || "",
+                        )
+                      }
+                    >
+                      {lang === "ar" ? "طلب العرض" : lang === "fr" ? "Demander l'offre" : "Request offer"} <ArrowRight className="ms-2 w-4 h-4" />
                     </Button>
                     <Button asChild variant="outline" size="lg">
                       <a href="mailto:hello@thealgerianstudio.com">{lang === "ar" ? "تواصل معنا" : lang === "fr" ? "Nous contacter" : "Contact us"}</a>
@@ -482,6 +524,13 @@ const Index = () => {
       )}
 
       <SiteFooter />
+
+      <BundleRequestModal
+        bundle={bundleModalBundle}
+        initialTierId={bundleModalTier}
+        open={bundleModalOpen}
+        onOpenChange={setBundleModalOpen}
+      />
     </div>
   );
 };

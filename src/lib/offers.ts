@@ -364,6 +364,17 @@ export const formatStartingPrice = (n: number, lang: "ar" | "en" | "fr"): string
 
 export const getOffer = (slug: string) => OFFERS.find((o) => o.slug === slug);
 
+/** Bundle lookup by slug. Returns `undefined` if the slug doesn't match a known
+ *  bundle (e.g. legacy data referencing a removed bundle). */
+export const getBundle = (slug: string) => BUNDLES.find((b) => b.slug === slug);
+
+/** Find a tier within a bundle. Returns `undefined` if either lookup fails. */
+export const getBundleTier = (bundleSlug: string, tierId: string) => {
+  const b = getBundle(bundleSlug);
+  if (!b) return undefined;
+  return b.monthlyTiers.find((t) => t.id === tierId);
+};
+
 // ─── Monthly partnership bundles ───────────────────────────────────────────
 // Each bundle is a sustained B2B retainer (vs. one-off project posts) for
 // a target industry vertical. Rendered side-by-side on the home page.

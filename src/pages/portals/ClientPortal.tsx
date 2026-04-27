@@ -6,10 +6,12 @@ import {
   Plus, FolderKanban, Clock, CheckCircle2, XCircle,
   Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
+import { ClientBundles } from "@/components/ClientBundles";
 import { OFFERS, formatDZD, formatStartingPrice } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
+import { useClientSubscriptions } from "@/lib/bundles";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
 import { Countdown } from "@/components/Countdown";
@@ -47,7 +49,14 @@ const ClientPortal = () => {
   const offers = useOffers();
   const bids = useBids();
 
-  const [activeTab, setActiveTab] = useState<"projects" | "profile">("projects");
+  const [activeTab, setActiveTab] = useState<"projects" | "bundles" | "profile">("projects");
+  const [searchParams] = useSearchParams();
+  const subs = useClientSubscriptions(auth.uid);
+
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t === "bundles" || t === "projects" || t === "profile") setActiveTab(t);
+  }, [searchParams]);
   const [editMode, setEditMode] = useState(false);
   const [profilePhone, setProfilePhone] = useState("");
   const [profileBariMob, setProfileBariMob] = useState("");
@@ -88,6 +97,7 @@ const ClientPortal = () => {
 
   const TABS = [
     { id: "projects", label: lang === "ar" ? "مشاريعي" : "My Projects" },
+    { id: "bundles",  label: lang === "ar" ? `باقاتي${subs.length > 0 ? ` (${subs.length})` : ""}` : `My Bundles${subs.length > 0 ? ` (${subs.length})` : ""}` },
     { id: "profile",  label: lang === "ar" ? "ملفي" : "My Profile" },
   ] as const;
 
@@ -249,6 +259,11 @@ const ClientPortal = () => {
             })
           )}
         </div>
+      )}
+
+      {/* ══ BUNDLES ══ */}
+      {activeTab === "bundles" && auth.uid && (
+        <ClientBundles clientUid={auth.uid} />
       )}
 
       {/* ══ PROFILE ══ */}

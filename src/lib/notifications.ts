@@ -17,13 +17,19 @@ import type { Lang } from "./i18n";
  * recipientUid to the right user and block non-recipients from reading.
  */
 export type NotificationType =
-  | "offer_approved"          // admin → client: your project is live and accepting bids
-  | "offer_rejected"          // admin → client: your project was rejected
-  | "new_bid"                 // creator → client: someone bid on your project
-  | "bid_accepted"            // admin → creator: your bid was accepted
-  | "bid_not_selected"        // admin → creator: another creator was picked
-  | "deliverable_submitted"   // creator → client: the deliverable is ready
-  | "advance_paid";           // client → creator: 10 % advance confirmed
+  | "offer_approved"            // admin → client: your project is live and accepting bids
+  | "offer_rejected"            // admin → client: your project was rejected
+  | "new_bid"                   // creator → client: someone bid on your project
+  | "bid_accepted"              // admin → creator: your bid was accepted
+  | "bid_not_selected"          // admin → creator: another creator was picked
+  | "deliverable_submitted"     // creator → client: the deliverable is ready
+  | "advance_paid"              // client → creator: 10 % advance confirmed
+  | "bundle_request_new"        // client → admin: new bundle subscription request
+  | "bundle_activated"          // admin → client: bundle subscription activated
+  | "bundle_cancelled"          // admin → client: bundle subscription cancelled
+  | "task_invitation_new"       // admin → creator: private task invitation
+  | "task_invitation_accepted"  // creator → admin: task invitation accepted
+  | "task_invitation_declined"; // creator → admin: task invitation declined
 
 export type AppNotification = {
   id: string;
@@ -146,6 +152,92 @@ export const NOTIFICATION_COPY: Record<
         : lang === "fr"
         ? "L'acompte de 10 % est confirmé — vous pouvez démarrer."
         : "The 10 % advance is confirmed — you can start.",
+  },
+  bundle_request_new: {
+    title: {
+      ar: "طلب اشتراك جديد في باقة",
+      fr: "Nouvelle demande de bundle",
+      en: "New bundle subscription request",
+    },
+    body: (m, lang) => {
+      const who = m.orgName || (lang === "ar" ? "عميل" : "A client");
+      return lang === "ar"
+        ? `طلب ${who} الاشتراك في باقة شهرية — راجع الطلب.`
+        : lang === "fr"
+        ? `${who} demande à souscrire à un bundle mensuel — à examiner.`
+        : `${who} requested a monthly bundle subscription — review it.`;
+    },
+  },
+  bundle_activated: {
+    title: {
+      ar: "تم تفعيل باقتك ✨",
+      fr: "Votre bundle est actif",
+      en: "Your bundle is active",
+    },
+    body: (_m, lang) =>
+      lang === "ar"
+        ? "بدأت الشراكة الشهرية — افتح مساحة العمل."
+        : lang === "fr"
+        ? "Le partenariat mensuel a démarré — ouvrez votre espace."
+        : "Your monthly partnership has started — open the workspace.",
+  },
+  bundle_cancelled: {
+    title: {
+      ar: "تم إلغاء الاشتراك",
+      fr: "Bundle annulé",
+      en: "Bundle subscription cancelled",
+    },
+    body: (_m, lang) =>
+      lang === "ar"
+        ? "تم إلغاء اشتراكك في الباقة. تواصل مع الدعم لمزيد من التفاصيل."
+        : lang === "fr"
+        ? "Votre bundle a été annulé. Contactez le support pour plus de détails."
+        : "Your bundle subscription was cancelled. Contact support for details.",
+  },
+  task_invitation_new: {
+    title: {
+      ar: "دعوة عمل خاصة",
+      fr: "Invitation à une mission privée",
+      en: "Private task invitation",
+    },
+    body: (m, lang) => {
+      const t = m.title ? ` (${m.title})` : "";
+      return lang === "ar"
+        ? `الإدارة تدعوك لمهمة${t} — افتح صندوق الوارد.`
+        : lang === "fr"
+        ? `L'équipe vous invite à une mission${t} — voir votre boîte.`
+        : `The studio invited you to a task${t} — open your inbox.`;
+    },
+  },
+  task_invitation_accepted: {
+    title: {
+      ar: "تم قبول الدعوة",
+      fr: "Invitation acceptée",
+      en: "Task invitation accepted",
+    },
+    body: (m, lang) => {
+      const who = m.creatorName || (lang === "ar" ? "المبدع" : "the creator");
+      return lang === "ar"
+        ? `${who} قبل دعوة المهمة — جهّز التفاصيل.`
+        : lang === "fr"
+        ? `${who} a accepté l'invitation — préparez les détails.`
+        : `${who} accepted the task invitation — prep the details.`;
+    },
+  },
+  task_invitation_declined: {
+    title: {
+      ar: "تم رفض الدعوة",
+      fr: "Invitation refusée",
+      en: "Task invitation declined",
+    },
+    body: (m, lang) => {
+      const who = m.creatorName || (lang === "ar" ? "المبدع" : "the creator");
+      return lang === "ar"
+        ? `${who} رفض دعوة المهمة — يمكنك دعوة شخص آخر.`
+        : lang === "fr"
+        ? `${who} a décliné — vous pouvez inviter quelqu'un d'autre.`
+        : `${who} declined — invite someone else.`;
+    },
   },
 };
 

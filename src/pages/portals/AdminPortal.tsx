@@ -1,11 +1,13 @@
 import { PortalShell } from "@/components/PortalShell";
+import { AdminBundles } from "@/components/AdminBundles";
 import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid } from "@/lib/store";
+import { useAllSubscriptions } from "@/lib/bundles";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS } from "@/lib/offers";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const StatCard = ({ icon: Icon, value, label, color = "accent" }: { icon: React.ElementType; value: string; label: string; color?: string }) => (
@@ -67,8 +69,19 @@ const AdminPortal = () => {
   const bids = useBids();
   const userCounts = useUserCounts();
   const allUsers = useAllUsers();
-  const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators" | "clients">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators" | "clients" | "bundles">("overview");
   const [expandedCreator, setExpandedCreator] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const subscriptions = useAllSubscriptions();
+  const pendingBundleRequests = subscriptions.filter((s) => s.status === "pending").length;
+
+  // Allow deep-linking to a tab via ?tab=bundles (from notifications).
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "bundles" || tab === "offers" || tab === "bids" || tab === "creators" || tab === "clients") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!auth.loading && auth.role !== "admin") navigate("/auth/login");
@@ -101,6 +114,7 @@ const AdminPortal = () => {
     { id: "overview",  label: lang === "ar" ? "نظرة عامة" : "Overview" },
     { id: "offers",    label: lang === "ar" ? `العروض${pendingOffers.length > 0 ? ` (${pendingOffers.length})` : ""}` : `Offers${pendingOffers.length > 0 ? ` (${pendingOffers.length})` : ""}` },
     { id: "bids",      label: lang === "ar" ? "المزايدات" : "Bids" },
+    { id: "bundles",   label: lang === "ar" ? `الباقات${pendingBundleRequests > 0 ? ` (${pendingBundleRequests})` : ""}` : `Bundles${pendingBundleRequests > 0 ? ` (${pendingBundleRequests})` : ""}` },
     { id: "creators",  label: lang === "ar" ? `العمال${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` : `Creators${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` },
     { id: "clients",   label: lang === "ar" ? `العملاء (${clients.length})` : `Clients (${clients.length})` },
   ] as const;
@@ -276,6 +290,18 @@ const AdminPortal = () => {
               );
             })
           }
+        </div>
+      )}
+
+      {/* BUNDLES */}
+      {activeTab === "bundles" && (
+        <div className="space-y-4">
+          <SectionHeader
+            title={lang === "ar" ? "اشتراكات الباقات" : "Bundle subscriptions"}
+            count={pendingBundleRequests > 0 ? pendingBundleRequests : undefined}
+            color="accent"
+          />
+          <AdminBundles adminUid={auth.uid} />
         </div>
       )}
 
