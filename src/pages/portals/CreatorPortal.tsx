@@ -151,16 +151,17 @@ const CreatorPortal = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Seed the edit-form inputs from the loaded user doc so that (a) opening
-  // edit mode shows the user's existing phone / Baridi-Mob instead of
-  // blanks, and (b) saving the profile (even for an unrelated field) does
-  // not overwrite stored values with empty strings.
+  // Keep the edit-form inputs in sync with the stored user doc — but only
+  // while the user is NOT actively editing, otherwise a background
+  // Firestore snapshot update could overwrite their in-progress input.
+  // Always set (no `if (value)` guard) so clearing a field and saving
+  // propagates the cleared value back into the form; otherwise the stale
+  // pre-clear value would leak into the next save.
   useEffect(() => {
-    const phone = myUserDoc?.phone || auth.phone || "";
-    const bariMob = myUserDoc?.bariMobAccount || "";
-    if (phone) setProfilePhone(phone);
-    if (bariMob) setProfileBariMob(bariMob);
-  }, [myUserDoc?.phone, myUserDoc?.bariMobAccount, auth.phone]);
+    if (editMode) return;
+    setProfilePhone(myUserDoc?.phone || auth.phone || "");
+    setProfileBariMob(myUserDoc?.bariMobAccount || "");
+  }, [myUserDoc?.phone, myUserDoc?.bariMobAccount, auth.phone, editMode]);
 
   // ── Computed
   const creatorEmail = auth.email;
