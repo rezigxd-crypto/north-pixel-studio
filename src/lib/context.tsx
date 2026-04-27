@@ -136,13 +136,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
       if (!user) { setAuthState({ role: null, email: "", name: "", wilaya: "", uid: "", loading: false }); return; }
-      // IMPORTANT: flip loading back to `true` before kicking off loadUser.
-      // Otherwise a prior `user=null` tick could have already set
-      // `loading:false`; the portals' auth guards would then see
-      // `loading:false` + `role:null` during the async window between
-      // sign-in and the getDoc resolving — and bounce the user straight
-      // back to /auth/login. This was the login-loop bug.
-      setAuthState((s) => ({ ...s, loading: true }));
+      // Flip loading back to `true` AND stamp the uid+email synchronously
+      // before awaiting loadUser. This is critical: sign-in flows navigate
+      // to /portal/* imperatively as soon as loginWith*() returns, which
+      // can happen BEFORE React commits the setAuthState below. Portals
+      // guard on `auth.loading` AND `auth.role`; by also keying on
+      // `!auth.uid` we guarantee a brand-new mount during the async
+      // loadUser window never sees stale `{role:null, uid:""}` and
+      // bounces the user back to /auth/login.
+      setAuthState((s) => ({ ...s, loading: true, uid: user.uid, email: user.email || "" }));
       await loadUser(user);
     });
   }, []);
@@ -154,6 +156,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const loginWithEmail = async (email: string, password: string): Promise<UserRole> => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
+    // Populate the shared auth state BEFORE returning so the caller can
+    // safely `navigate("/portal/...")` without racing the onAuthStateChanged
+    // callback (which also calls loadUser). Without this, a slow first
+    // paint or pending React batch can let the portal mount with stale
+    // `{role:null, uid:""}` and redirect straight back to /auth/login.
+    await loadUser(cred.user);
     if (cred.user.email === ADMIN_EMAIL) return "admin";
     const snap = await getDoc(doc(db, "users", cred.user.uid));
     return snap.exists() ? (snap.data().role as UserRole) : null;
@@ -165,9 +173,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const user = result.user;
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
+      // Existing user — prime the shared auth state before returning so
+      // the Login page's navigate() call lands on a portal that reads a
+      // hydrated context (role/uid set). Same race-avoidance reasoning
+      // as loginWithEmail above.
+      await loadUser(user);
       return { status: "existing", role: snap.data().role as UserRole };
     }
-    // New Google user — require them to complete signup
+    // New Google user — require them to complete signup. Do NOT hydrate
+    // the auth context yet (no user doc exists); the complete-signup
+    // page owns that step.
     return {
       status: "new",
       email: user.email || "",
