@@ -394,7 +394,9 @@ export type Bundle = {
 };
 
 export const UNIVERSITY_BUNDLE: Bundle = {
-  slug: "university-bundle",
+  // Slug kept as "university" so existing /#university nav links in
+  // SiteHeader and SiteFooter continue to anchor here after the refactor.
+  slug: "university",
   icon: "GraduationCap",
   badge: { ar: "عرض خاص للجامعات", en: "Special University Offer", fr: "Offre Spéciale Universités" },
   slogan: { ar: "دعم للرقمنة والبحث العلمي وتعزيز العلاقة بين الطالب والمؤسسة الجامعية", en: "Supporting digitalization, scientific research, and student-institution relations", fr: "Pour la numérisation, la recherche scientifique et le lien étudiant-université" },
