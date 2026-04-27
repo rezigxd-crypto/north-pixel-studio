@@ -87,15 +87,13 @@ const AdminPortal = () => {
   // non-admin users are rerouted to their own portal rather than bounced
   // to the login screen; unauthenticated visitors still go to /auth/login.
   //
-  // We also wait on `auth.uid` — Firebase sets the uid the moment a
-  // sign-in completes, before the Firestore doc has loaded. Checking uid
-  // separately from role prevents a race where the user bounces to login
-  // in the micro-window between `signInWithPopup` resolving and the
-  // `/users/{uid}` doc being fetched.
+  // `auth.loading` stays true throughout the async sign-in window (set by
+  // onAuthStateChanged and cleared by loadUser), so a role-null state once
+  // loading is false is a *terminal* state — the Firestore doc is genuinely
+  // missing. Treat it as unauthenticated and redirect to /auth/login.
   useEffect(() => {
     if (auth.loading) return;
-    if (!auth.uid) { navigate("/auth/login"); return; }
-    if (!auth.role) return; // authed, doc still resolving — wait
+    if (!auth.uid || !auth.role) { navigate("/auth/login"); return; }
     if (auth.role !== "admin") navigate(`/portal/${auth.role}`);
   }, [auth.loading, auth.uid, auth.role, navigate]);
 
