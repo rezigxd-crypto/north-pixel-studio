@@ -10,6 +10,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useApp } from "@/lib/context";
 import { toast } from "sonner";
 import type { Lang } from "@/lib/i18n";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const LANGS: { code: Lang; label: string; flag: string }[] = [
   { code: "ar", label: "العربية", flag: "🇩🇿" },
@@ -92,6 +93,7 @@ export const SiteHeader = () => {
           {/* Auth buttons */}
           {isLoggedIn ? (
             <>
+              <NotificationBell />
               <Button asChild variant="ghost" size="sm">
                 <Link to={`/portal/${auth.role}`}><LayoutDashboard className="w-4 h-4 me-1" />{lang === "ar" ? "لوحتي" : "Dashboard"}</Link>
               </Button>
@@ -107,7 +109,10 @@ export const SiteHeader = () => {
           )}
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile-only notification bell + hamburger */}
+        <div className="md:hidden flex items-center ms-auto">
+          {isLoggedIn && <NotificationBell />}
+        </div>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden"><Menu /></Button>

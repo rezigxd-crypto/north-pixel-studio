@@ -121,6 +121,7 @@ const ClientPortal = () => {
           }
           clientName={auth.name}
           clientEmail={auth.email}
+          clientUid={auth.uid}
           clientWilaya={auth.wilaya}
         />
       </div>
@@ -159,7 +160,7 @@ const ClientPortal = () => {
               <p className="text-muted-foreground mb-4">{lang === "ar" ? "لم تنشر أي مشروع بعد." : "No projects posted yet."}</p>
               <PostProjectWizard
                 trigger={<Button variant="gold"><Plus className="w-4 h-4 me-1" />{lang === "ar" ? "انشر مشروعك الأول" : "Post first project"}</Button>}
-                clientName={auth.name} clientEmail={auth.email} clientWilaya={auth.wilaya}
+                clientName={auth.name} clientEmail={auth.email} clientWilaya={auth.wilaya} clientUid={auth.uid}
               />
             </div>
           ) : (

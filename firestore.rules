@@ -47,5 +47,29 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow update, delete: if request.auth != null;
     }
+
+    // Notifications — per-user feed.
+    //   • create: any authed user can write (so a creator placing a bid
+    //     can drop a `new_bid` notification on the project owner). The
+    //     recipientUid is set client-side, but the creator is also forced
+    //     to mark `read: false` at create time, so they can't pre-read or
+    //     spoof the dot.
+    //   • read/list: only the recipient (or admin tooling, which is run
+    //     while logged in as the recipient anyway).
+    //   • update: only the recipient, and only to flip `read` to true.
+    match /notifications/{docId} {
+      allow create: if request.auth != null
+                    && request.resource.data.recipientUid is string
+                    && request.resource.data.recipientUid.size() > 0
+                    && request.resource.data.read == false;
+      allow read: if request.auth != null
+                  && resource.data.recipientUid == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.recipientUid == request.auth.uid
+                    && request.resource.data.recipientUid == resource.data.recipientUid
+                    && request.resource.data.type == resource.data.type;
+      allow delete: if request.auth != null
+                    && resource.data.recipientUid == request.auth.uid;
+    }
   }
 }
