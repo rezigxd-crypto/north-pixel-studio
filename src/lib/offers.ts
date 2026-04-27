@@ -219,6 +219,81 @@ export const OFFERS: Offer[] = [
     pricing: { unit: "عقار", pricePerUnit: 12000, minUnits: 1, maxUnits: 20, unitLabel: "property", unitLabelPlural: "properties", unitLabelAr: "عقار" },
     matchingRoles: ["Photographer", "Cinematographer"],
   },
+  {
+    slug: "government-institutional",
+    title: { en: "Government & Institutional", fr: "Gouvernement & Institutionnel", ar: "الإنتاج الحكومي والمؤسسي" },
+    tagline: { en: "Sovereign creative production for Algerian institutions.", fr: "Production créative souveraine pour les institutions algériennes.", ar: "إنتاج إعلامي سيادي للمؤسسات الجزائرية." },
+    description: {
+      en: "End-to-end audio-visual production for ministries, public agencies, public-sector campaigns and institutional events — annual reports on film, citizen-awareness campaigns, parliamentary archives, ministerial communication films and official ceremony coverage. Compliant with Algerian administrative and procurement standards.",
+      fr: "Production audiovisuelle complète pour les ministères, agences publiques, campagnes de service public et événements institutionnels — rapports annuels filmés, campagnes de sensibilisation, archives parlementaires, films de communication ministérielle et couverture de cérémonies officielles. Conforme aux normes administratives algériennes.",
+      ar: "إنتاج سمعي بصري متكامل للوزارات والهيئات العمومية والحملات الحكومية والفعاليات المؤسسية — تقارير سنوية مصوّرة، حملات توعية للمواطنين، أرشفة جلسات برلمانية، أفلام التواصل الوزاري وتغطية المراسم الرسمية. مع التزام تام بالمعايير الإدارية الجزائرية.",
+    },
+    features: {
+      en: ["Annual-report film production", "Citizen-awareness campaigns", "Ministerial communication films", "Parliamentary & policy archives", "Official-event coverage with protocol crew"],
+      fr: ["Films de rapport annuel", "Campagnes de sensibilisation citoyenne", "Films de communication ministérielle", "Archives parlementaires & politiques", "Couverture protocolaire d'événements officiels"],
+      ar: ["إنتاج أفلام التقارير السنوية", "حملات توعية للمواطنين", "أفلام التواصل الوزاري", "أرشفة الجلسات البرلمانية والسياسات العامة", "تغطية الفعاليات الرسمية مع فريق ملتزم بالبروتوكول"],
+    },
+    process: {
+      en: ["Briefing with the institutional cabinet", "Treatment & legal compliance review", "On-site production with protocol team", "Editorial review, AR/FR delivery + official invoice"],
+      fr: ["Briefing avec le cabinet institutionnel", "Traitement & conformité juridique", "Production sur site avec équipe protocolaire", "Révision éditoriale, livraison AR/FR + facture officielle"],
+      ar: ["جلسة عمل مع الديوان", "كتابة المعالجة ومراجعة المطابقة القانونية", "الإنتاج في الموقع مع فريق ملتزم بالبروتوكول", "المراجعة التحريرية والتسليم بالعربية/الفرنسية مع فاتورة رسمية"],
+    },
+    startingPrice: 25000,
+    icon: "Landmark", accent: "royal",
+    image: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80",
+    pricing: { unit: "يوم تصوير", pricePerUnit: 25000, minUnits: 1, maxUnits: 10, unitLabel: "day", unitLabelPlural: "days", unitLabelAr: "يوم" },
+    matchingRoles: ["Cinematographer", "Director", "Photographer", "Video Editor", "Motion Designer"],
+  },
+  {
+    slug: "elearning-production",
+    title: { en: "E-Learning & MOOC Production", fr: "Production E-Learning & MOOC", ar: "إنتاج التعليم الرقمي والمساقات" },
+    tagline: { en: "Filmed lectures, animated explainers and MOOC-ready courses.", fr: "Cours filmés, explainers animés et MOOCs clé en main.", ar: "محاضرات مصوّرة وفيديوهات شرحية ومساقات إلكترونية كاملة." },
+    description: {
+      en: "Full e-learning production for universities, training centres and edtech startups — filmed lectures with chroma-key, animated explainers, course thumbnails, AR/FR/EN subtitling, course intros and final exam recap clips. Aligned with the MESRS digitalization mandate.",
+      fr: "Production e-learning complète pour universités, centres de formation et startups edtech — cours filmés avec fond vert, explainers animés, miniatures, sous-titres AR/FR/EN, intros de cours et capsules récapitulatives. Alignée avec la mission de numérisation du MESRS.",
+      ar: "إنتاج متكامل للتعليم الرقمي للجامعات ومراكز التكوين وشركات التيكنولوجيا التعليمية — محاضرات مصوّرة بتقنية الكروما، فيديوهات شرحية متحركة، صور مصغّرة، ترجمات بالعربية/الفرنسية/الإنجليزية، مقدّمات للمساقات وكبسولات مراجعة. متوافق مع مهمة الرقمنة الجامعية.",
+    },
+    features: {
+      en: ["Studio-grade lecture filming (chroma-key)", "Animated explainer videos", "AR / FR / EN subtitling", "Course thumbnails & branding", "MOOC-ready packaging"],
+      fr: ["Cours filmés en studio (fond vert)", "Vidéos explainer animées", "Sous-titres AR / FR / EN", "Miniatures & branding du cours", "Packaging prêt pour MOOC"],
+      ar: ["تصوير المحاضرات في الاستوديو (كروما)", "فيديوهات شرحية متحركة", "ترجمات بالعربية والفرنسية والإنجليزية", "صور مصغّرة وتصميم العلامة", "تجهيز نهائي جاهز للمنصّات"],
+    },
+    process: {
+      en: ["Curriculum review with the educator", "Studio recording session", "Animation & graphics layer", "Subtitles, packaging & platform-ready export"],
+      fr: ["Revue du programme avec l'enseignant", "Session studio", "Couche animation & motion design", "Sous-titres, packaging & export prêt-plateforme"],
+      ar: ["مراجعة المنهاج مع الأستاذ", "جلسة تصوير في الاستوديو", "إضافة الرسوم المتحركة والتصميم", "الترجمات والتجهيز والتصدير الجاهز للمنصّات"],
+    },
+    startingPrice: 5000,
+    icon: "MonitorPlay", accent: "gold",
+    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80",
+    pricing: { unit: "دقيقة فيديو نهائية", pricePerUnit: 5000, minUnits: 5, maxUnits: 240, unitLabel: "minute of finished video", unitLabelPlural: "minutes of finished video", unitLabelAr: "دقيقة" },
+    matchingRoles: ["Cinematographer", "Video Editor", "Motion Designer", "Voice-Over Artist"],
+  },
+  {
+    slug: "live-streaming",
+    title: { en: "Live Streaming", fr: "Diffusion en direct", ar: "البث المباشر" },
+    tagline: { en: "Multi-camera live coverage of conferences, ceremonies and university events.", fr: "Diffusion multi-caméras de conférences, cérémonies et événements universitaires.", ar: "تغطية مباشرة متعددة الكاميرات للمؤتمرات والمراسم والفعاليات الجامعية." },
+    description: {
+      en: "Real-time multi-camera streaming with live switching, lower thirds, sponsor overlays and simulcast to YouTube, Facebook, LinkedIn or a private link — purpose-built for conferences, ministerial events, university openings and graduation ceremonies. On-site directed by an experienced broadcast crew.",
+      fr: "Streaming multi-caméras en temps réel avec régie live, lower thirds, habillage sponsors et simulcast YouTube/Facebook/LinkedIn ou lien privé — pensé pour les conférences, événements ministériels, ouvertures universitaires et cérémonies de remise de diplômes.",
+      ar: "بث مباشر متعدد الكاميرات مع تبديل لحظي، شارات سفلية، علامات الرعاة، وبث متزامن على يوتيوب وفيسبوك ولينكدإن أو رابط خاص — مصمّم للمؤتمرات والفعاليات الوزارية والافتتاحات الجامعية وحفلات التخرج. يديره فريق ميداني متخصّص في البث المباشر.",
+    },
+    features: {
+      en: ["3+ camera live switching", "Branded lower thirds & overlays", "Simulcast to YouTube / Facebook / LinkedIn", "Recorded archive (4K)", "On-site stream director"],
+      fr: ["Régie live 3+ caméras", "Lower thirds & habillage marque", "Simulcast YouTube / Facebook / LinkedIn", "Archive enregistrée (4K)", "Directeur de stream sur site"],
+      ar: ["تبديل مباشر بين 3 كاميرات أو أكثر", "شارات سفلية وعناصر تصميم بالعلامة", "بث متزامن على يوتيوب وفيسبوك ولينكدإن", "أرشيف مسجّل بدقة 4K", "مدير بث ميداني"],
+    },
+    process: {
+      en: ["Pre-event tech walkthrough", "Cameras & encoder setup", "Live event direction", "Archive delivery + highlight cutdown"],
+      fr: ["Repérage technique pré-événement", "Installation caméras & encodeurs", "Direction live", "Livraison de l'archive + best-of"],
+      ar: ["زيارة تقنية قبل الفعالية", "تركيب الكاميرات والمشفّرات", "إدارة البث المباشر", "تسليم الأرشيف وملخّص اللحظات"],
+    },
+    startingPrice: 12000,
+    icon: "Radio", accent: "royal",
+    image: "https://images.unsplash.com/photo-1540304453527-62f979142a17?w=800&q=80",
+    pricing: { unit: "ساعة بث مباشر", pricePerUnit: 12000, minUnits: 1, maxUnits: 12, unitLabel: "live hour", unitLabelPlural: "live hours", unitLabelAr: "ساعة" },
+    matchingRoles: ["Cinematographer", "Director", "Sound Designer"],
+  },
 ];
 
 export const CLIENT_TYPES = [
@@ -289,9 +364,38 @@ export const formatStartingPrice = (n: number, lang: "ar" | "en" | "fr"): string
 
 export const getOffer = (slug: string) => OFFERS.find((o) => o.slug === slug);
 
-// ─── University bundle (special offer) ─────────────────────────────────────
-export const UNIVERSITY_BUNDLE = {
+// ─── Monthly partnership bundles ───────────────────────────────────────────
+// Each bundle is a sustained B2B retainer (vs. one-off project posts) for
+// a target industry vertical. Rendered side-by-side on the home page.
+export type Bundle = {
+  slug: string;
+  /** Lucide icon name used as the bundle's visual sigil. */
+  icon: string;
+  /** Audience tag shown above the headline. */
+  badge: { ar: string; en: string; fr: string };
+  /** Short slogan / mission statement. */
+  slogan: { ar: string; en: string; fr: string };
+  /** Hero headline for the bundle section. */
+  headline: { ar: string; en: string; fr: string };
+  /** High-level deliverables ("what's included") shown above the tier grid. */
+  includes: { ar: string[]; en: string[]; fr: string[] };
+  /** Background image (Unsplash, lazy-loaded). */
+  image: string;
+  /** 3 monthly tiers — middle one is highlighted as "most popular". */
+  monthlyTiers: Array<{
+    id: string;
+    monthlyPrice: number;
+    title: { ar: string; en: string; fr: string };
+    tagline: { ar: string; en: string; fr: string };
+    includes: { ar: string[]; en: string[]; fr: string[] };
+  }>;
+  /** Contract / billing fine-print bullets. */
+  contractTerms: { ar: string[]; en: string[]; fr: string[] };
+};
+
+export const UNIVERSITY_BUNDLE: Bundle = {
   slug: "university-bundle",
+  icon: "GraduationCap",
   badge: { ar: "عرض خاص للجامعات", en: "Special University Offer", fr: "Offre Spéciale Universités" },
   slogan: { ar: "دعم للرقمنة والبحث العلمي وتعزيز العلاقة بين الطالب والمؤسسة الجامعية", en: "Supporting digitalization, scientific research, and student-institution relations", fr: "Pour la numérisation, la recherche scientifique et le lien étudiant-université" },
   headline: { ar: "نطرح عليكم عرضًا يتضمن ما يلي — ويتيح لكم الحصول على مادة سمعية بصرية ترقى بمستوى جامعتكم بين الجامعات.", en: "We offer you a package that includes the following — giving you audio-visual content that elevates your university among peers.", fr: "Nous vous proposons un package qui comprend ce qui suit — pour vous offrir un contenu audiovisuel qui élève le niveau de votre université." },
@@ -345,3 +449,123 @@ export const UNIVERSITY_BUNDLE = {
     fr: ["Contrat mensuel renouvelable", "Résiliation avec préavis 30 jours", "-10% pour un engagement annuel", "Facture officielle conforme à l'administration algérienne"],
   },
 };
+
+// ─── Hospitality & tourism bundle ───────────────────────────────────────────
+// Targets hotels, riads, restaurants and tour operators — aligns with the
+// national tourism push and is one of the highest-demand creative verticals
+// in Algeria.
+export const HOSPITALITY_BUNDLE: Bundle = {
+  slug: "hospitality-bundle",
+  icon: "Hotel",
+  badge: { ar: "عرض الفنادق والسياحة", en: "Hospitality & Tourism Offer", fr: "Offre Hôtellerie & Tourisme" },
+  slogan: { ar: "تعزيز الحضور الرقمي للفنادق والمطاعم والوكالات السياحية الجزائرية", en: "Powering the digital presence of Algerian hotels, restaurants and tour operators", fr: "Pour renforcer la présence digitale des hôtels, restaurants et agences touristiques algériens" },
+  headline: { ar: "نقدّم لكم باقة شهرية من المحتوى البصري الفاخر — صور وريلز وجولات افتراضية ترفع من قيمة منشأتكم وتجذب المزيد من النزلاء.", en: "A monthly premium-content package — photos, reels and virtual tours that lift your venue's prestige and bring in more guests.", fr: "Un package mensuel de contenu premium — photos, reels et visites virtuelles qui élèvent le prestige de votre établissement et attirent plus de clients." },
+  includes: {
+    ar: ["جلسات تصوير دورية للغرف والقاعات والمطاعم", "ريلز شهرية لشبكات التواصل", "جولة افتراضية 360°", "أفلام ترويجية فصلية", "تغطية الفعاليات الخاصة"],
+    en: ["Recurring shoots for rooms, halls and restaurants", "Monthly reels for social media", "360° virtual tour", "Quarterly promotional films", "Coverage of private events"],
+    fr: ["Séances photo régulières (chambres, salles, restaurants)", "Reels mensuels pour les réseaux sociaux", "Visite virtuelle 360°", "Films promotionnels trimestriels", "Couverture des événements privés"],
+  },
+  image: "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&q=80",
+  monthlyTiers: [
+    {
+      id: "boutique",
+      monthlyPrice: 60000,
+      title: { ar: "باقة بوتيك", en: "Boutique", fr: "Boutique" },
+      tagline: { ar: "للفنادق الصغيرة والمطاعم", en: "For boutique hotels & restaurants", fr: "Pour hôtels boutique & restaurants" },
+      includes: {
+        ar: ["جلسة تصوير شهرية واحدة", "4 ريلز للسوشيال", "20 صورة معدّلة", "تسليم في 72 ساعة"],
+        en: ["1 monthly photoshoot", "4 social reels", "20 retouched photos", "72-hour delivery"],
+        fr: ["1 séance photo mensuelle", "4 reels social", "20 photos retouchées", "Livraison 72h"],
+      },
+    },
+    {
+      id: "standard",
+      monthlyPrice: 110000,
+      title: { ar: "باقة قياسية", en: "Standard", fr: "Standard" },
+      tagline: { ar: "الأكثر طلبًا — حضور رقمي ثابت", en: "Most popular — full digital presence", fr: "Le plus populaire" },
+      includes: {
+        ar: ["جلستا تصوير شهريتان", "8 ريلز للسوشيال", "50 صورة معدّلة", "فيلم ترويجي مصغّر شهريًا", "تسليم في 48 ساعة"],
+        en: ["2 monthly photoshoots", "8 social reels", "50 retouched photos", "Monthly mini promo film", "48-hour delivery"],
+        fr: ["2 séances photo mensuelles", "8 reels social", "50 photos retouchées", "Mini film promo mensuel", "Livraison 48h"],
+      },
+    },
+    {
+      id: "premier",
+      monthlyPrice: 180000,
+      title: { ar: "باقة بريمير", en: "Premier", fr: "Premier" },
+      tagline: { ar: "غرفة محتوى داخل المنشأة", en: "Your in-house content room", fr: "Votre salle contenu intégrée" },
+      includes: {
+        ar: ["4 جلسات تصوير شهريًا", "16 ريلز للسوشيال", "100 صورة معدّلة", "جولة افتراضية 360° سنوية", "فيلم ترويجي فصلي", "مدير حساب مخصص"],
+        en: ["4 monthly photoshoots", "16 social reels", "100 retouched photos", "Annual 360° virtual tour", "Quarterly hero film", "Dedicated account manager"],
+        fr: ["4 séances photo mensuelles", "16 reels social", "100 photos retouchées", "Visite 360° annuelle", "Film phare trimestriel", "Chargé de compte dédié"],
+      },
+    },
+  ],
+  contractTerms: {
+    ar: ["عقد شهري قابل للتجديد", "إمكانية الإيقاف بإشعار 30 يومًا", "خصم 10% للالتزام السنوي", "فاتورة رسمية"],
+    en: ["Renewable monthly contract", "Cancel with 30-day notice", "10% off for an annual commitment", "Official invoice"],
+    fr: ["Contrat mensuel renouvelable", "Résiliation avec préavis 30 jours", "-10% pour un engagement annuel", "Facture officielle"],
+  },
+};
+
+// ─── SME / startup starter bundle ──────────────────────────────────────────
+// Targets small Algerian businesses, shops, e-commerce and indie pros looking
+// to professionalize their content with a low entry-point. Job-creation lever:
+// every SME on the platform = sustained work for creators across all wilayas.
+export const SME_STARTER_BUNDLE: Bundle = {
+  slug: "sme-starter-bundle",
+  icon: "Rocket",
+  badge: { ar: "عرض المؤسسات الصغيرة والشركات الناشئة", en: "SME & Startup Offer", fr: "Offre PME & Startups" },
+  slogan: { ar: "بداية احترافية للأعمال الصغيرة والمشاريع الناشئة في الجزائر", en: "A professional launchpad for Algerian small businesses and startups", fr: "Un tremplin professionnel pour les PME et startups algériennes" },
+  headline: { ar: "نمنح المشاريع الناشئة بداية بصرية احترافية — هوية واضحة ومحتوى منتظم بأسعار في متناول الجميع.", en: "A professional visual launch for early-stage businesses — clean identity and steady content at an entry-level price.", fr: "Un démarrage visuel professionnel — identité claire et contenu régulier à un tarif accessible." },
+  includes: {
+    ar: ["تصميم الشعار ودليل الهوية البصرية", "صور المنتجات / الخدمات", "ريلز شهرية للسوشيال", "حملات إعلانية قصيرة", "متابعة استشارية"],
+    en: ["Logo & brand book", "Product / service photography", "Monthly social reels", "Short ad campaigns", "Strategic content advisory"],
+    fr: ["Logo & charte graphique", "Photos produits / services", "Reels mensuels", "Campagnes pub courtes", "Conseil contenu stratégique"],
+  },
+  image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80",
+  monthlyTiers: [
+    {
+      id: "launch",
+      monthlyPrice: 40000,
+      title: { ar: "باقة الإطلاق", en: "Launch", fr: "Lancement" },
+      tagline: { ar: "كل ما تحتاجه للانطلاق", en: "Everything to get started", fr: "Tout pour démarrer" },
+      includes: {
+        ar: ["تصميم شعار ودليل بسيط للهوية", "10 صور للمنتجات / الخدمة", "ريلز واحد للسوشيال", "تسليم في 7 أيام"],
+        en: ["Logo + light brand guide", "10 product / service photos", "1 social reel", "7-day delivery"],
+        fr: ["Logo + mini charte", "10 photos produit / service", "1 reel social", "Livraison 7 jours"],
+      },
+    },
+    {
+      id: "growth",
+      monthlyPrice: 85000,
+      title: { ar: "باقة النمو", en: "Growth", fr: "Croissance" },
+      tagline: { ar: "الأكثر طلبًا — محتوى منتظم", en: "Most popular — regular content", fr: "Le plus populaire" },
+      includes: {
+        ar: ["جلسة تصوير شهرية", "20 صورة معدّلة", "4 ريلز للسوشيال", "إعلان قصير شهري", "تسليم في 5 أيام"],
+        en: ["1 monthly photoshoot", "20 retouched photos", "4 social reels", "1 short monthly ad", "5-day delivery"],
+        fr: ["1 séance photo mensuelle", "20 photos retouchées", "4 reels social", "1 pub courte mensuelle", "Livraison 5 jours"],
+      },
+    },
+    {
+      id: "scale",
+      monthlyPrice: 150000,
+      title: { ar: "باقة التوسّع", en: "Scale", fr: "Scale" },
+      tagline: { ar: "للنمو السريع وحملات السوشيال", en: "For fast growth & paid campaigns", fr: "Croissance rapide & campagnes" },
+      includes: {
+        ar: ["جلستا تصوير شهريتان", "40 صورة معدّلة", "8 ريلز للسوشيال", "حملة إعلانية شهرية", "تقرير أداء شهري", "تسليم في 3 أيام"],
+        en: ["2 monthly photoshoots", "40 retouched photos", "8 social reels", "1 ad campaign / month", "Monthly performance report", "3-day delivery"],
+        fr: ["2 séances photo mensuelles", "40 photos retouchées", "8 reels social", "1 campagne pub / mois", "Rapport mensuel", "Livraison 3 jours"],
+      },
+    },
+  ],
+  contractTerms: {
+    ar: ["عقد شهري قابل للتجديد", "إمكانية الإيقاف بإشعار 14 يومًا", "خصم 10% للالتزام السنوي", "فاتورة رسمية"],
+    en: ["Renewable monthly contract", "Cancel with 14-day notice", "10% off for an annual commitment", "Official invoice"],
+    fr: ["Contrat mensuel renouvelable", "Résiliation avec préavis 14 jours", "-10% pour un engagement annuel", "Facture officielle"],
+  },
+};
+
+/** All monthly bundles, in display order. The home page renders these
+ *  side-by-side, each with the same layout as the original university bundle. */
+export const BUNDLES: Bundle[] = [UNIVERSITY_BUNDLE, HOSPITALITY_BUNDLE, SME_STARTER_BUNDLE];

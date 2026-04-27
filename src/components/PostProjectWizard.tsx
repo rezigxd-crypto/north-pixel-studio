@@ -331,6 +331,107 @@ const SERVICES = [
       },
     },
   },
+  {
+    slug: "government-institutional",
+    icon: "Landmark",
+    accent: "royal" as const,
+    title: { ar: "إنتاج حكومي ومؤسسي", en: "Government & Institutional", fr: "Gouvernement & Institutionnel" },
+    matchingRoles: ["Cinematographer", "Director", "Photographer", "Video Editor", "Motion Designer"],
+    options: {
+      productionType: {
+        label: { ar: "نوع الإنتاج", en: "Production type", fr: "Type de production" },
+        choices: [
+          { id: "annual-report", label: { ar: "فيلم تقرير سنوي", en: "Annual report film", fr: "Film de rapport annuel" } },
+          { id: "ministerial-film", label: { ar: "فيلم تواصل وزاري", en: "Ministerial communication film", fr: "Film de communication ministérielle" } },
+          { id: "awareness-campaign", label: { ar: "حملة توعية للمواطنين", en: "Citizen-awareness campaign", fr: "Campagne de sensibilisation" } },
+          { id: "official-event", label: { ar: "تغطية فعالية رسمية", en: "Official event coverage", fr: "Couverture événement officiel" } },
+          { id: "parliamentary", label: { ar: "أرشيف برلماني", en: "Parliamentary archive", fr: "Archive parlementaire" } },
+        ],
+      },
+      duration: {
+        label: { ar: "مدة الإنتاج", en: "Production duration", fr: "Durée" },
+        choices: [
+          { id: "1day", label: { ar: "يوم تصوير", en: "1 shoot day", fr: "1 journée" }, price: 25000 },
+          { id: "2day", label: { ar: "يومان", en: "2 days", fr: "2 jours" }, price: 45000 },
+          { id: "5day", label: { ar: "5 أيام", en: "5 days", fr: "5 jours" }, price: 100000 },
+          { id: "10day", label: { ar: "10 أيام", en: "10 days", fr: "10 jours" }, price: 180000 },
+        ],
+      },
+    },
+  },
+  {
+    slug: "elearning-production",
+    icon: "MonitorPlay",
+    accent: "gold" as const,
+    title: { ar: "إنتاج التعليم الرقمي", en: "E-Learning Production", fr: "Production E-Learning" },
+    matchingRoles: ["Cinematographer", "Video Editor", "Motion Designer", "Voice-Over Artist"],
+    options: {
+      contentType: {
+        label: { ar: "نوع المحتوى", en: "Content type", fr: "Type de contenu" },
+        choices: [
+          { id: "filmed-lecture", label: { ar: "محاضرة مصوّرة", en: "Filmed lecture", fr: "Cours filmé" } },
+          { id: "explainer", label: { ar: "فيديو شرحي متحرك", en: "Animated explainer", fr: "Vidéo explainer animée" } },
+          { id: "course", label: { ar: "مساق متكامل (MOOC)", en: "Full course (MOOC)", fr: "Cours complet (MOOC)" } },
+          { id: "training", label: { ar: "سلسلة تدريبية", en: "Training series", fr: "Série de formation" } },
+        ],
+      },
+      length: {
+        label: { ar: "طول المحتوى النهائي", en: "Final video length", fr: "Durée vidéo finale" },
+        choices: [
+          { id: "5min", label: { ar: "حتى 5 دقائق", en: "Up to 5 minutes", fr: "Jusqu'à 5 min" }, price: 25000 },
+          { id: "15min", label: { ar: "حتى 15 دقيقة", en: "Up to 15 minutes", fr: "Jusqu'à 15 min" }, price: 60000 },
+          { id: "30min", label: { ar: "حتى 30 دقيقة", en: "Up to 30 minutes", fr: "Jusqu'à 30 min" }, price: 120000 },
+          { id: "60min", label: { ar: "حتى 60 دقيقة", en: "Up to 60 minutes", fr: "Jusqu'à 60 min" }, price: 220000 },
+          { id: "course", label: { ar: "مساق كامل (4+ ساعات)", en: "Full course (4+ hours)", fr: "Cours complet (4h+)" }, price: 500000 },
+        ],
+      },
+      extras: {
+        label: { ar: "إضافات", en: "Extras", fr: "Extras" },
+        choices: [
+          { id: "subtitles-ar", label: { ar: "ترجمة عربية", en: "Arabic subtitles", fr: "Sous-titres arabes" } },
+          { id: "subtitles-multi", label: { ar: "ترجمة AR/FR/EN", en: "AR/FR/EN subtitles", fr: "Sous-titres AR/FR/EN" } },
+          { id: "thumbnails", label: { ar: "صور مصغّرة وعلامة المساق", en: "Thumbnails & branding", fr: "Miniatures & branding" } },
+          { id: "complete", label: { ar: "الباقة الكاملة (ترجمة + علامة + تجهيز نهائي)", en: "Complete package", fr: "Package complet" } },
+        ],
+      },
+    },
+  },
+  {
+    slug: "live-streaming",
+    icon: "Radio",
+    accent: "royal" as const,
+    title: { ar: "بث مباشر", en: "Live Streaming", fr: "Diffusion en direct" },
+    matchingRoles: ["Cinematographer", "Director", "Sound Designer"],
+    options: {
+      eventType: {
+        label: { ar: "نوع الحدث", en: "Event type", fr: "Type d'événement" },
+        choices: [
+          { id: "conference", label: { ar: "مؤتمر / ندوة", en: "Conference / Seminar", fr: "Conférence / Séminaire" } },
+          { id: "ministerial", label: { ar: "فعالية وزارية", en: "Ministerial event", fr: "Événement ministériel" } },
+          { id: "graduation", label: { ar: "حفل تخرج", en: "Graduation ceremony", fr: "Cérémonie de remise de diplômes" } },
+          { id: "launch", label: { ar: "إطلاق منتج", en: "Product launch", fr: "Lancement produit" } },
+          { id: "concert", label: { ar: "حفل موسيقي", en: "Concert", fr: "Concert" } },
+        ],
+      },
+      duration: {
+        label: { ar: "مدة البث المباشر", en: "Live duration", fr: "Durée du direct" },
+        choices: [
+          { id: "1h", label: { ar: "ساعة واحدة", en: "1 hour", fr: "1 heure" }, price: 12000 },
+          { id: "3h", label: { ar: "3 ساعات", en: "3 hours", fr: "3 heures" }, price: 32000 },
+          { id: "halfday", label: { ar: "نصف يوم (5 ساعات)", en: "Half day (5h)", fr: "Demi-journée (5h)" }, price: 50000 },
+          { id: "fullday", label: { ar: "يوم كامل (10 ساعات)", en: "Full day (10h)", fr: "Journée complète (10h)" }, price: 90000 },
+        ],
+      },
+      cameras: {
+        label: { ar: "عدد الكاميرات", en: "Number of cameras", fr: "Nombre de caméras" },
+        choices: [
+          { id: "2cam", label: { ar: "كاميرتان", en: "2 cameras", fr: "2 caméras" } },
+          { id: "3cam", label: { ar: "3 كاميرات", en: "3 cameras", fr: "3 caméras" } },
+          { id: "4cam", label: { ar: "4 كاميرات + درون", en: "4 cameras + drone", fr: "4 caméras + drone" } },
+        ],
+      },
+    },
+  },
 ] as const;
 
 type ServiceSlug = typeof SERVICES[number]["slug"];
