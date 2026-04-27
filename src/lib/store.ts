@@ -5,6 +5,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { generateUniqueUsername } from "./username";
+import { addNotification } from "./notifications";
 
 export type UserProfile = {
   uid: string;
@@ -60,6 +61,9 @@ export type Bid = {
 
 export type ClientOffer = {
   id: string;
+  /** UID of the client who posted the project. Optional because legacy offers
+   *  written before notifications shipped don't have it. */
+  clientUid?: string;
   clientName: string;
   clientEmail: string;
   clientWilaya?: string;
@@ -184,18 +188,94 @@ export const addOffer = async (o: Omit<ClientOffer, "id" | "status" | "createdAt
 };
 export const setOfferStatus = async (id: string, status: ClientOffer["status"]) => {
   await updateDoc(doc(db, "offers", id), { status });
+  // Notify the client when admin approves or rejects their project.
+  if (status === "open" || status === "rejected") {
+    try {
+      const snap = await getDoc(doc(db, "offers", id));
+      if (snap.exists()) {
+        const o = snap.data() as ClientOffer;
+        if (o.clientUid) {
+          await addNotification({
+            recipientUid: o.clientUid,
+            type: status === "open" ? "offer_approved" : "offer_rejected",
+            meta: { serviceTitle: o.serviceTitle || "", offerId: id },
+            link: "/portal/client",
+          });
+        }
+      }
+    } catch { /* silent — notifications never block the main flow */ }
+  }
 };
 export const markAdvancePaid = async (id: string, amount: number) => {
   await updateDoc(doc(db, "offers", id), { advancePaid: true, advanceAmount: amount });
+  // Notify the assigned creator that the advance is confirmed.
+  try {
+    const offSnap = await getDoc(doc(db, "offers", id));
+    if (!offSnap.exists()) return;
+    const o = offSnap.data() as ClientOffer;
+    if (!o.acceptedBidId) return;
+    const bidSnap = await getDoc(doc(db, "bids", o.acceptedBidId));
+    if (!bidSnap.exists()) return;
+    const b = bidSnap.data() as Bid;
+    if (b.creatorId) {
+      await addNotification({
+        recipientUid: b.creatorId,
+        type: "advance_paid",
+        meta: { serviceTitle: o.serviceTitle || "", amount: String(amount) },
+        link: "/portal/creator",
+      });
+    }
+  } catch { /* silent */ }
 };
 
 // ─── Bids ─────────────────────────────────────────────────────────────────
 export const addBid = async (b: Omit<Bid, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "bids"), { ...b, status: "pending", createdAt: serverTimestamp() });
+  // Notify the project owner that someone bid.
+  try {
+    const snap = await getDoc(doc(db, "offers", b.offerId));
+    if (snap.exists()) {
+      const o = snap.data() as ClientOffer;
+      if (o.clientUid) {
+        await addNotification({
+          recipientUid: o.clientUid,
+          type: "new_bid",
+          meta: {
+            serviceTitle: o.serviceTitle || "",
+            creatorName: b.creatorName || "",
+            amount: String(b.amount || 0),
+            offerId: b.offerId,
+          },
+          link: "/portal/client",
+        });
+      }
+    }
+  } catch { /* silent */ }
   return ref.id;
 };
 export const submitDeliverable = async (bidId: string, link: string) => {
   await updateDoc(doc(db, "bids", bidId), { deliverableLink: link, status: "delivered" });
+  // Notify the client that the work is ready for review.
+  try {
+    const bidSnap = await getDoc(doc(db, "bids", bidId));
+    if (!bidSnap.exists()) return;
+    const b = bidSnap.data() as Bid;
+    const offSnap = await getDoc(doc(db, "offers", b.offerId));
+    if (!offSnap.exists()) return;
+    const o = offSnap.data() as ClientOffer;
+    if (o.clientUid) {
+      await addNotification({
+        recipientUid: o.clientUid,
+        type: "deliverable_submitted",
+        meta: {
+          serviceTitle: o.serviceTitle || "",
+          creatorName: b.creatorName || "",
+          offerId: b.offerId,
+        },
+        link: "/portal/client",
+      });
+    }
+  } catch { /* silent */ }
 };
 export const acceptBid = async (bidId: string, offerId: string) => {
   const acceptedAt = Date.now();
@@ -209,6 +289,38 @@ export const acceptBid = async (bidId: string, offerId: string) => {
   const { getDocs, query: q, collection: col, where: w } = await import("firebase/firestore");
   const snap = await getDocs(q(col(db, "bids"), w("offerId", "==", offerId), w("status", "==", "pending")));
   await Promise.all(snap.docs.filter((d) => d.id !== bidId).map((d) => updateDoc(doc(db, "bids", d.id), { status: "rejected" })));
+
+  // Notify accepted creator + rejected creators.
+  try {
+    const offSnap = await getDoc(doc(db, "offers", offerId));
+    const serviceTitle = offSnap.exists() ? (offSnap.data() as ClientOffer).serviceTitle || "" : "";
+    const acceptedSnap = await getDoc(doc(db, "bids", bidId));
+    if (acceptedSnap.exists()) {
+      const ab = acceptedSnap.data() as Bid;
+      if (ab.creatorId) {
+        await addNotification({
+          recipientUid: ab.creatorId,
+          type: "bid_accepted",
+          meta: { serviceTitle, offerId },
+          link: "/portal/creator",
+        });
+      }
+    }
+    await Promise.all(
+      snap.docs
+        .filter((d) => d.id !== bidId)
+        .map(async (d) => {
+          const rb = d.data() as Bid;
+          if (!rb.creatorId) return;
+          await addNotification({
+            recipientUid: rb.creatorId,
+            type: "bid_not_selected",
+            meta: { serviceTitle, offerId },
+            link: "/portal/creator",
+          });
+        }),
+    );
+  } catch { /* silent */ }
 };
 
 /** Update workspace fields on an offer (meeting URL, meeting time, address). */

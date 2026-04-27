@@ -338,8 +338,8 @@ type ServiceSlug = typeof SERVICES[number]["slug"];
 // ─── Component ────────────────────────────────────────────────────────────
 
 export const PostProjectWizard = ({
-  trigger, clientName = "Client", clientEmail = "", clientWilaya = "",
-}: { trigger: React.ReactNode; clientName?: string; clientEmail?: string; clientWilaya?: string }) => {
+  trigger, clientName = "Client", clientEmail = "", clientWilaya = "", clientUid = "",
+}: { trigger: React.ReactNode; clientName?: string; clientEmail?: string; clientWilaya?: string; clientUid?: string }) => {
   const { lang } = useApp();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("service");
@@ -466,6 +466,7 @@ export const PostProjectWizard = ({
       const payload: Record<string, any> = {
         clientName: clientName || "Client",
         clientEmail,
+        clientUid: clientUid || "",
         serviceSlug: selectedService.slug,
         serviceTitle: selectedService.title[lang],
         units: 1,
