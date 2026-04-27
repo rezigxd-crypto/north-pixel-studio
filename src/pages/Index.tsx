@@ -420,7 +420,7 @@ const Index = () => {
                       onClick={() =>
                         openBundleRequest(
                           bundle,
-                          bundle.monthlyTiers[Math.floor(bundle.monthlyTiers.length / 2)]?.id || bundle.monthlyTiers[0].id,
+                          bundle.monthlyTiers[Math.floor(bundle.monthlyTiers.length / 2)]?.id || bundle.monthlyTiers[0]?.id || "",
                         )
                       }
                     >
