@@ -83,9 +83,14 @@ const AdminPortal = () => {
     }
   }, [searchParams]);
 
+  // Auth guard. Only the admin may view this portal. Authenticated
+  // non-admin users are rerouted to their own portal rather than bounced
+  // to the login screen; unauthenticated visitors still go to /auth/login.
   useEffect(() => {
-    if (!auth.loading && auth.role !== "admin") navigate("/auth/login");
-  }, [auth.loading, auth.role]);
+    if (auth.loading) return;
+    if (!auth.role) { navigate("/auth/login"); return; }
+    if (auth.role !== "admin") navigate(`/portal/${auth.role}`);
+  }, [auth.loading, auth.role, navigate]);
 
   const pendingCreators = creators.filter((c) => c.status === "pending");
   const approvedCreators = creators.filter((c) => c.status === "approved");

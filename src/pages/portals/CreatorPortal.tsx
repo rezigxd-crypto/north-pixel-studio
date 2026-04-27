@@ -50,10 +50,16 @@ const CreatorPortal = () => {
   const { auth, lang, refreshAuth } = useApp();
   const navigate = useNavigate();
 
-  // ── Auth guard
+  // ── Auth guard. If the authed user's role doesn't match this portal,
+  // send them to the portal that actually belongs to them (e.g. a client
+  // who tries to open /portal/creator is rerouted to /portal/client)
+  // rather than bouncing to the login screen. Only unauthenticated
+  // visitors go back to /auth/login.
   useEffect(() => {
-    if (!auth.loading && auth.role !== "creator") navigate("/auth/login");
-  }, [auth.loading, auth.role]);
+    if (auth.loading) return;
+    if (!auth.role) { navigate("/auth/login"); return; }
+    if (auth.role !== "creator") navigate(`/portal/${auth.role}`);
+  }, [auth.loading, auth.role, navigate]);
 
   const offers = useOffers();
   const bids = useBids();

@@ -136,6 +136,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     return onAuthStateChanged(auth, async (user) => {
       if (!user) { setAuthState({ role: null, email: "", name: "", wilaya: "", uid: "", loading: false }); return; }
+      // IMPORTANT: flip loading back to `true` before kicking off loadUser.
+      // Otherwise a prior `user=null` tick could have already set
+      // `loading:false`; the portals' auth guards would then see
+      // `loading:false` + `role:null` during the async window between
+      // sign-in and the getDoc resolving — and bounce the user straight
+      // back to /auth/login. This was the login-loop bug.
+      setAuthState((s) => ({ ...s, loading: true }));
       await loadUser(user);
     });
   }, []);
