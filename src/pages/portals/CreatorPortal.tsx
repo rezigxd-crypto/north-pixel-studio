@@ -55,11 +55,18 @@ const CreatorPortal = () => {
   // who tries to open /portal/creator is rerouted to /portal/client)
   // rather than bouncing to the login screen. Only unauthenticated
   // visitors go back to /auth/login.
+  //
+  // We also wait on `auth.uid` — Firebase sets the uid the moment a
+  // sign-in completes, before the Firestore doc has loaded. Checking uid
+  // separately from role prevents a race where the user bounces to login
+  // in the micro-window between `signInWithPopup` resolving and the
+  // `/users/{uid}` doc being fetched.
   useEffect(() => {
     if (auth.loading) return;
-    if (!auth.role) { navigate("/auth/login"); return; }
+    if (!auth.uid) { navigate("/auth/login"); return; }
+    if (!auth.role) return; // authed, doc still resolving — wait
     if (auth.role !== "creator") navigate(`/portal/${auth.role}`);
-  }, [auth.loading, auth.role, navigate]);
+  }, [auth.loading, auth.uid, auth.role, navigate]);
 
   const offers = useOffers();
   const bids = useBids();
