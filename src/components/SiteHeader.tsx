@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Menu, Sun, Moon, Globe, LogOut, LayoutDashboard,
-  Home, Sparkles, GraduationCap, Clapperboard, Users, UserCheck, User, ArrowRight, Mail,
+  Home, Sparkles, GraduationCap, Clapperboard, Users, UserCheck, User, ArrowRight, Mail, Lightbulb,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
@@ -213,6 +213,7 @@ export const SiteHeader = () => {
                     { Icon: Sparkles,     to: "/#offers",                            ar: "الخدمات",      fr: "Services",        en: "Services" },
                     { Icon: GraduationCap, to: "/#university",                       ar: "عرض الجامعات", fr: "Universités",     en: "University" },
                     { Icon: Clapperboard, to: "/quest",                              ar: "MovieCollab",  fr: "MovieCollab",     en: "MovieCollab" },
+                    { Icon: Lightbulb,    to: "/innovation",                         ar: "الابتكار",     fr: "Innovation",      en: "Innovation" },
                     { Icon: Users,        to: "/clients",                            ar: "العملاء",      fr: "Clients",         en: "Clients" },
                     { Icon: UserCheck,    to: "/freelancers",                        ar: "المبدعون",     fr: "Créateurs",       en: "Creators" },
                   ].map((n) => (
