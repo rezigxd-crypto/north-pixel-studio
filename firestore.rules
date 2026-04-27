@@ -48,6 +48,15 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
+    // Public config — small key/value store used to publish things like the
+    // admin UID so other clients can route notifications to the admin.
+    //   • read: any authed user.
+    //   • write: any authed user (the admin self-publishes on login;
+    //     constraining further would require custom claims which we don't use).
+    match /publicConfig/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
     // Bundle subscriptions — B2B / B2G monthly retainers.
     //   • create: any authed user (the requesting client).
     //   • read/list: any authed user — the admin needs to list them all,

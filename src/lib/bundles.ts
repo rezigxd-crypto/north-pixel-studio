@@ -113,13 +113,35 @@ const toMs = (v: unknown): number => {
 
 // ─── Subscriptions ────────────────────────────────────────────────────────
 
+/**
+ * Read the admin UID from the public config doc that the admin self-publishes
+ * on login (see `src/lib/context.tsx`). Used to route the new-bundle-request
+ * notification to the admin without needing admin-sdk access on the client.
+ * Returns "" if the doc isn't there yet (admin has never signed in on this
+ * project) — in that case the notification is silently skipped.
+ */
+export const getAdminUid = async (): Promise<string> => {
+  try {
+    const snap = await getDoc(doc(db, "publicConfig", "admin"));
+    if (!snap.exists()) return "";
+    const data = snap.data() as { uid?: string };
+    return data.uid || "";
+  } catch {
+    return "";
+  }
+};
+
 /** Create a new bundle subscription request. Triggers an admin notification. */
 export const requestBundleSubscription = async (
   data: Omit<
     BundleSubscription,
     "id" | "status" | "createdAt" | "updatedAt" | "approvedBy" | "adminNotes"
   >,
-  /** UID of the admin to notify. Pass falsy to skip the notification (e.g. tests). */
+  /**
+   * UID of the admin to notify. Defaults to looking it up from
+   * /publicConfig/admin (set by the admin on login). Pass an empty string
+   * to explicitly skip the notification (e.g. tests).
+   */
   adminUidToNotify?: string,
 ): Promise<string> => {
   const ref = await addDoc(collection(db, "bundleSubscriptions"), {
@@ -128,9 +150,13 @@ export const requestBundleSubscription = async (
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  if (adminUidToNotify) {
+  // Resolve the admin UID lazily if the caller didn't pass one. Treat
+  // `undefined` as "look it up", and an explicit empty string as "skip".
+  const recipientUid =
+    adminUidToNotify === undefined ? await getAdminUid() : adminUidToNotify;
+  if (recipientUid) {
     await addNotification({
-      recipientUid: adminUidToNotify,
+      recipientUid,
       type: "bundle_request_new",
       meta: {
         orgName: data.orgName,

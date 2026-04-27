@@ -98,6 +98,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const loadUser = async (user: FirebaseUser) => {
     if (user.email === ADMIN_EMAIL) {
       setAuthState({ role: "admin", email: user.email, name: "Admin", wilaya: "", uid: user.uid, loading: false });
+      // Publish admin UID to a public config doc so other clients (notably
+      // the bundle-request modal) can route notifications to the admin
+      // without having admin-sdk access. Updated every login so a new
+      // admin device / re-auth keeps it fresh. Best-effort; failure here
+      // should never block sign-in.
+      try {
+        await setDoc(doc(db, "publicConfig", "admin"), { uid: user.uid, email: user.email, updatedAt: Date.now() });
+      } catch {
+        /* silent — write will retry on next admin login */
+      }
       return;
     }
     try {
