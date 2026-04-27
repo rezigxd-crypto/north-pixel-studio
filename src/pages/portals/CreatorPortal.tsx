@@ -101,7 +101,9 @@ const CreatorPortal = () => {
   }, [auth.role, auth.uid, auth.name, myUserDoc?.username]);
 
   /* ── Profile completion ───────────────────────────────────────────────
-   * Six fields, equal weight. Hits the gold ring at 100 %. */
+   * Eight fields, equal weight. Hits the gold ring at 100 %. Phone and
+   * Baridi-Mob are required for payouts / client coordination, so they
+   * count toward the completion score too. */
   const completion = (() => {
     if (!myApp) return { pct: 0, missing: [] as string[] };
     const checks: { ok: boolean; key: string }[] = [
@@ -111,6 +113,8 @@ const CreatorPortal = () => {
       { ok: !!myApp.role, key: lang === "ar" ? "التخصص" : lang === "fr" ? "Spécialité" : "Specialty" },
       { ok: (myApp.rate || 0) > 0, key: lang === "ar" ? "سعر الساعة" : lang === "fr" ? "Tarif horaire" : "Hourly rate" },
       { ok: (myApp.portfolio?.length || 0) > 0, key: lang === "ar" ? "رابط أعمال واحد على الأقل" : lang === "fr" ? "Au moins un lien portfolio" : "At least one portfolio link" },
+      { ok: !!(myUserDoc?.phone || auth.phone), key: lang === "ar" ? "رقم الهاتف" : lang === "fr" ? "Numéro de téléphone" : "Phone number" },
+      { ok: !!myUserDoc?.bariMobAccount, key: lang === "ar" ? "حساب بريدي موب" : lang === "fr" ? "Compte Baridi-Mob" : "Baridi-Mob account" },
     ];
     const filled = checks.filter((c) => c.ok).length;
     return {
