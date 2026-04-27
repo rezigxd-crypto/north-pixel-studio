@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ServiceDetail from "./pages/ServiceDetail.tsx";
 import Quest from "./pages/Quest.tsx";
+import Innovation from "./pages/Innovation.tsx";
 import Members from "./pages/Members.tsx";
 import Login from "./pages/auth/Login.tsx";
 import SignupChoice from "./pages/auth/SignupChoice.tsx";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
           <Route path="/quest" element={<Quest />} />
+          <Route path="/innovation" element={<Innovation />} />
           <Route path="/clients" element={<Members mode="clients" />} />
           <Route path="/freelancers" element={<Members mode="freelancers" />} />
           <Route path="/auth/login" element={<Login />} />
