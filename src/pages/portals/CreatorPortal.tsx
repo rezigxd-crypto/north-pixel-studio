@@ -17,8 +17,10 @@ import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
+import { CreatorInvitations } from "@/components/CreatorInvitations";
+import { useCreatorInvitations } from "@/lib/bundles";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
 import { ProfileCompletionRing } from "@/components/ProfileCompletionRing";
 import { Countdown } from "@/components/Countdown";
@@ -107,7 +109,17 @@ const CreatorPortal = () => {
   })();
 
   // ── State
-  const [activeTab, setActiveTab] = useState<"home" | "bids" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "bids" | "invitations" | "profile">("home");
+  const [searchParams] = useSearchParams();
+  const invitations = useCreatorInvitations(auth.uid);
+  const pendingInvitations = invitations.filter((i) => i.status === "pending").length;
+
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t === "invitations" || t === "home" || t === "bids" || t === "profile") {
+      setActiveTab(t as "home" | "bids" | "invitations" | "profile");
+    }
+  }, [searchParams]);
   const [filterWilaya, setFilterWilaya] = useState(true); // default: same wilaya
   const [bidAmounts, setBidAmounts] = useState<Record<string, string>>({});
   const [deliverableLinks, setDeliverableLinks] = useState<Record<string, string>>({});
@@ -212,6 +224,7 @@ const CreatorPortal = () => {
   const TABS = [
     { id: "home", label: lang === "ar" ? "العروض المتاحة" : "Available Offers" },
     { id: "bids", label: lang === "ar" ? `عروضي${myBids.length > 0 ? ` (${myBids.length})` : ""}` : `My Bids${myBids.length > 0 ? ` (${myBids.length})` : ""}` },
+    { id: "invitations", label: lang === "ar" ? `الدعوات${pendingInvitations > 0 ? ` (${pendingInvitations})` : ""}` : `Invitations${pendingInvitations > 0 ? ` (${pendingInvitations})` : ""}` },
     { id: "profile", label: lang === "ar" ? "ملفي" : "My Profile" },
   ] as const;
 
@@ -465,6 +478,11 @@ const CreatorPortal = () => {
             })
           )}
         </div>
+      )}
+
+      {/* ══ INVITATIONS ══════════════════════════════════════════════ */}
+      {activeTab === "invitations" && auth.uid && (
+        <CreatorInvitations creatorUid={auth.uid} />
       )}
 
       {/* ══ PROFILE ══════════════════════════════════════════════════ */}

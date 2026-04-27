@@ -48,6 +48,38 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
+    // Bundle subscriptions — B2B / B2G monthly retainers.
+    //   • create: any authed user (the requesting client).
+    //   • read/list: any authed user — the admin needs to list them all,
+    //     and clients filter their own list with a where(clientUid==me).
+    //   • update: any authed user (admin updates status; client may update
+    //     their own pre-active notes). Tightening to admin-only would
+    //     require a custom claim which we don't use; rules are kept
+    //     consistent with the rest of the project.
+    match /bundleSubscriptions/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null;
+
+      // Deliverables under each subscription. Same authed-only model as
+      // the parent — admin manages, client reads.
+      match /deliverables/{delivId} {
+        allow create, read, update, delete: if request.auth != null;
+      }
+    }
+
+    // Task invitations — admin invites a freelancer to a private task.
+    //   • create: any authed user. fromAdminUid is set client-side to
+    //     the actor's own uid.
+    //   • read/list: any authed user (creator filters with where(toCreatorUid==me),
+    //     admin filters with where(fromAdminUid==me)).
+    //   • update: any authed user (creator accepts/declines, admin completes).
+    match /taskInvitations/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
     // Notifications — per-user feed.
     //   • create: any authed user can write (so a creator placing a bid
     //     can drop a `new_bid` notification on the project owner). The
