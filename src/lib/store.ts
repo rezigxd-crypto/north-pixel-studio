@@ -170,6 +170,48 @@ export const getUserByUsername = async (username: string): Promise<UserDoc | nul
   }
 };
 
+// ─── Client tags (admin-only B2B / B2G classification) ───────────────────
+// Stored under /clientTags/{uid}. Read + write are gated to the admin email
+// in firestore.rules — clients themselves never see these tags.
+export type ClientTagType = "b2b" | "b2g";
+
+export type ClientTag = {
+  uid: string;
+  tag: ClientTagType;
+  updatedAt: number;
+};
+
+/** Set or clear a client's admin tag. Pass `null` to remove the tag. */
+export const setClientTag = async (uid: string, tag: ClientTagType | null) => {
+  const ref = doc(db, "clientTags", uid);
+  if (tag === null) {
+    const { deleteDoc } = await import("firebase/firestore");
+    await deleteDoc(ref);
+    return;
+  }
+  await setDoc(ref, { tag, updatedAt: Date.now() }, { merge: true });
+};
+
+/** Live map of clientUid → tag, used by the admin dashboard. */
+export function useClientTags(): Record<string, ClientTagType> {
+  const [data, setData] = useState<Record<string, ClientTagType>>({});
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, "clientTags"),
+      (snap) => {
+        const next: Record<string, ClientTagType> = {};
+        snap.forEach((d) => {
+          const t = (d.data() as { tag?: ClientTagType }).tag;
+          if (t === "b2b" || t === "b2g") next[d.id] = t;
+        });
+        setData(next);
+      },
+      () => { /* silent — non-admin readers are denied by rules */ }
+    );
+  }, []);
+  return data;
+}
+
 // ─── Creators ─────────────────────────────────────────────────────────────
 export const addCreator = async (c: Omit<CreatorApplication, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "creators"), { ...c, status: "pending", createdAt: serverTimestamp() });
