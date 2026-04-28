@@ -254,17 +254,17 @@ const Innovation = () => {
             {ar ? "جرّب المنصّة" : fr ? "Tester la plateforme" : "Test the platform"}
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold mt-3">
-            {ar ? "ثلاثة حسابات تجريبية — انقر، سجّل الدخول، استكشف"
-              : fr ? "Trois comptes de démo — cliquez, connectez-vous, explorez"
-              : "Three demo accounts — click, sign in, explore"}
+            {ar ? "حسابان تجريبيان — انقر، سجّل الدخول، استكشف"
+              : fr ? "Deux comptes de démo — cliquez, connectez-vous, explorez"
+              : "Two demo accounts — click, sign in, explore"}
           </h2>
           <p className="text-sm text-muted-foreground mt-3 max-w-2xl mx-auto">
-            {ar ? "كلّ حساب مُحمَّل مسبقًا ببيانات حقيقية لرؤية دورة حياة المشروع كاملة في جلسة واحدة."
-              : fr ? "Chaque compte est pré-chargé avec de vraies données pour parcourir tout le cycle d'un projet en une session."
-              : "Each account is pre-loaded with real data so you can walk the full project lifecycle in one session."}
+            {ar ? "كلّ حساب مُحمَّل مسبقًا ببيانات حقيقية لرؤية دورة حياة المشروع كاملة في جلسة واحدة. الجانب الإداري يُعرَض في فيديو مخصّص نُرسله مع ملفّ الدعم."
+              : fr ? "Chaque compte est pré-chargé avec de vraies données pour parcourir tout le cycle d'un projet en une session. Le côté admin est présenté dans une vidéo dédiée jointe au dossier."
+              : "Each account is pre-loaded with real data so you can walk the full project lifecycle in one session. The admin backoffice is shown in a dedicated walkthrough video included with the application file."}
           </p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
           {[
             {
               role: "client",
@@ -281,14 +281,6 @@ const Innovation = () => {
               password: "StartupDZ2026!",
               ar: "مبدع", fr: "Créateur", en: "Creator",
               tip: { ar: "ملف كامل + عرض على مشروع حقيقي", fr: "Profil complet + soumission active", en: "Complete profile + active bid" },
-            },
-            {
-              role: "admin",
-              icon: ShieldCheck,
-              email: "rezig@admin.np",
-              password: "admin123",
-              ar: "إدارة", fr: "Admin", en: "Admin",
-              tip: { ar: "لوحة الإدارة الكاملة", fr: "Tableau de bord admin complet", en: "Full backoffice dashboard" },
             },
           ].map((d) => (
             <div key={d.role} className="glass rounded-3xl p-5 flex flex-col">
