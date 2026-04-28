@@ -136,9 +136,9 @@ const CARDS: Card[] = [
       en: "Creator rank progression — retention through gamification",
     },
     body: {
-      ar: "Bronze → Silver → Gold → Platinum → Diamond. كلّ مرتبة تفتح ظهورًا أعلى ومميّزات إضافية. هذا يحافظ على ولاء المبدعين للمنصّة ويحارب الالتفاف (أخذ المبدعين خارج المنصّة لتجنّب العمولة) — ابتكار هيكلي لا مجرّد لمسة واجهة.",
-      fr: "Bronze → Silver → Gold → Platinum → Diamond. Chaque rang débloque visibilité et avantages. Cela fidélise les créateurs à la plateforme et combat la désintermédiation (clients qui sortent les créateurs hors-plateforme pour éviter la commission) — une innovation structurelle, pas un gadget UI.",
-      en: "Bronze → Silver → Gold → Platinum → Diamond ranks unlock visibility and perks. This keeps creators loyal to the platform and fights disintermediation (clients pulling creators off-platform to avoid the commission) — a structural innovation, not just a UI gimmick.",
+      ar: "Bronze → Silver → Gold → Platinum → Diamond. كلّ مرتبة تفتح ظهورًا أعلى ومميّزات إضافية. هذا يحافظ على ولاء المبدعين للمنصّة ويحارب الالتفاف خارج المنصّة — ابتكار هيكلي لا مجرّد لمسة واجهة.",
+      fr: "Bronze → Silver → Gold → Platinum → Diamond. Chaque rang débloque visibilité et avantages. Cela fidélise les créateurs à la plateforme et combat la désintermédiation hors-plateforme — une innovation structurelle, pas un gadget UI.",
+      en: "Bronze → Silver → Gold → Platinum → Diamond ranks unlock visibility and perks. This keeps creators loyal to the platform and fights off-platform disintermediation — a structural innovation, not just a UI gimmick.",
     },
   },
 ];
