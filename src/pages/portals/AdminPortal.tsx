@@ -2,7 +2,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { AdminBundles } from "@/components/AdminBundles";
 import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid } from "@/lib/store";
+import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
 import { useAllSubscriptions } from "@/lib/bundles";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS } from "@/lib/offers";
 import { toast } from "sonner";
@@ -55,6 +55,23 @@ const Pill = ({ children, color }: { children: React.ReactNode; color: string })
   <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${color === "red" ? "bg-destructive/20 text-destructive" : color === "green" ? "bg-emerald-400/20 text-emerald-400" : color === "yellow" ? "bg-yellow-400/20 text-yellow-400" : color === "blue" ? "bg-primary/20 text-primary-foreground" : "bg-accent/20 text-accent"}`}>{children}</span>
 );
 
+// Admin-only B2B / B2G classification chip. Two distinct colors so the
+// admin can scan the client list at a glance:
+//   • #B2B — royal blue (private-sector business clients)
+//   • #B2G — gold (public-sector / government clients)
+const ClientTagChip = ({ tag }: { tag: ClientTagType }) => (
+  <span
+    className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+      tag === "b2b"
+        ? "bg-primary/20 text-primary-foreground border-primary/40"
+        : "bg-accent/20 text-accent border-accent/40"
+    }`}
+    title={tag === "b2b" ? "Business client" : "Government / institutional client"}
+  >
+    #{tag.toUpperCase()}
+  </span>
+);
+
 const Empty = ({ msg }: { msg: string }) => (
   <div className="glass rounded-2xl p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
     <Eye className="w-8 h-8 text-muted-foreground/30" />{msg}
@@ -74,6 +91,20 @@ const AdminPortal = () => {
   const [searchParams] = useSearchParams();
   const subscriptions = useAllSubscriptions();
   const pendingBundleRequests = subscriptions.filter((s) => s.status === "pending").length;
+  const clientTags = useClientTags();
+
+  const handleSetClientTag = async (uid: string, tag: ClientTagType | null) => {
+    try {
+      await setClientTag(uid, tag);
+      toast.success(
+        tag
+          ? (lang === "ar" ? `تم تعيين #${tag.toUpperCase()}` : `Tagged as #${tag.toUpperCase()}`)
+          : (lang === "ar" ? "تم مسح الوسم" : "Tag cleared")
+      );
+    } catch {
+      toast.error(lang === "ar" ? "فشل تحديث الوسم" : "Failed to update tag");
+    }
+  };
 
   // Allow deep-linking to a tab via ?tab=bundles (from notifications).
   useEffect(() => {
@@ -430,6 +461,7 @@ const AdminPortal = () => {
                 const numOffers = clientOffers(c.email);
                 const expanded = expandedCreator === `client-${c.uid}`;
                 const hasDetails = !!(c.phone || c.bariMobAccount);
+                const tag = clientTags[c.uid];
                 return (
                   <div key={c.uid} className={`glass rounded-2xl overflow-hidden transition-smooth ${expanded ? "border-accent/50 shadow-[0_0_30px_-10px_hsl(41_67%_60%/0.4)]" : "hover:border-accent/30"}`}>
                     <button
@@ -439,8 +471,11 @@ const AdminPortal = () => {
                     >
                       <Avatar src={c.profilePic} fallback={c.name || c.email} />
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">
-                          {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm truncate">
+                            {c.name?.trim() ? c.name : (lang === "ar" ? "بدون اسم" : "No name")}
+                          </span>
+                          {tag && <ClientTagChip tag={tag} />}
                         </div>
                         <div className="text-xs text-muted-foreground truncate" dir="ltr">{c.email}</div>
                         {c.wilaya && (
@@ -458,7 +493,7 @@ const AdminPortal = () => {
                       </div>
                     </button>
                     {expanded && (
-                      <div className="px-4 pb-4 pt-3 border-t border-accent/15 space-y-2">
+                      <div className="px-4 pb-4 pt-3 border-t border-accent/15 space-y-3">
                         {hasDetails ? (
                           <div className="grid sm:grid-cols-2 gap-2">
                             <Field icon={Phone} label={lang === "ar" ? "الهاتف" : "Phone"} value={c.phone} href={c.phone ? `tel:${c.phone}` : undefined} />
@@ -469,6 +504,42 @@ const AdminPortal = () => {
                             {lang === "ar" ? "لم يضف العميل تفاصيل اتصال بعد." : lang === "fr" ? "Aucun détail de contact ajouté par ce client." : "This client hasn't added contact details yet."}
                           </p>
                         )}
+                        <div className="flex items-center flex-wrap gap-2 pt-1">
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground me-1">
+                            {lang === "ar" ? "تصنيف الإدارة" : lang === "fr" ? "Classement admin" : "Admin tag"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleSetClientTag(c.uid, tag === "b2b" ? null : "b2b"); }}
+                            className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-smooth ${
+                              tag === "b2b"
+                                ? "bg-primary/30 text-primary-foreground border-primary/60"
+                                : "bg-primary/5 text-muted-foreground border-primary/20 hover:bg-primary/15 hover:text-primary-foreground"
+                            }`}
+                          >
+                            #B2B
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleSetClientTag(c.uid, tag === "b2g" ? null : "b2g"); }}
+                            className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-smooth ${
+                              tag === "b2g"
+                                ? "bg-accent/30 text-accent border-accent/60"
+                                : "bg-accent/5 text-muted-foreground border-accent/20 hover:bg-accent/15 hover:text-accent"
+                            }`}
+                          >
+                            #B2G
+                          </button>
+                          {tag && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleSetClientTag(c.uid, null); }}
+                              className="text-[11px] px-2.5 py-1 rounded-full border border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-smooth"
+                            >
+                              {lang === "ar" ? "مسح" : lang === "fr" ? "Effacer" : "Clear"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
