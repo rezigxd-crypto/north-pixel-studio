@@ -1,6 +1,7 @@
 import { PortalShell } from "@/components/PortalShell";
 import { AdminBundles } from "@/components/AdminBundles";
-import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, TrendingUp, AlertCircle, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
+import { AdminOverview } from "@/components/admin/AdminOverview";
+import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
 import { useAllSubscriptions } from "@/lib/bundles";
@@ -176,14 +177,16 @@ const AdminPortal = () => {
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-        <StatCard icon={UserSquare2} value={String(Math.max(userCounts.clients, clients.length))} label={lang === "ar" ? "عملاء" : "Clients"} color="blue" />
-        <StatCard icon={Users} value={String(approvedCreators.length)} label={lang === "ar" ? "عمال حرون" : "Freelancers"} color="accent" />
-        <StatCard icon={Camera} value={String(pendingCreators.length)} label={lang === "ar" ? "بانتظار الموافقة" : "Pending"} color="yellow" />
-        <StatCard icon={FolderKanban} value={String(liveOffers.length + assignedOffers.length)} label={lang === "ar" ? "مشاريع" : "Projects"} color="yellow" />
-        <StatCard icon={DollarSign} value={formatDZD(revenue)} label={lang === "ar" ? "إيراداتي" : "Revenue"} color="green" />
-      </div>
+      {/* Compact stat row — only on non-overview tabs (overview has its own KPI grid). */}
+      {activeTab !== "overview" && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <StatCard icon={UserSquare2} value={String(Math.max(userCounts.clients, clients.length))} label={lang === "ar" ? "عملاء" : "Clients"} color="blue" />
+          <StatCard icon={Users} value={String(approvedCreators.length)} label={lang === "ar" ? "عمال حرون" : "Freelancers"} color="accent" />
+          <StatCard icon={Camera} value={String(pendingCreators.length)} label={lang === "ar" ? "بانتظار الموافقة" : "Pending"} color="yellow" />
+          <StatCard icon={FolderKanban} value={String(liveOffers.length + assignedOffers.length)} label={lang === "ar" ? "مشاريع" : "Projects"} color="yellow" />
+          <StatCard icon={DollarSign} value={formatDZD(revenue)} label={lang === "ar" ? "إيراداتي" : "Revenue"} color="green" />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 glass rounded-2xl mb-8 overflow-x-auto">
@@ -195,43 +198,14 @@ const AdminPortal = () => {
         ))}
       </div>
 
-      {/* OVERVIEW */}
+      {/* OVERVIEW — analytics dashboard */}
       {activeTab === "overview" && (
-        <div className="space-y-4">
-          {pendingOffers.length > 0 && (
-            <button onClick={() => setActiveTab("offers")} className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-yellow-400/40 transition-smooth text-start">
-              <div className="w-9 h-9 rounded-xl bg-yellow-400/15 flex items-center justify-center flex-shrink-0"><AlertCircle className="w-4 h-4 text-yellow-400" /></div>
-              <div className="flex-1"><div className="font-semibold text-sm">{pendingOffers.length} {lang === "ar" ? "عرض ينتظر" : "offer(s) waiting"}</div><div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للمراجعة" : "Click to review"}</div></div>
-              <TrendingUp className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-            </button>
-          )}
-          {pendingCreators.length > 0 && (
-            <button onClick={() => setActiveTab("creators")} className="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:border-accent/40 transition-smooth text-start">
-              <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0"><Users className="w-4 h-4 text-accent" /></div>
-              <div className="flex-1"><div className="font-semibold text-sm">{pendingCreators.length} {lang === "ar" ? "عامل ينتظر" : "creator(s) pending"}</div><div className="text-xs text-muted-foreground">{lang === "ar" ? "انقر للموافقة" : "Click to approve"}</div></div>
-              <TrendingUp className="w-4 h-4 text-accent flex-shrink-0" />
-            </button>
-          )}
-          {notifications === 0 && <div className="glass rounded-2xl p-8 text-center"><div className="text-3xl mb-2">&#x2714;</div><p className="text-muted-foreground text-sm">{lang === "ar" ? "لا إشعارات جديدة." : "All clear."}</p></div>}
-          {offers.length > 0 && (
-            <div>
-              <h3 className="font-serif text-lg font-bold mb-3 mt-2">{lang === "ar" ? "آخر المشاريع" : "Recent projects"}</h3>
-              <div className="space-y-2">
-                {offers.slice(0, 6).map((o) => (
-                  <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0"><div className="font-medium text-sm truncate">{o.serviceTitle}</div><div className="text-xs text-muted-foreground">{o.clientName}{o.clientWilaya ? ` · ${o.clientWilaya}` : ""}</div></div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
-                      <Pill color={o.status === "open" ? "green" : o.status === "assigned" ? "yellow" : o.status === "rejected" ? "red" : "accent"}>
-                        {o.status === "pending_admin" ? (lang === "ar" ? "معلق" : "Pending") : o.status === "open" ? (lang === "ar" ? "مباشر" : "Live") : o.status === "assigned" ? (lang === "ar" ? "معيّن" : "Assigned") : lang === "ar" ? "مرفوض" : "Rejected"}
-                      </Pill>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <AdminOverview
+          pendingOffers={pendingOffers}
+          pendingCreators={pendingCreators}
+          onJumpToOffers={() => setActiveTab("offers")}
+          onJumpToCreators={() => setActiveTab("creators")}
+        />
       )}
 
       {/* OFFERS */}
