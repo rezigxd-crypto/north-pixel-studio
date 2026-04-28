@@ -248,13 +248,10 @@ const SERVICES = [
         ],
       },
       tone: {
-        label: { ar: "نبرة الأداء", en: "Tone", fr: "Ton" },
+        label: { ar: "اختيار الصوت", en: "Voice choice", fr: "Choix de voix" },
         choices: [
-          { id: "energetic", label: { ar: "حماسية", en: "Energetic", fr: "Énergique" } },
-          { id: "warm", label: { ar: "دافئة / ودودة", en: "Warm / friendly", fr: "Chaleureux" } },
-          { id: "corporate", label: { ar: "رسمية", en: "Corporate / formal", fr: "Corporate" } },
-          { id: "dramatic", label: { ar: "درامية", en: "Dramatic", fr: "Dramatique" } },
-          { id: "narrator", label: { ar: "راوي / حكواتي", en: "Narrator", fr: "Narrateur" } },
+          { id: "female", label: { ar: "صوت انثوي", en: "Female voice", fr: "Voix féminine" } },
+          { id: "male", label: { ar: "صوت رجولي", en: "Male voice", fr: "Voix masculine" } },
         ],
       },
     },
