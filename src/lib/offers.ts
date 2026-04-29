@@ -339,6 +339,52 @@ export const ADMIN_COMMISSION = 0.20;
 export const CLIENT_ADVANCE_PCT = 0.10; // 10% advance from client
 
 /**
+ * Studio's BaridiMob account where clients send the 10% advance and the
+ * remaining balance. Hardcoded here so it's the single source of truth
+ * across the wizard, the client portal, and the printed contract.
+ */
+export const STUDIO_BARIMOB = {
+  account: "007999990029553196",
+  key: "73",
+  holder: "North Pixel Studio",
+} as const;
+
+/**
+ * Compute the bid-savings discount the client gets back when they pay the
+ * 10% advance up-front and a creator wins the bid below the headline max.
+ *
+ * Discount = max(0, bidMax - winningBid), but only if `advancePaid` is true.
+ * Otherwise zero.
+ */
+export const bidSavingsDiscount = (
+  bidMax: number,
+  winningBidAmount: number,
+  advancePaid: boolean,
+): number => {
+  if (!advancePaid) return 0;
+  return Math.max(0, Math.round(bidMax - winningBidAmount));
+};
+
+/**
+ * Final amount the client owes for the project, after subtracting the
+ * advance already paid and any bid-savings discount they unlocked.
+ *
+ * Returned in absolute DA. If no bid is accepted yet, `winningBidAmount`
+ * should be passed as `null` and only the advance is subtracted.
+ */
+export const computeClientRemaining = (
+  totalPrice: number,
+  advancePaid: boolean,
+  advanceAmount: number,
+  winningBidAmount: number | null,
+  bidMax: number,
+): number => {
+  const advance = advancePaid ? advanceAmount : 0;
+  const discount = winningBidAmount !== null ? bidSavingsDiscount(bidMax, winningBidAmount, advancePaid) : 0;
+  return Math.max(0, Math.round(totalPrice - advance - discount));
+};
+
+/**
  * Format a DZD price with the suffix in the user's current language.
  * Reads the language preference from localStorage (set by AppProvider).
  * Pass `lang` explicitly when calling outside a React render path.

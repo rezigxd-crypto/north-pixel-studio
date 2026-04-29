@@ -19,6 +19,7 @@ import PendingReview from "./pages/auth/PendingReview.tsx";
 import ClientPortal from "./pages/portals/ClientPortal.tsx";
 import CreatorPortal from "./pages/portals/CreatorPortal.tsx";
 import AdminPortal from "./pages/portals/AdminPortal.tsx";
+import Contract from "./pages/Contract.tsx";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/portal/client" element={<ClientPortal />} />
           <Route path="/portal/creator" element={<CreatorPortal />} />
           <Route path="/portal/admin" element={<AdminPortal />} />
+          <Route path="/contract/:offerId/:role" element={<Contract />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
