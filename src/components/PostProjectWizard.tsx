@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addOffer } from "@/lib/store";
-import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, formatDZD } from "@/lib/offers";
+import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, STUDIO_BARIMOB, formatDZD } from "@/lib/offers";
 import { ALGERIA_WILAYAS } from "@/lib/i18n";
 import * as Icons from "lucide-react";
 import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Phone, Hash, Shield, CalendarClock, FileText, Loader2, Upload, X, Mic2 } from "lucide-react";
@@ -931,8 +931,8 @@ export const PostProjectWizard = ({
               <div className="flex items-start gap-3 mb-4">
                 <CreditCard className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-semibold">{lang === "ar" ? "ادفع 10% مسبقًا لتأكيد مشروعك" : "Pay 10% advance to confirm"}</div>
-                  <div className="text-xs text-muted-foreground">{lang === "ar" ? "يضمن جدية الطلب ويحمي حقوق الطرفين." : "Secures your project and protects both parties."}</div>
+                  <div className="font-semibold">{lang === "ar" ? "ادفع 10% مسبقًا وافتح خصمًا خاصًا" : lang === "fr" ? "Payez 10% d'avance et débloquez une réduction" : "Pay 10% advance and unlock a discount"}</div>
+                  <div className="text-xs text-muted-foreground">{lang === "ar" ? "إذا فاز عامل حر بأقل من السقف، الفرق يعود لك خصمًا. الدفع المسبق يفعّل هذه الميزة." : lang === "fr" ? "Si un créateur remporte sous le maximum, l'écart vous revient en remise. L'avance débloque cette remise." : "If a creator wins below the maximum, the difference comes back to you as a discount. The advance unlocks it."}</div>
                 </div>
               </div>
               {total > 0 && (
@@ -941,18 +941,43 @@ export const PostProjectWizard = ({
                   <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? `من إجمالي ${formatDZD(total)}` : `of total ${formatDZD(total)}`}</div>
                 </div>
               )}
+              {/* Worked example showing the bid-savings discount */}
+              <div className="glass rounded-xl p-3 bg-accent/5 border border-accent/20 mb-3 text-xs space-y-1">
+                <div className="font-semibold text-accent text-[11px] uppercase tracking-wider">
+                  {lang === "ar" ? "كيف تعمل الميزة" : lang === "fr" ? "Comment ça marche" : "How it works"}
+                </div>
+                <div className="text-muted-foreground leading-relaxed">
+                  {lang === "ar"
+                    ? "مثال: السقف 19,000 د.ج، فاز عامل بـ 16,000 د.ج. الفرق 3,000 د.ج يُخصم من فاتورتك. شرط الميزة: أن تدفع الـ 10% مسبقًا."
+                    : lang === "fr"
+                      ? "Exemple : plafond 19,000 DA, un créateur gagne à 16,000 DA. La différence de 3,000 DA est déduite de votre facture finale. Condition : avance de 10% payée."
+                      : "Example: cap 19,000 DA, a creator wins at 16,000 DA. The 3,000 DA difference is deducted from your final invoice. Condition: 10% advance paid."}
+                </div>
+              </div>
               <div className="glass rounded-xl p-4 bg-secondary/20 space-y-1">
                 <div className="text-xs font-semibold text-accent">{lang === "ar" ? "الدفع عبر بريدي موب" : "Pay via Baridi Mob"}</div>
-                <div className="font-mono text-base font-bold">007999990029553196</div>
-                <div className="text-xs text-muted-foreground">{lang === "ar" ? "المفتاح: 73" : "Key: 73"}</div>
+                <div className="font-mono text-base font-bold">{STUDIO_BARIMOB.account}</div>
+                <div className="text-xs text-muted-foreground">{lang === "ar" ? `المفتاح: ${STUDIO_BARIMOB.key}` : `Key: ${STUDIO_BARIMOB.key}`}</div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                {lang === "ar" ? "* يُسترد المبلغ كاملًا إذا لم يتوفر عامل حر في منطقتك." : "* Full refund if no freelancer is found in your area."}
+                {lang === "ar"
+                  ? "* الدفع المسبق اختياري لكنه يفتح الخصم. كل المدفوعات تتم حصرًا عبر المنصة."
+                  : lang === "fr"
+                    ? "* L'avance est optionnelle mais débloque la remise. Tous les paiements se font exclusivement via la plateforme."
+                    : "* The advance is optional but unlocks the discount. All payments happen exclusively on the platform."}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {lang === "ar" ? "* يُسترد المبلغ كاملًا إذا لم يتوفر عامل حر في منطقتك." : lang === "fr" ? "* Remboursement intégral si aucun créateur n'est disponible." : "* Full refund if no freelancer is found in your area."}
               </p>
             </div>
-            <Button variant="royal" className="w-full" onClick={() => setStep("done")}>
-              {lang === "ar" ? "تم الدفع — متابعة" : "Payment sent — Continue"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" className="flex-1" onClick={() => setStep("done")}>
+                {lang === "ar" ? "تخطي الخصم" : lang === "fr" ? "Passer la remise" : "Skip discount"}
+              </Button>
+              <Button variant="royal" className="flex-1" onClick={() => setStep("done")}>
+                {lang === "ar" ? "تم الدفع — متابعة" : lang === "fr" ? "Avance payée — Continuer" : "Advance sent — Continue"}
+              </Button>
+            </div>
           </div>
         )}
 

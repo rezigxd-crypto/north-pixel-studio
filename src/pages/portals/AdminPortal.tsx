@@ -1,14 +1,14 @@
 import { PortalShell } from "@/components/PortalShell";
 import { AdminBundles } from "@/components/AdminBundles";
 import { AdminOverview } from "@/components/admin/AdminOverview";
-import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink } from "lucide-react";
+import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
+import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
 import { useAllSubscriptions } from "@/lib/bundles";
-import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS } from "@/lib/offers";
+import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS, CLIENT_ADVANCE_PCT } from "@/lib/offers";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const StatCard = ({ icon: Icon, value, label, color = "accent" }: { icon: React.ElementType; value: string; label: string; color?: string }) => (
@@ -149,6 +149,11 @@ const AdminPortal = () => {
   const acceptOffer = async (id: string, title: string) => { await setOfferStatus(id, "open"); toast.success(`${title} — ${lang === "ar" ? "مباشر" : "live"}`); };
   const rejectOffer = async (id: string) => { await setOfferStatus(id, "rejected"); toast.error(lang === "ar" ? "مرفوض" : "Rejected"); };
   const handleAcceptBid = async (bidId: string, offerId: string, name: string, amount: number) => { await acceptBid(bidId, offerId); toast.success(`${name} — ${formatDZD(amount)}`); };
+  const handleMarkAdvancePaid = async (offerId: string, total: number) => {
+    const amount = Math.round(total * CLIENT_ADVANCE_PCT);
+    await markAdvancePaid(offerId, amount);
+    toast.success(lang === "ar" ? `تأكيد الدفعة المسبقة: ${formatDZD(amount)}` : `Advance confirmed: ${formatDZD(amount)}`);
+  };
 
   if (auth.loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-glow-pulse text-accent font-serif text-2xl">North Pixel</div></div>;
 
@@ -246,7 +251,19 @@ const AdminPortal = () => {
                         <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "حصتي:" : "My cut:"} <span className="text-accent font-semibold">{formatDZD(o.adminCut)}</span></div>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4 justify-end">
+                    <div className="flex gap-2 mt-4 justify-end flex-wrap">
+                      {!o.advancePaid && (
+                        <Button variant="ghost" size="sm" onClick={() => handleMarkAdvancePaid(o.id, o.totalPrice)}>
+                          <BadgeCheck className="w-4 h-4 me-1" />
+                          {lang === "ar" ? "تأكيد الدفعة المسبقة" : "Confirm advance"}
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" asChild>
+                        <RouterLink to={`/contract/${o.id}/client`}>
+                          <FileText className="w-4 h-4 me-1" />
+                          {lang === "ar" ? "العقد" : "Contract"}
+                        </RouterLink>
+                      </Button>
                       <Button variant="destructive" size="sm" onClick={() => rejectOffer(o.id)}><X className="w-4 h-4 me-1" />{lang === "ar" ? "رفض" : "Reject"}</Button>
                       <Button variant="royal" size="sm" onClick={() => acceptOffer(o.id, o.serviceTitle)}><Check className="w-4 h-4 me-1" />{lang === "ar" ? "قبول ونشر" : "Accept"}</Button>
                     </div>
@@ -260,9 +277,30 @@ const AdminPortal = () => {
               <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "مباشر" : "Live"}</h2><Pill color="green">{liveOffers.length}</Pill></div>
               <div className="space-y-2">
                 {liveOffers.map((o) => (
-                  <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0"><div className="font-medium text-sm">{o.serviceTitle} · {o.clientName}</div><div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عروض" : "bids"}</div></div>
-                    <div className="flex items-center gap-2"><span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span><Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>{lang === "ar" ? "عروض" : "Bids"}</Button></div>
+                  <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm flex items-center gap-2 flex-wrap">
+                        <span>{o.serviceTitle} · {o.clientName}</span>
+                        {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عروض" : "bids"}</div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
+                      {!o.advancePaid && (
+                        <Button size="sm" variant="ghost" onClick={() => handleMarkAdvancePaid(o.id, o.totalPrice)}>
+                          <BadgeCheck className="w-3.5 h-3.5 me-1" />
+                          {lang === "ar" ? "تأكيد الدفعة" : "Confirm advance"}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" asChild>
+                        <RouterLink to={`/contract/${o.id}/client`}>
+                          <FileText className="w-3.5 h-3.5 me-1" />
+                          {lang === "ar" ? "العقد" : "Contract"}
+                        </RouterLink>
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>{lang === "ar" ? "عروض" : "Bids"}</Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -287,18 +325,36 @@ const AdminPortal = () => {
                     {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
                     <span className="ms-auto text-accent font-bold text-sm">{formatDZD(o.totalPrice)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">{lang === "ar" ? "النطاق:" : "Range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span></p>
+                  <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+                    <p className="text-xs text-muted-foreground">{lang === "ar" ? "النطاق:" : "Range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span></p>
+                    {o.advancePaid
+                      ? <Pill color="green">{lang === "ar" ? "دفع مسبق — الخصم مفعّل" : "Advance paid — discount unlocked"}</Pill>
+                      : <Pill color="yellow">{lang === "ar" ? "بلا دفعة مسبقة — لا خصم" : "No advance — no discount"}</Pill>
+                    }
+                  </div>
                   {ob.length === 0 ? <p className="text-xs text-muted-foreground italic">{lang === "ar" ? "لا عروض بعد." : "No bids yet."}</p> : (
                     <div className="space-y-2">
-                      {ob.map((b) => (
-                        <div key={b.id} className="flex items-center justify-between glass rounded-xl px-4 py-2.5">
-                          <div><span className="font-semibold text-sm">{b.creatorName}</span><span className="text-xs text-muted-foreground ms-2">{b.creatorEmail}</span></div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-accent font-bold">{formatDZD(b.amount)}</span>
-                            <Button size="sm" variant="gold" onClick={() => handleAcceptBid(b.id, o.id, b.creatorName, b.amount)}><Check className="w-3 h-3 me-1" />{lang === "ar" ? "قبول" : "Accept"}</Button>
+                      {ob.map((b) => {
+                        const savings = o.advancePaid ? Math.max(0, o.bidMax - b.amount) : 0;
+                        return (
+                          <div key={b.id} className="glass rounded-xl px-4 py-2.5">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div><span className="font-semibold text-sm">{b.creatorName}</span><span className="text-xs text-muted-foreground ms-2">{b.creatorEmail}</span></div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-accent font-bold">{formatDZD(b.amount)}</span>
+                                <Button size="sm" variant="gold" onClick={() => handleAcceptBid(b.id, o.id, b.creatorName, b.amount)}><Check className="w-3 h-3 me-1" />{lang === "ar" ? "قبول" : "Accept"}</Button>
+                              </div>
+                            </div>
+                            {savings > 0 && (
+                              <div className="text-[11px] text-emerald-400 mt-1.5">
+                                {lang === "ar"
+                                  ? `إذا قبلت هذا العرض: خصم ${formatDZD(savings)} للعميل`
+                                  : `If accepted: ${formatDZD(savings)} discount for the client`}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

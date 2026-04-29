@@ -4,12 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Plus, FolderKanban, Clock, CheckCircle2, XCircle,
-  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2
+  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2, FileText, BadgeCheck
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { ClientBundles } from "@/components/ClientBundles";
-import { OFFERS, formatDZD, formatStartingPrice } from "@/lib/offers";
+import { OFFERS, STUDIO_BARIMOB, formatDZD, formatStartingPrice, bidSavingsDiscount, computeClientRemaining } from "@/lib/offers";
 import { useOffers, useBids, updateUserProfile } from "@/lib/store";
 import { useClientSubscriptions } from "@/lib/bundles";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
@@ -264,7 +264,54 @@ const ClientPortal = () => {
                       <div className="text-[11px] text-muted-foreground mt-0.5">
                         {p.deadline ? `📅 ${p.deadline}` : lang === "ar" ? "بلا موعد" : "No deadline"}
                       </div>
+                      {(() => {
+                        const advanceAmount = p.advanceAmount || Math.round(p.totalPrice * 0.10);
+                        const winning = acceptedBid?.amount ?? null;
+                        const discount = winning !== null ? bidSavingsDiscount(p.bidMax, winning, !!p.advancePaid) : 0;
+                        const remaining = computeClientRemaining(p.totalPrice, !!p.advancePaid, advanceAmount, winning, p.bidMax);
+                        if (!p.advancePaid && !acceptedBid) return null;
+                        return (
+                          <div className="mt-2 text-[11px] space-y-0.5">
+                            {p.advancePaid && (
+                              <div className="text-emerald-400 flex items-center gap-1 justify-end">
+                                <BadgeCheck className="w-3 h-3" />
+                                {lang === "ar" ? "دُفع المسبق" : "Advance paid"}
+                              </div>
+                            )}
+                            {discount > 0 && (
+                              <div className="text-emerald-400">
+                                {lang === "ar" ? `خصم ${formatDZD(discount)}` : `${formatDZD(discount)} off`}
+                              </div>
+                            )}
+                            {acceptedBid && (
+                              <div className="text-foreground font-semibold">
+                                {lang === "ar" ? `المتبقي: ${formatDZD(remaining)}` : `Remaining: ${formatDZD(remaining)}`}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
+                  </div>
+                  {/* Advance / contract action row */}
+                  <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap items-center gap-3 text-xs">
+                    {!p.advancePaid && (p.status === "open" || p.status === "pending_admin") && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <CreditCard className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>
+                          {lang === "ar"
+                            ? `ادفع 10% (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) عبر بريدي موب ${STUDIO_BARIMOB.account} لتفعيل الخصم`
+                            : `Pay 10% (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) via BaridiMob ${STUDIO_BARIMOB.account} to unlock the discount`}
+                        </span>
+                      </div>
+                    )}
+                    <Link
+                      to={`/contract/${p.id}/client`}
+                      className="ms-auto inline-flex items-center gap-1 text-accent hover:underline"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "عرض العقد" : "View contract"}
+                    </Link>
                   </div>
                 </div>
               );

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Gavel, TrendingUp, MapPin, Edit2, Save,
   Phone, CreditCard, Upload, Star, Trophy,
-  ChevronRight, Briefcase, DollarSign, X, Check, Plus,
+  ChevronRight, Briefcase, DollarSign, X, Check, Plus, FileText,
 } from "lucide-react";
 import {
   useOffers, useBids, useCreators, useAllUsers,
@@ -17,7 +17,7 @@ import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { CreatorInvitations } from "@/components/CreatorInvitations";
 import { useCreatorInvitations } from "@/lib/bundles";
@@ -499,6 +499,15 @@ const CreatorPortal = () => {
                     <a href={bid.deliverableLink} target="_blank" rel="noreferrer" className="text-xs text-purple-400 underline mt-2 block">
                       📦 {bid.deliverableLink}
                     </a>
+                  )}
+                  {(bid.status === "accepted" || bid.status === "delivered") && (
+                    <Link
+                      to={`/contract/${bid.offerId}/creator`}
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-2"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "عرض عقد التنفيذ" : "View execution contract"}
+                    </Link>
                   )}
                 </div>
               );
