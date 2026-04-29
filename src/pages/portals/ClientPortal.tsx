@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Plus, FolderKanban, Clock, CheckCircle2, XCircle,
-  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2, FileText, BadgeCheck
+  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2, FileText, BadgeCheck, Lock
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
@@ -210,9 +210,20 @@ const ClientPortal = () => {
                       <div className="mt-2 flex flex-wrap items-center gap-3">
                         <StatusBadge status={p.status} lang={lang} />
                         {p.status === "open" && pendingBidCount > 0 && (
-                          <span className="text-xs text-emerald-400 flex items-center gap-1">
-                            <Gavel className="w-3 h-3" />{pendingBidCount} {lang === "ar" ? "عرض مستلم" : "bids received"}
-                          </span>
+                          p.advancePaid ? (
+                            <span className="text-xs text-emerald-400 flex items-center gap-1">
+                              <Gavel className="w-3 h-3" />{pendingBidCount} {lang === "ar" ? "عرض مستلم" : "interested freelancers"}
+                            </span>
+                          ) : (
+                            <span
+                              className="text-xs text-yellow-400 flex items-center gap-1"
+                              title={lang === "ar" ? "ادفع الالتزام المسبق لمتابعة هذا المشروع" : "Pay commitment to lock in this project"}
+                            >
+                              <Lock className="w-3 h-3" />
+                              <span className="blur-[3px] select-none">{pendingBidCount}</span>
+                              <span>{lang === "ar" ? "مهتمّون — ادفع الالتزام للمتابعة" : "interested — pay commitment to proceed"}</span>
+                            </span>
+                          )
                         )}
                         {acceptedBid && (
                           <span className="text-xs text-blue-400 flex items-center gap-1">
@@ -300,8 +311,8 @@ const ClientPortal = () => {
                         <CreditCard className="w-3.5 h-3.5 text-yellow-400" />
                         <span>
                           {lang === "ar"
-                            ? `ادفع 10% (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) عبر بريدي موب ${STUDIO_BARIMOB.account} لتفعيل الخصم`
-                            : `Pay 10% (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) via BaridiMob ${STUDIO_BARIMOB.account} to unlock the discount`}
+                            ? `ادفع الالتزام المسبق (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) عبر بريدي موب ${STUDIO_BARIMOB.account} لتفعيل خصم الالتزام`
+                            : `Pay commitment (${formatDZD(p.advanceAmount || Math.round(p.totalPrice * 0.10))}) via BaridiMob ${STUDIO_BARIMOB.account} to unlock your commitment discount`}
                         </span>
                       </div>
                     )}
