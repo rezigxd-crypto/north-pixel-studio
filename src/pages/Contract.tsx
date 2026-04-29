@@ -383,23 +383,19 @@ const Contract = () => {
               <span className="font-semibold">{formatAr(remaining)}</span>
               {discount > 0 ? (
                 <>
-                  {" "}(بعد خصم فرق المزايدة المُقدَّر بـ{" "}
+                  {" "}بعد تطبيق{" "}
+                  <span className="font-semibold">خصم الالتزام المسبق</span>{" "}
+                  المُقدَّر بـ{" "}
                   <span className="font-semibold">{formatAr(discount)}</span>{" "}
-                  لصالح العميل، نتيجة قبول عرض أقل من السقف المُعلَن{" "}
-                  <span className="font-semibold">{formatAr(offer.bidMax)}</span>)
+                  لصالح العميل
                 </>
-              ) : winningBidAmount !== null ? (
-                <> (لم يتحقق فرق مزايدة، إذ تم قبول العرض عند سقف المنافسة)</>
               ) : advancePaid ? (
                 <>
-                  {" "}(يُحسم منه فرق المزايدة لصالح العميل عند قبول عرض أقل من
-                  السقف المُعلَن{" "}
-                  <span className="font-semibold">{formatAr(offer.bidMax)}</span>)
+                  {" "}(يحقّ للعميل خصم الالتزام المسبق عند تأكيد العرض النهائي)
                 </>
               ) : (
                 <>
-                  {" "}(لا يستفيد العميل من خصم فرق المزايدة ما لم يتم تأكيد
-                  الدفعة المسبقة)
+                  {" "}(يُمنح خصم الالتزام المسبق فور تأكيد الدفعة المسبقة)
                 </>
               )}.
             </p>
@@ -412,7 +408,7 @@ const Contract = () => {
             </p>
             <p>
               ويُقرّ العميل بأنه لن يقوم بأي دفعة خارج المنصة، تحت طائلة فقدان
-              حقه في خصم فرق المزايدة وفي ضمان حسن التنفيذ الذي توفره المؤسسة.
+              حقه في خصم الالتزام المسبق وفي ضمان حسن التنفيذ الذي توفره المؤسسة.
             </p>
           </section>
         )}
@@ -423,12 +419,18 @@ const Contract = () => {
             <p className="mb-3">
               نحن مؤسسة <span className="font-semibold">North Pixel Studio</span> نُصرّح
               بأن العامل الحر المذكور أعلاه قد قبِل تنفيذ الخدمة الموصوفة أعلاه،
-              مقابل مبلغ إجمالي صافٍ قدره{" "}
+              مقابل أجرة صافية قدرها{" "}
               <span className="font-semibold">
                 {formatAr(bid?.amount ?? offer.creatorPayout)}
               </span>
-              ، يُدفع له حصراً عبر المنصة بعد التسليم والتحقق من الجودة.
+              ، تُدفع له حصراً عبر المنصة بعد التسليم والتحقق من الجودة.
             </p>
+            {advancePaid && (
+              <p className="mb-3">
+                وقد أكّد العميل التزامه المسبق تجاه المنصة، مما يضمن جدية
+                المشروع وانطلاق التنفيذ في آجاله.
+              </p>
+            )}
             <p className="mb-3">
               ويلتزم العامل الحر بعدم تلقي أي مبلغ من العميل خارج المنصة، تحت
               طائلة الإقصاء النهائي من قاعدة المتعاونين، وفقدان كل حق في
@@ -459,69 +461,81 @@ const Contract = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="border border-[#8a6d3b] px-3 py-1.5">
-                  المبلغ الإجمالي للخدمة
-                </td>
-                <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
-                  {formatAr(offer.totalPrice)}
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-[#8a6d3b] px-3 py-1.5">
-                  الدفعة المسبقة (10%) {advancePaid ? "— مدفوعة ✓" : "— غير مؤكدة"}
-                </td>
-                <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
-                  {formatAr(advanceAmount)}
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-[#8a6d3b] px-3 py-1.5">
-                  سقف المزايدة المُعلَن
-                </td>
-                <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
-                  {formatAr(offer.bidMax)}
-                </td>
-              </tr>
-              {winningBidAmount !== null && (
-                <tr>
-                  <td className="border border-[#8a6d3b] px-3 py-1.5">
-                    قيمة العرض المقبول
-                  </td>
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
-                    {formatAr(winningBidAmount)}
-                  </td>
-                </tr>
-              )}
-              {discount > 0 && (
-                <tr className="bg-[#eef6ee]">
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 font-semibold">
-                    خصم فرق المزايدة لصالح العميل
-                  </td>
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-semibold">
-                    − {formatAr(discount)}
-                  </td>
-                </tr>
-              )}
               {role === "client" && (
-                <tr className="bg-[#fdf6e0]">
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 font-bold">
-                    المبلغ المتبقي على العميل
-                  </td>
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-bold">
-                    {formatAr(remaining)}
-                  </td>
-                </tr>
+                <>
+                  <tr>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5">
+                      المبلغ الإجمالي للخدمة
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
+                      {formatAr(offer.totalPrice)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5">
+                      الدفعة المسبقة (10%) {advancePaid ? "— مدفوعة ✓" : "— غير مؤكدة"}
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
+                      {formatAr(advanceAmount)}
+                    </td>
+                  </tr>
+                  {discount > 0 && (
+                    <>
+                      <tr className="bg-[#eef6ee]">
+                        <td className="border border-[#8a6d3b] px-3 py-1.5 font-semibold">
+                          خصم الالتزام المسبق
+                        </td>
+                        <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-semibold">
+                          − {formatAr(discount)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="border border-[#8a6d3b] px-3 py-1.5">
+                          السعر النهائي للخدمة
+                        </td>
+                        <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
+                          {formatAr(offer.totalPrice - discount)}
+                        </td>
+                      </tr>
+                    </>
+                  )}
+                  <tr className="bg-[#fdf6e0]">
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 font-bold">
+                      المبلغ المتبقي على العميل
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-bold">
+                      {formatAr(remaining)}
+                    </td>
+                  </tr>
+                </>
               )}
               {role === "creator" && (
-                <tr className="bg-[#fdf6e0]">
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 font-bold">
-                    صافي ما يستحقه العامل الحر
-                  </td>
-                  <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-bold">
-                    {formatAr(bid?.amount ?? offer.creatorPayout)}
-                  </td>
-                </tr>
+                <>
+                  <tr>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5">
+                      الخدمة
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left">
+                      {offer.serviceTitle}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5">
+                      قيمة عرضك المقبول
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono">
+                      {formatAr(bid?.amount ?? offer.creatorPayout)}
+                    </td>
+                  </tr>
+                  <tr className="bg-[#fdf6e0]">
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 font-bold">
+                      صافي ما يستحقه العامل الحر
+                    </td>
+                    <td className="border border-[#8a6d3b] px-3 py-1.5 text-left font-mono font-bold">
+                      {formatAr(bid?.amount ?? offer.creatorPayout)}
+                    </td>
+                  </tr>
+                </>
               )}
             </tbody>
           </table>

@@ -931,27 +931,42 @@ export const PostProjectWizard = ({
               <div className="flex items-start gap-3 mb-4">
                 <CreditCard className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-semibold">{lang === "ar" ? "ادفع 10% مسبقًا وافتح خصمًا خاصًا" : lang === "fr" ? "Payez 10% d'avance et débloquez une réduction" : "Pay 10% advance and unlock a discount"}</div>
-                  <div className="text-xs text-muted-foreground">{lang === "ar" ? "إذا فاز عامل حر بأقل من السقف، الفرق يعود لك خصمًا. الدفع المسبق يفعّل هذه الميزة." : lang === "fr" ? "Si un créateur remporte sous le maximum, l'écart vous revient en remise. L'avance débloque cette remise." : "If a creator wins below the maximum, the difference comes back to you as a discount. The advance unlocks it."}</div>
+                  <div className="font-semibold">{lang === "ar" ? "ادفع 10% مسبقًا واحصل على خصم الالتزام المسبق" : lang === "fr" ? "Payez 10% d'avance et bénéficiez de la remise d'engagement" : "Pay 10% commitment and unlock the commitment discount"}</div>
+                  <div className="text-xs text-muted-foreground">{lang === "ar" ? "عند تأكيد الدفعة المسبقة، يُطبَّق خصم تلقائي على فاتورتك النهائية، تحدّده المنصة عند تأكيد العرض النهائي." : lang === "fr" ? "Une fois l'avance confirmée, une remise est appliquée automatiquement à votre facture finale, fixée par la plateforme à la clôture du projet." : "Once the advance is confirmed, the platform applies an automatic discount to your final invoice, set when the project is finalized."}</div>
                 </div>
               </div>
-              {total > 0 && (
-                <div className="mb-4">
-                  <div className="text-3xl font-serif font-bold text-yellow-400">{formatDZD(advance)}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? `من إجمالي ${formatDZD(total)}` : `of total ${formatDZD(total)}`}</div>
-                </div>
-              )}
-              {/* Worked example showing the bid-savings discount */}
+              {total > 0 && (() => {
+                // Max realistic discount = bidMax × (1 - 0.83) = total × 0.80 × 0.17.
+                // Floored to nearest 500 DZD so the figure looks credible.
+                const maxSavings = Math.floor((total * 0.80 * 0.17) / 500) * 500;
+                return (
+                <>
+                  <div className="mb-4 grid grid-cols-2 gap-3">
+                    <div className="glass rounded-xl p-3 bg-yellow-400/5 border border-yellow-400/20">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{lang === "ar" ? "تدفع الآن" : lang === "fr" ? "Vous payez maintenant" : "You pay now"}</div>
+                      <div className="text-2xl font-serif font-bold text-yellow-400">{formatDZD(advance)}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{lang === "ar" ? `من ${formatDZD(total)}` : lang === "fr" ? `sur ${formatDZD(total)}` : `of ${formatDZD(total)}`}</div>
+                    </div>
+                    <div className="glass rounded-xl p-3 bg-emerald-500/5 border border-emerald-400/30">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">{lang === "ar" ? "توفّر حتّى" : lang === "fr" ? "Économisez jusqu'à" : "You save up to"}</div>
+                      <div className="text-2xl font-serif font-bold text-emerald-400">{formatDZD(maxSavings)}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{lang === "ar" ? "على الفاتورة النهائية" : lang === "fr" ? "sur la facture finale" : "on the final invoice"}</div>
+                    </div>
+                  </div>
+                </>
+                );
+              })()}
+              {/* Faster-delivery promise — service-tier framing of the advance */}
               <div className="glass rounded-xl p-3 bg-accent/5 border border-accent/20 mb-3 text-xs space-y-1">
                 <div className="font-semibold text-accent text-[11px] uppercase tracking-wider">
-                  {lang === "ar" ? "كيف تعمل الميزة" : lang === "fr" ? "Comment ça marche" : "How it works"}
+                  {lang === "ar" ? "أولوية في التنفيذ" : lang === "fr" ? "Priorité d'exécution" : "Priority delivery"}
                 </div>
                 <div className="text-muted-foreground leading-relaxed">
                   {lang === "ar"
-                    ? "مثال: السقف 19,000 د.ج، فاز عامل بـ 16,000 د.ج. الفرق 3,000 د.ج يُخصم من فاتورتك. شرط الميزة: أن تدفع الـ 10% مسبقًا."
+                    ? "المشاريع المؤكَّدة بدفعة مسبقة تحظى بأولوية في سلسلة الإنتاج، وتُسلَّم عادةً أسرع بيومين."
                     : lang === "fr"
-                      ? "Exemple : plafond 19,000 DA, un créateur gagne à 16,000 DA. La différence de 3,000 DA est déduite de votre facture finale. Condition : avance de 10% payée."
-                      : "Example: cap 19,000 DA, a creator wins at 16,000 DA. The 3,000 DA difference is deducted from your final invoice. Condition: 10% advance paid."}
+                      ? "Les projets avec avance confirmée sont priorisés dans la file de production et sont généralement livrés 2 jours plus tôt."
+                      : "Projects with paid commitment are prioritized in the production queue and typically delivered 2 days earlier."}
                 </div>
               </div>
               <div className="glass rounded-xl p-4 bg-secondary/20 space-y-1">
@@ -961,10 +976,10 @@ export const PostProjectWizard = ({
               </div>
               <p className="text-xs text-muted-foreground mt-3">
                 {lang === "ar"
-                  ? "* الدفع المسبق اختياري لكنه يفتح الخصم. كل المدفوعات تتم حصرًا عبر المنصة."
+                  ? "* الدفع المسبق اختياري لكنه يفتح خصم الالتزام. كل المدفوعات تتم حصرًا عبر المنصة."
                   : lang === "fr"
-                    ? "* L'avance est optionnelle mais débloque la remise. Tous les paiements se font exclusivement via la plateforme."
-                    : "* The advance is optional but unlocks the discount. All payments happen exclusively on the platform."}
+                    ? "* L'avance est optionnelle mais débloque la remise d'engagement. Tous les paiements se font exclusivement via la plateforme."
+                    : "* The advance is optional but unlocks the commitment discount. All payments happen exclusively on the platform."}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {lang === "ar" ? "* يُسترد المبلغ كاملًا إذا لم يتوفر عامل حر في منطقتك." : lang === "fr" ? "* Remboursement intégral si aucun créateur n'est disponible." : "* Full refund if no freelancer is found in your area."}
