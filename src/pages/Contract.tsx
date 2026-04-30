@@ -211,17 +211,32 @@ const Contract = () => {
       {/* Print-only stylesheet sets A4 paper + clean margins. */}
       <style>{`
         @media print {
-          @page { size: A4; margin: 18mm 18mm 22mm 18mm; }
+          /* Single-page A4: tighter margins + reduced font scale + force page
+             breaks off of cards so the signature block can't orphan onto a
+             second sheet. */
+          @page { size: A4; margin: 8mm 10mm 10mm 10mm; }
           body { background: white !important; }
           .contract-toolbar { display: none !important; }
           .contract-sheet {
             box-shadow: none !important;
             margin: 0 !important;
+            padding: 6mm 6mm 8mm 6mm !important;
             width: 100% !important;
             min-height: auto !important;
             border: none !important;
+            font-size: 9.5pt !important;
+            line-height: 1.32 !important;
             page-break-after: avoid;
           }
+          .contract-sheet h1 { font-size: 13pt !important; }
+          .contract-sheet h2 { font-size: 11pt !important; }
+          .contract-sheet header { margin-bottom: 4mm !important; }
+          .contract-sheet section,
+          .contract-sheet table,
+          .contract-sheet article > div {
+            page-break-inside: avoid;
+          }
+          .contract-watermark { font-size: 70pt !important; }
         }
         .contract-sheet {
           /* A4 at 96dpi ≈ 794×1123. We use mm so print + screen match. */

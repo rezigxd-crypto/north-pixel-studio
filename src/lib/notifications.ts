@@ -29,7 +29,17 @@ export type NotificationType =
   | "bundle_cancelled"          // admin → client: bundle subscription cancelled
   | "task_invitation_new"       // admin → creator: private task invitation
   | "task_invitation_accepted"  // creator → admin: task invitation accepted
-  | "task_invitation_declined"; // creator → admin: task invitation declined
+  | "task_invitation_declined"  // creator → admin: task invitation declined
+  | "advance_received"          // admin → client: studio confirmed receipt of the 10 % advance
+  | "contract_ready"            // system → both: A4 contract is generated and ready to view / sign
+  | "deliverable_accepted"      // client → creator: client approved the delivery, payout coming
+  | "deliverable_revisions"     // client → creator: client sent the deliverable back with notes
+  | "payment_released"          // admin → creator: BaridiMob payout has been issued
+  | "deadline_approaching"      // system → client + creator: 24 h before the delivery deadline
+  | "offer_expired"             // system → client: project closed without bids — relist nudge
+  | "new_creator_signup"        // system → admin: new creator awaiting application review
+  | "rating_reminder"           // system → both: post-delivery prompt to leave a rating
+  | "bundle_milestone";         // system → client: hit a usage milestone in their bundle
 
 export type AppNotification = {
   id: string;
@@ -237,6 +247,154 @@ export const NOTIFICATION_COPY: Record<
         : lang === "fr"
         ? `${who} a décliné — vous pouvez inviter quelqu'un d'autre.`
         : `${who} declined — invite someone else.`;
+    },
+  },
+  advance_received: {
+    title: {
+      ar: "تم استلام دفعتك المسبقة ✓",
+      fr: "Avance reçue",
+      en: "Advance received",
+    },
+    body: (m, lang) => {
+      const s = m.serviceTitle ? ` (${m.serviceTitle})` : "";
+      return lang === "ar"
+        ? `أكّدنا دفعتك المسبقة للمشروع${s}. خصم الالتزام مفعّل.`
+        : lang === "fr"
+        ? `Nous avons confirmé votre avance pour le projet${s}. Remise d'engagement active.`
+        : `We confirmed your advance for the project${s}. Commitment discount unlocked.`;
+    },
+  },
+  contract_ready: {
+    title: {
+      ar: "العقد جاهز للاطلاع",
+      fr: "Contrat prêt",
+      en: "Contract ready",
+    },
+    body: (_m, lang) =>
+      lang === "ar"
+        ? "تم تحرير عقدك الرسمي — افتحه للاطلاع أو الطباعة."
+        : lang === "fr"
+        ? "Votre contrat officiel est généré — ouvrez-le pour le consulter ou l'imprimer."
+        : "Your official contract is ready — open it to view or print.",
+  },
+  deliverable_accepted: {
+    title: {
+      ar: "تم قبول تسليمك ✓",
+      fr: "Livraison acceptée",
+      en: "Delivery accepted",
+    },
+    body: (m, lang) => {
+      const s = m.serviceTitle ? ` (${m.serviceTitle})` : "";
+      return lang === "ar"
+        ? `وافق العميل على تسليمك${s} — الدفعة قادمة.`
+        : lang === "fr"
+        ? `Le client a validé votre livraison${s} — paiement en cours.`
+        : `The client approved your delivery${s} — payout incoming.`;
+    },
+  },
+  deliverable_revisions: {
+    title: {
+      ar: "العميل طلب تعديلات",
+      fr: "Révisions demandées",
+      en: "Revisions requested",
+    },
+    body: (m, lang) => {
+      const note = m.note ? ` — “${m.note.slice(0, 80)}”` : "";
+      return lang === "ar"
+        ? `طلب العميل تعديلات على التسليم${note}.`
+        : lang === "fr"
+        ? `Le client a demandé des révisions${note}.`
+        : `The client requested revisions${note}.`;
+    },
+  },
+  payment_released: {
+    title: {
+      ar: "تم تحويل أجرك 💸",
+      fr: "Paiement envoyé",
+      en: "Payment sent",
+    },
+    body: (m, lang) => {
+      const amt = m.amount ? ` (${m.amount} دج)` : "";
+      return lang === "ar"
+        ? `تم إرسال أجرك${amt} عبر بريدي موب — تحقق من حسابك.`
+        : lang === "fr"
+        ? `Votre paiement${amt} est envoyé via BaridiMob.`
+        : `Your payout${amt} has been sent via BaridiMob.`;
+    },
+  },
+  deadline_approaching: {
+    title: {
+      ar: "الموعد النهائي قريب",
+      fr: "Échéance imminente",
+      en: "Deadline approaching",
+    },
+    body: (m, lang) => {
+      const s = m.serviceTitle ? ` (${m.serviceTitle})` : "";
+      return lang === "ar"
+        ? `أقل من 24 ساعة على موعد التسليم${s}.`
+        : lang === "fr"
+        ? `Moins de 24 h avant la livraison${s}.`
+        : `Less than 24 hours until delivery${s}.`;
+    },
+  },
+  offer_expired: {
+    title: {
+      ar: "انتهت صلاحية مشروعك",
+      fr: "Projet expiré",
+      en: "Project expired",
+    },
+    body: (m, lang) => {
+      const s = m.serviceTitle ? ` (${m.serviceTitle})` : "";
+      return lang === "ar"
+        ? `لم تصل عروض على مشروعك${s}. أعد نشره أو راجع نطاق الميزانية.`
+        : lang === "fr"
+        ? `Aucune offre n'est arrivée sur votre projet${s}. Republiez-le ou ajustez la fourchette.`
+        : `No bids came in on your project${s}. Relist it or adjust the budget range.`;
+    },
+  },
+  new_creator_signup: {
+    title: {
+      ar: "مبدع جديد ينتظر المراجعة",
+      fr: "Nouveau créateur en attente",
+      en: "New creator awaiting review",
+    },
+    body: (m, lang) => {
+      const who = m.creatorName || (lang === "ar" ? "مبدع" : "A creator");
+      return lang === "ar"
+        ? `${who} قدّم طلب انضمام — راجعه في لوحة الإدارة.`
+        : lang === "fr"
+        ? `${who} a soumis une candidature — à examiner dans l'admin.`
+        : `${who} submitted an application — review in admin.`;
+    },
+  },
+  rating_reminder: {
+    title: {
+      ar: "اترك تقييمك",
+      fr: "Laissez votre avis",
+      en: "Leave a rating",
+    },
+    body: (m, lang) => {
+      const s = m.serviceTitle ? ` (${m.serviceTitle})` : "";
+      return lang === "ar"
+        ? `كيف كانت تجربتك مع المشروع${s}؟ تقييمك يساعد المنصة.`
+        : lang === "fr"
+        ? `Comment s'est passé le projet${s} ? Votre avis nous aide.`
+        : `How did the project${s} go? Your rating helps the platform.`;
+    },
+  },
+  bundle_milestone: {
+    title: {
+      ar: "إنجاز جديد في باقتك ✨",
+      fr: "Nouveau jalon dans votre bundle",
+      en: "Bundle milestone reached",
+    },
+    body: (m, lang) => {
+      const n = m.count || "";
+      return lang === "ar"
+        ? `وصلت إلى ${n} مشاريع منجزة في باقتك — شكرًا على ثقتك.`
+        : lang === "fr"
+        ? `Vous avez atteint ${n} livraisons dans votre bundle — merci !`
+        : `You've hit ${n} deliveries in your bundle — thank you.`;
     },
   },
 };

@@ -6,6 +6,7 @@ import {
 import { db } from "./firebase";
 import { generateUniqueUsername } from "./username";
 import { addNotification } from "./notifications";
+import { getAdminUid } from "./bundles";
 
 export type UserProfile = {
   uid: string;
@@ -56,6 +57,18 @@ export type Bid = {
   acceptedAt?: number;
   /** ms timestamp when creator must deliver by (acceptedAt + 24h by default). */
   deliveryDeadline?: number;
+  /** ms timestamp when client approved the deliverable. Drives payout + rating reminder. */
+  deliveryAcceptedAt?: number;
+  /** ms timestamp when client requested revisions (overrides any prior accept). */
+  revisionRequestedAt?: number;
+  /** Free-form note the client left when requesting revisions. */
+  revisionNote?: string;
+  /** ms timestamp when admin marked the BaridiMob payout as released. */
+  paymentReleasedAt?: number;
+  /** ms timestamp when the deadline-approaching notification fired (idempotency). */
+  deadlineNotifiedAt?: number;
+  /** ms timestamp when the rating-reminder notification fired (idempotency). */
+  ratingPromptedAt?: number;
   createdAt: number;
 };
 
@@ -105,6 +118,8 @@ export type ClientOffer = {
   advanceAmount?: number;
   status: "pending_admin" | "open" | "assigned" | "delivered" | "rejected";
   acceptedBidId?: string;
+  /** ms timestamp when the offer-expired notification fired (idempotency). */
+  expiredNotifiedAt?: number;
   createdAt: number;
 };
 
@@ -215,6 +230,18 @@ export function useClientTags(): Record<string, ClientTagType> {
 // ─── Creators ─────────────────────────────────────────────────────────────
 export const addCreator = async (c: Omit<CreatorApplication, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "creators"), { ...c, status: "pending", createdAt: serverTimestamp() });
+  // Notify the admin that a new creator is awaiting application review.
+  try {
+    const adminUid = await getAdminUid();
+    if (adminUid) {
+      await addNotification({
+        recipientUid: adminUid,
+        type: "new_creator_signup",
+        meta: { creatorName: c.fullName || "", role: c.role || "", wilaya: c.wilaya || "" },
+        link: "/portal/admin",
+      });
+    }
+  } catch { /* silent */ }
   return ref.id;
 };
 export const setCreatorStatus = async (id: string, status: CreatorApplication["status"]) => {
@@ -250,24 +277,223 @@ export const setOfferStatus = async (id: string, status: ClientOffer["status"]) 
 };
 export const markAdvancePaid = async (id: string, amount: number) => {
   await updateDoc(doc(db, "offers", id), { advancePaid: true, advanceAmount: amount });
-  // Notify the assigned creator that the advance is confirmed.
+  // Notify the assigned creator (advance_paid + contract_ready) AND the
+  // client (advance_received + contract_ready) that the advance is confirmed.
   try {
     const offSnap = await getDoc(doc(db, "offers", id));
     if (!offSnap.exists()) return;
     const o = offSnap.data() as ClientOffer;
-    if (!o.acceptedBidId) return;
-    const bidSnap = await getDoc(doc(db, "bids", o.acceptedBidId));
+    const serviceTitle = o.serviceTitle || "";
+    // Client side — close the receipt loop + nudge to the contract page.
+    if (o.clientUid) {
+      await addNotification({
+        recipientUid: o.clientUid,
+        type: "advance_received",
+        meta: { serviceTitle, amount: String(amount), offerId: id },
+        link: "/portal/client",
+      });
+      await addNotification({
+        recipientUid: o.clientUid,
+        type: "contract_ready",
+        meta: { serviceTitle, offerId: id },
+        link: `/contract/${id}/client`,
+      });
+    }
+    // Creator side — same two notifications, only fires once a bid is accepted.
+    if (o.acceptedBidId) {
+      const bidSnap = await getDoc(doc(db, "bids", o.acceptedBidId));
+      if (bidSnap.exists()) {
+        const b = bidSnap.data() as Bid;
+        if (b.creatorId) {
+          await addNotification({
+            recipientUid: b.creatorId,
+            type: "advance_paid",
+            meta: { serviceTitle, amount: String(amount) },
+            link: "/portal/creator",
+          });
+          await addNotification({
+            recipientUid: b.creatorId,
+            type: "contract_ready",
+            meta: { serviceTitle, offerId: id },
+            link: `/contract/${id}/creator`,
+          });
+        }
+      }
+    }
+  } catch { /* silent */ }
+};
+
+/**
+ * Client accepts the deliverable. Notifies the creator and stamps the bid so
+ * the post-delivery rating reminder can fire later.
+ */
+export const acceptDelivery = async (bidId: string) => {
+  await updateDoc(doc(db, "bids", bidId), {
+    deliveryAcceptedAt: Date.now(),
+    revisionRequestedAt: 0,
+  });
+  try {
+    const bidSnap = await getDoc(doc(db, "bids", bidId));
+    if (!bidSnap.exists()) return;
+    const b = bidSnap.data() as Bid;
+    const offSnap = await getDoc(doc(db, "offers", b.offerId));
+    const serviceTitle = offSnap.exists() ? (offSnap.data() as ClientOffer).serviceTitle || "" : "";
+    if (b.creatorId) {
+      await addNotification({
+        recipientUid: b.creatorId,
+        type: "deliverable_accepted",
+        meta: { serviceTitle, offerId: b.offerId },
+        link: "/portal/creator",
+      });
+    }
+  } catch { /* silent */ }
+};
+
+/** Client sends the deliverable back for revisions with an optional note. */
+export const requestRevisions = async (bidId: string, note: string) => {
+  await updateDoc(doc(db, "bids", bidId), {
+    revisionRequestedAt: Date.now(),
+    revisionNote: note || "",
+    deliveryAcceptedAt: 0,
+    // Reset the bid back to "accepted" so the creator can re-submit.
+    status: "accepted",
+    deliverableLink: "",
+  });
+  try {
+    const bidSnap = await getDoc(doc(db, "bids", bidId));
     if (!bidSnap.exists()) return;
     const b = bidSnap.data() as Bid;
     if (b.creatorId) {
       await addNotification({
         recipientUid: b.creatorId,
-        type: "advance_paid",
-        meta: { serviceTitle: o.serviceTitle || "", amount: String(amount) },
+        type: "deliverable_revisions",
+        meta: { offerId: b.offerId, note: (note || "").slice(0, 120) },
         link: "/portal/creator",
       });
     }
   } catch { /* silent */ }
+};
+
+/** Admin marks the BaridiMob payout as released. Notifies the creator. */
+export const releasePayment = async (bidId: string) => {
+  await updateDoc(doc(db, "bids", bidId), { paymentReleasedAt: Date.now() });
+  try {
+    const bidSnap = await getDoc(doc(db, "bids", bidId));
+    if (!bidSnap.exists()) return;
+    const b = bidSnap.data() as Bid;
+    if (b.creatorId) {
+      await addNotification({
+        recipientUid: b.creatorId,
+        type: "payment_released",
+        meta: { amount: String(b.amount || 0), offerId: b.offerId },
+        link: "/portal/creator",
+      });
+    }
+  } catch { /* silent */ }
+};
+
+// ─── Time-based notification triggers ────────────────────────────────────
+//
+// These are called from portal mounts (ClientPortal, CreatorPortal,
+// AdminPortal). Each writes an idempotency timestamp on the source doc so
+// the same event fires at most once per user per project.
+
+/** 24 h-before-deadline notification for both client and creator. */
+export const checkDeadlineNotifications = async (
+  bids: Bid[],
+  offers: ClientOffer[],
+) => {
+  const now = Date.now();
+  const window = 24 * 60 * 60 * 1000;
+  const dueSoon = bids.filter((b) =>
+    b.status === "accepted" &&
+    !b.deadlineNotifiedAt &&
+    b.deliveryDeadline &&
+    b.deliveryDeadline - now <= window &&
+    b.deliveryDeadline - now > 0,
+  );
+  for (const b of dueSoon) {
+    try {
+      const o = offers.find((x) => x.id === b.offerId);
+      const serviceTitle = o?.serviceTitle || "";
+      if (o?.clientUid) {
+        await addNotification({
+          recipientUid: o.clientUid,
+          type: "deadline_approaching",
+          meta: { serviceTitle, offerId: b.offerId },
+          link: "/portal/client",
+        });
+      }
+      if (b.creatorId) {
+        await addNotification({
+          recipientUid: b.creatorId,
+          type: "deadline_approaching",
+          meta: { serviceTitle, offerId: b.offerId },
+          link: "/portal/creator",
+        });
+      }
+      await updateDoc(doc(db, "bids", b.id), { deadlineNotifiedAt: now });
+    } catch { /* silent */ }
+  }
+};
+
+/** "No bids in 14 days" → notify the client once with a relist nudge. */
+export const checkExpiredOfferNotifications = async (offers: ClientOffer[], bids: Bid[]) => {
+  const now = Date.now();
+  const expiry = 14 * 24 * 60 * 60 * 1000;
+  const expired = offers.filter((o) =>
+    o.status === "open" &&
+    !o.expiredNotifiedAt &&
+    now - o.createdAt > expiry &&
+    !bids.some((b) => b.offerId === o.id),
+  );
+  for (const o of expired) {
+    try {
+      if (o.clientUid) {
+        await addNotification({
+          recipientUid: o.clientUid,
+          type: "offer_expired",
+          meta: { serviceTitle: o.serviceTitle || "", offerId: o.id },
+          link: "/portal/client",
+        });
+      }
+      await updateDoc(doc(db, "offers", o.id), { expiredNotifiedAt: now });
+    } catch { /* silent */ }
+  }
+};
+
+/** 24 h after the client accepted delivery → prompt both sides for a rating. */
+export const checkRatingReminders = async (bids: Bid[], offers: ClientOffer[]) => {
+  const now = Date.now();
+  const delay = 24 * 60 * 60 * 1000;
+  const ready = bids.filter((b) =>
+    b.deliveryAcceptedAt &&
+    !b.ratingPromptedAt &&
+    now - b.deliveryAcceptedAt >= delay,
+  );
+  for (const b of ready) {
+    try {
+      const o = offers.find((x) => x.id === b.offerId);
+      const serviceTitle = o?.serviceTitle || "";
+      if (o?.clientUid) {
+        await addNotification({
+          recipientUid: o.clientUid,
+          type: "rating_reminder",
+          meta: { serviceTitle, offerId: b.offerId, target: "creator" },
+          link: "/portal/client",
+        });
+      }
+      if (b.creatorId) {
+        await addNotification({
+          recipientUid: b.creatorId,
+          type: "rating_reminder",
+          meta: { serviceTitle, offerId: b.offerId, target: "client" },
+          link: "/portal/creator",
+        });
+      }
+      await updateDoc(doc(db, "bids", b.id), { ratingPromptedAt: now });
+    } catch { /* silent */ }
+  }
 };
 
 // ─── Bids ─────────────────────────────────────────────────────────────────

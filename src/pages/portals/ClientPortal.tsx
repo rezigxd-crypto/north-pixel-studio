@@ -10,7 +10,11 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
 import { ClientBundles } from "@/components/ClientBundles";
 import { OFFERS, STUDIO_BARIMOB, formatDZD, formatStartingPrice, bidSavingsDiscount, computeClientRemaining } from "@/lib/offers";
-import { useOffers, useBids, updateUserProfile } from "@/lib/store";
+import {
+  useOffers, useBids, updateUserProfile,
+  acceptDelivery, requestRevisions,
+  checkDeadlineNotifications, checkExpiredOfferNotifications, checkRatingReminders,
+} from "@/lib/store";
 import { useClientSubscriptions } from "@/lib/bundles";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
 import { ProfilePicUpload } from "@/components/ProfilePicUpload";
@@ -83,6 +87,34 @@ const ClientPortal = () => {
     if (auth.avatar) setSelectedAvatar(auth.avatar);
     if (auth.phone) setProfilePhone(auth.phone);
   }, [auth.avatar, auth.phone]);
+
+  // Run time-based notification checks once data is available. Each helper
+  // is idempotent (uses a flag on the source doc) so re-running is safe.
+  useEffect(() => {
+    if (!auth.uid || !offers.length) return;
+    const myOffers = offers.filter((o) => o.clientEmail === auth.email);
+    void checkDeadlineNotifications(bids, myOffers);
+    void checkExpiredOfferNotifications(myOffers, bids);
+    void checkRatingReminders(bids, myOffers);
+  }, [auth.uid, auth.email, offers, bids]);
+
+  const [revisionFor, setRevisionFor] = useState<string | null>(null);
+  const [revisionNote, setRevisionNoteTxt] = useState("");
+  const handleAcceptDelivery = async (bidId: string) => {
+    try {
+      await acceptDelivery(bidId);
+      toast.success(lang === "ar" ? "✓ تم قبول التسليم" : "✓ Delivery accepted");
+    } catch { toast.error(lang === "ar" ? "فشلت العملية" : "Failed"); }
+  };
+  const handleRequestRevisions = async (bidId: string) => {
+    if (!revisionNote.trim()) { toast.error(lang === "ar" ? "اكتب ملاحظاتك" : "Write your notes"); return; }
+    try {
+      await requestRevisions(bidId, revisionNote.trim());
+      toast.success(lang === "ar" ? "✓ تم إرسال طلب التعديلات" : "✓ Revision request sent");
+      setRevisionFor(null);
+      setRevisionNoteTxt("");
+    } catch { toast.error(lang === "ar" ? "فشلت العملية" : "Failed"); }
+  };
 
   const myOffers = offers.filter((o) => o.clientEmail === auth.email);
   const pending  = myOffers.filter((o) => o.status === "pending_admin").length;
@@ -236,6 +268,49 @@ const ClientPortal = () => {
                             className="text-xs text-purple-400 underline flex items-center gap-1">
                             📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
                           </a>
+                        )}
+                        {deliveredBid && !deliveredBid.deliveryAcceptedAt && (
+                          <div className="w-full mt-2 flex flex-wrap items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs bg-emerald-500 hover:bg-emerald-500/90"
+                              onClick={() => handleAcceptDelivery(deliveredBid.id)}
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              {lang === "ar" ? "قبول التسليم" : "Accept delivery"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => setRevisionFor(deliveredBid.id)}
+                            >
+                              {lang === "ar" ? "طلب تعديلات" : "Request revisions"}
+                            </Button>
+                            {revisionFor === deliveredBid.id && (
+                              <div className="w-full flex items-center gap-2 mt-1">
+                                <Input
+                                  value={revisionNote}
+                                  onChange={(e) => setRevisionNoteTxt(e.target.value)}
+                                  placeholder={lang === "ar" ? "ما الذي يحتاج تعديلًا؟" : "What needs to change?"}
+                                  className="h-7 text-xs flex-1"
+                                />
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => handleRequestRevisions(deliveredBid.id)}
+                                >
+                                  {lang === "ar" ? "إرسال" : "Send"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {deliveredBid?.deliveryAcceptedAt && (
+                          <span className="text-xs text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {lang === "ar" ? "تم قبول التسليم" : "Delivery accepted"}
+                          </span>
                         )}
                         {p.deadline && (p.status === "open" || p.status === "assigned") && (
                           <Countdown

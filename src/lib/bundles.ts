@@ -18,7 +18,7 @@
  */
 import { useEffect, useState } from "react";
 import {
-  collection, addDoc, updateDoc, doc, getDoc, query, where, orderBy,
+  collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where, orderBy,
   onSnapshot, serverTimestamp, Timestamp, collectionGroup,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -311,6 +311,37 @@ export const updateDeliverable = async (
     ...data,
     updatedAt: serverTimestamp(),
   });
+  // Bundle milestone notification: when admin marks a deliverable as
+  // "delivered", count completed deliverables and ping the client at
+  // the 3rd / 5th / 10th milestone (idempotent via `lastMilestoneNotified`
+  // on the parent subscription).
+  if (data.status !== "delivered") return;
+  try {
+    const subRef = doc(db, "bundleSubscriptions", subscriptionId);
+    const subSnap = await getDoc(subRef);
+    if (!subSnap.exists()) return;
+    const sub = subSnap.data() as BundleSubscription & { lastMilestoneNotified?: number };
+    const allSnap = await getDocs(deliverablesCol(subscriptionId));
+    const delivered = allSnap.docs.filter(
+      (d) => (d.data() as { status?: string }).status === "delivered",
+    ).length;
+    const milestones = [3, 5, 10, 25, 50, 100];
+    if (!milestones.includes(delivered)) return;
+    if (sub.lastMilestoneNotified === delivered) return;
+    if (sub.clientUid) {
+      await addNotification({
+        recipientUid: sub.clientUid,
+        type: "bundle_milestone",
+        meta: {
+          count: String(delivered),
+          orgName: sub.orgName || "",
+          subscriptionId,
+        },
+        link: "/portal/client",
+      });
+    }
+    await updateDoc(subRef, { lastMilestoneNotified: delivered });
+  } catch { /* silent */ }
 };
 
 /** Live feed of deliverables for a single subscription. */
