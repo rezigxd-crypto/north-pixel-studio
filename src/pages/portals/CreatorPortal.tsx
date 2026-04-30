@@ -11,6 +11,7 @@ import {
 import {
   useOffers, useBids, useCreators, useAllUsers,
   addBid, submitDeliverable, updateUserProfile, fetchTakenUsernames,
+  checkDeadlineNotifications, checkRatingReminders,
 } from "@/lib/store";
 import { generateUniqueUsername } from "@/lib/username";
 import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from "@/lib/offers";
@@ -70,6 +71,15 @@ const CreatorPortal = () => {
   const bids = useBids();
   const creators = useCreators();
   const allUsers = useAllUsers();
+
+  // Time-based notifications: 24h-before-deadline + post-delivery rating
+  // reminder. Each helper writes a flag on the source doc so re-running
+  // is idempotent.
+  useEffect(() => {
+    if (!auth.uid || !bids.length) return;
+    void checkDeadlineNotifications(bids, offers);
+    void checkRatingReminders(bids, offers);
+  }, [auth.uid, bids, offers]);
 
   // Find this creator's application doc (used for the public profile +
   // completion-ring computation).
@@ -480,6 +490,28 @@ const CreatorPortal = () => {
                     <ProjectWorkspace offer={offer} acceptedBid={bid} viewer="creator" lang={lang} />
                   )}
 
+                  {/* Revision request banner (client sent it back) */}
+                  {bid.revisionRequestedAt && bid.revisionNote && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <p className="text-xs text-yellow-400 font-semibold mb-1">
+                        ↩ {lang === "ar" ? "العميل طلب تعديلات:" : "Client requested revisions:"}
+                      </p>
+                      <p className="text-xs text-foreground bg-yellow-500/10 border border-yellow-500/30 rounded-md p-2">
+                        “{bid.revisionNote}”
+                      </p>
+                    </div>
+                  )}
+                  {/* Delivery accepted / payout state */}
+                  {bid.deliveryAcceptedAt && !bid.paymentReleasedAt && (
+                    <p className="mt-3 text-xs text-emerald-400">
+                      ✓ {lang === "ar" ? "تم قبول التسليم — الدفعة قيد الإرسال." : "Delivery accepted — payout incoming."}
+                    </p>
+                  )}
+                  {bid.paymentReleasedAt && (
+                    <p className="mt-3 text-xs text-emerald-400 font-semibold">
+                      💸 {lang === "ar" ? "تم إرسال أجرك عبر بريدي موب." : "Payout sent via BaridiMob."}
+                    </p>
+                  )}
                   {/* Deliverable upload for accepted bids */}
                   {bid.status === "accepted" && !bid.deliverableLink && (
                     <div className="mt-3 pt-3 border-t border-border">

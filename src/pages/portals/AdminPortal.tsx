@@ -3,7 +3,7 @@ import { AdminBundles } from "@/components/AdminBundles";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
+import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, releasePayment, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
 import { useAllSubscriptions } from "@/lib/bundles";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS, CLIENT_ADVANCE_PCT } from "@/lib/offers";
 import { toast } from "sonner";
@@ -149,6 +149,10 @@ const AdminPortal = () => {
   const acceptOffer = async (id: string, title: string) => { await setOfferStatus(id, "open"); toast.success(`${title} — ${lang === "ar" ? "مباشر" : "live"}`); };
   const rejectOffer = async (id: string) => { await setOfferStatus(id, "rejected"); toast.error(lang === "ar" ? "مرفوض" : "Rejected"); };
   const handleAcceptBid = async (bidId: string, offerId: string, name: string, amount: number) => { await acceptBid(bidId, offerId); toast.success(`${name} — ${formatDZD(amount)}`); };
+  const handleReleasePayment = async (bidId: string, name: string, amount: number) => {
+    await releasePayment(bidId);
+    toast.success(lang === "ar" ? `تم إرسال أجر ${name}: ${formatDZD(amount)}` : `Payout sent to ${name}: ${formatDZD(amount)}`);
+  };
   const handleMarkAdvancePaid = async (offerId: string, total: number) => {
     const amount = Math.round(total * CLIENT_ADVANCE_PCT);
     await markAdvancePaid(offerId, amount);
@@ -361,6 +365,44 @@ const AdminPortal = () => {
               );
             })
           }
+          {/* Awaiting payout — accepted-and-approved bids that still need a BaridiMob payout. */}
+          {(() => {
+            const awaiting = bids.filter((b) => b.deliveryAcceptedAt && !b.paymentReleasedAt);
+            if (awaiting.length === 0) return null;
+            return (
+              <div className="glass rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <span className="font-semibold">{lang === "ar" ? "في انتظار الدفع" : "Awaiting payout"}</span>
+                  <span className="text-xs text-muted-foreground">({awaiting.length})</span>
+                </div>
+                <div className="space-y-2">
+                  {awaiting.map((b) => {
+                    const o = offers.find((x) => x.id === b.offerId);
+                    return (
+                      <div key={b.id} className="glass rounded-xl px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">{b.creatorName}</div>
+                          <div className="text-xs text-muted-foreground truncate">{o?.serviceTitle || ""} · {b.creatorEmail}</div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className="text-accent font-bold">{formatDZD(b.amount)}</span>
+                          <Button
+                            size="sm"
+                            variant="gold"
+                            onClick={() => handleReleasePayment(b.id, b.creatorName, b.amount)}
+                          >
+                            <DollarSign className="w-3 h-3 me-1" />
+                            {lang === "ar" ? "تحرير الدفعة" : "Release payment"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
