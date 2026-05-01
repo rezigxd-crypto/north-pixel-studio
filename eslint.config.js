@@ -22,5 +22,12 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-explicit-any": "off",
     },
+  },
+  // Vercel serverless functions in /api run on Node, not in the browser.
+  {
+    files: ["api/**/*.ts"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
   }
 );

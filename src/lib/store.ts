@@ -6,6 +6,7 @@ import {
 import { db } from "./firebase";
 import { generateUniqueUsername } from "./username";
 import { addNotification } from "./notifications";
+import { dispatchEmail } from "./email";
 import { getAdminUid } from "./bundles";
 
 export type UserProfile = {
@@ -299,6 +300,14 @@ export const setOfferStatus = async (id: string, status: ClientOffer["status"]) 
             meta: { serviceTitle: o.serviceTitle || "", offerId: id },
             link: "/portal/client",
           });
+          // Email — only for the approval, skip the rejection (admins follow up manually).
+          if (status === "open") {
+            void dispatchEmail({
+              type: "offer_approved",
+              recipientUid: o.clientUid,
+              meta: { serviceTitle: o.serviceTitle || "" },
+            });
+          }
         }
       }
     } catch { /* silent — notifications never block the main flow */ }
@@ -327,6 +336,11 @@ export const markAdvancePaid = async (id: string, amount: number) => {
         meta: { serviceTitle, offerId: id },
         link: `/contract/${id}/client`,
       });
+      void dispatchEmail({
+        type: "advance_received",
+        recipientUid: o.clientUid,
+        meta: { serviceTitle, amount: String(amount) },
+      });
     }
     // Creator side — same two notifications, only fires once a bid is accepted.
     if (o.acceptedBidId) {
@@ -345,6 +359,11 @@ export const markAdvancePaid = async (id: string, amount: number) => {
             type: "contract_ready",
             meta: { serviceTitle, offerId: id },
             link: `/contract/${id}/creator`,
+          });
+          void dispatchEmail({
+            type: "advance_received",
+            recipientUid: b.creatorId,
+            meta: { serviceTitle, amount: String(amount) },
           });
         }
       }
@@ -416,6 +435,11 @@ export const releasePayment = async (bidId: string) => {
         type: "payment_released",
         meta: { amount: String(b.amount || 0), offerId: b.offerId },
         link: "/portal/creator",
+      });
+      void dispatchEmail({
+        type: "payment_released",
+        recipientUid: b.creatorId,
+        meta: { amount: String(b.amount || 0) },
       });
     }
   } catch { /* silent */ }
@@ -595,6 +619,15 @@ export const addBid = async (b: Omit<Bid, "id" | "status" | "createdAt">) => {
           },
           link: "/portal/client",
         });
+        void dispatchEmail({
+          type: "new_bid",
+          recipientUid: o.clientUid,
+          meta: {
+            serviceTitle: o.serviceTitle || "",
+            creatorName: b.creatorName || "",
+            amount: String(b.amount || 0),
+          },
+        });
       }
     }
   } catch { /* silent */ }
@@ -620,6 +653,14 @@ export const submitDeliverable = async (bidId: string, link: string) => {
           offerId: b.offerId,
         },
         link: "/portal/client",
+      });
+      void dispatchEmail({
+        type: "deliverable_submitted",
+        recipientUid: o.clientUid,
+        meta: {
+          serviceTitle: o.serviceTitle || "",
+          creatorName: b.creatorName || "",
+        },
       });
     }
   } catch { /* silent */ }
@@ -697,6 +738,11 @@ export const acceptBid = async (bidId: string, offerId: string) => {
           type: "bid_accepted",
           meta: { serviceTitle, offerId },
           link: "/portal/creator",
+        });
+        void dispatchEmail({
+          type: "bid_accepted",
+          recipientUid: ab.creatorId,
+          meta: { serviceTitle, amount: String(ab.amount || 0) },
         });
       }
     }
