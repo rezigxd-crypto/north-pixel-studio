@@ -9,6 +9,7 @@ import { ADMIN_COMMISSION, CLIENT_ADVANCE_PCT, STUDIO_BARIMOB, formatDZD } from 
 import { ALGERIA_WILAYAS } from "@/lib/i18n";
 import * as Icons from "lucide-react";
 import { ArrowLeft, Send, CheckCircle2, CreditCard, MapPin, ChevronDown, Check, Phone, Hash, Shield, CalendarClock, FileText, Loader2, Upload, X, Mic2 } from "lucide-react";
+import { OfferMap } from "@/components/OfferMap";
 import { uploadProjectScript } from "@/lib/storage";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
@@ -447,6 +448,7 @@ export const PostProjectWizard = ({
   const [deadline, setDeadline] = useState("");
   const [referenceLink, setReferenceLink] = useState("");
   const [wilaya, setWilaya] = useState(clientWilaya || "");
+  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [shootAddress, setShootAddress] = useState("");
   const [preferredShootDate, setPreferredShootDate] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -462,7 +464,7 @@ export const PostProjectWizard = ({
   const reset = () => {
     setStep("service"); setSelectedService(null); setSelections({});
     setBrief(""); setDeadline(""); setReferenceLink(""); setSubmitting(false);
-    setWilaya(clientWilaya || "");
+    setWilaya(clientWilaya || ""); setPin(null);
     setShootAddress(""); setPreferredShootDate(""); setClientPhone("");
     setDeliverableCount(1); setUsageRights("personal");
     setVoiceGender("any"); setScriptFile(null); setScriptUrl(""); setScriptName(""); setScriptUploading(false);
@@ -579,6 +581,7 @@ export const PostProjectWizard = ({
         serviceOptions: selections,
       };
       if (wilaya) { payload.clientWilaya = wilaya; payload.wilayaFilter = wilaya; }
+      if (pin) { payload.locationLat = pin.lat; payload.locationLng = pin.lng; }
       if (referenceLink.trim()) payload.referenceLink = referenceLink.trim();
       if (deadline) payload.deadline = deadline;
       if (shootAddress.trim()) payload.shootAddress = shootAddress.trim();
@@ -739,6 +742,45 @@ export const PostProjectWizard = ({
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
+
+            {/* Precise pin picker — drag the marker / click anywhere on the map
+                to drop the pin on the exact spot inside the wilaya. No GPS. */}
+            {wilaya && (
+              <div>
+                <Label className="flex items-center gap-1 mb-1">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {lang === "ar"
+                    ? "حدد المكان بدقة على الخريطة (اختياري)"
+                    : lang === "fr"
+                    ? "Épinglez l'endroit exact sur la carte (optionnel)"
+                    : "Pin the exact spot on the map (optional)"}
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {lang === "ar"
+                    ? "اضغط في الخريطة أو اسحب الدبوس لتحديد الموقع. هذا يساعد المبدع يلقى المكان بسرعة."
+                    : lang === "fr"
+                    ? "Cliquez ou glissez l'épingle pour préciser l'endroit. Aide le créateur à trouver vite."
+                    : "Click or drag the pin to set the location. Helps the freelancer find it fast."}
+                </p>
+                <OfferMap
+                  wilaya={wilaya}
+                  interactive
+                  height={220}
+                  lat={pin?.lat}
+                  lng={pin?.lng}
+                  onPinChange={(lat, lng) => setPin({ lat, lng })}
+                />
+                {pin && (
+                  <button
+                    type="button"
+                    onClick={() => setPin(null)}
+                    className="mt-2 text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    {lang === "ar" ? "مسح الدبوس" : lang === "fr" ? "Effacer l'épingle" : "Clear pin"}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Brief */}
             <div>

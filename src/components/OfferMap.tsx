@@ -1,10 +1,12 @@
-// OfferMap — shows a pulsing red dot on the wilaya location
-// Uses Leaflet with OpenStreetMap tiles (free, no API key)
+// OfferMap — shows a pulsing red dot on the wilaya location, with optional
+// precise lat/lng pin and an optional interactive picker mode for posting
+// offers (the wizard uses `interactive` to let the client zoom in and drag
+// the pin to the exact spot inside their wilaya).
 import { useEffect, useRef } from "react";
 import { useApp } from "@/lib/context";
 
 // Coordinates for all 58 Algerian wilayas
-const WILAYA_COORDS: Record<string, [number, number]> = {
+export const WILAYA_COORDS: Record<string, [number, number]> = {
   "Adrar": [27.874, -0.294], "Chlef": [36.165, 1.330], "Laghouat": [33.800, 2.865],
   "Oum El Bouaghi": [35.870, 7.114], "Batna": [35.556, 6.174], "Béjaïa": [36.752, 5.084],
   "Biskra": [34.850, 5.728], "Béchar": [31.617, -2.216], "Blida": [36.470, 2.829],
@@ -31,20 +33,45 @@ const WILAYA_COORDS: Record<string, [number, number]> = {
 interface OfferMapProps {
   wilaya: string;
   className?: string;
+  /** Optional precise [lat, lng]. Falls back to the wilaya centroid. */
+  lat?: number;
+  lng?: number;
+  /** Interactive pick mode — pan/zoom + draggable pin. Wizard uses this. */
+  interactive?: boolean;
+  /** Initial zoom (overrides default). 8 = wilaya view, 12 = town, 14 = street. */
+  zoom?: number;
+  /** Pixel height of the map container. */
+  height?: number;
+  /** Fired when the user drags the pin (interactive mode only). */
+  onPinChange?: (lat: number, lng: number) => void;
 }
 
-export const OfferMap = ({ wilaya, className = "" }: OfferMapProps) => {
+export const OfferMap = ({
+  wilaya, className = "",
+  lat, lng, interactive = false, zoom, height = 140,
+  onPinChange,
+}: OfferMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const onPinChangeRef = useRef(onPinChange);
+  onPinChangeRef.current = onPinChange;
   const { dark } = useApp();
 
-  const coords = WILAYA_COORDS[wilaya];
+  const fallback = WILAYA_COORDS[wilaya];
+  const coords: [number, number] | undefined =
+    typeof lat === "number" && typeof lng === "number" ? [lat, lng] : fallback;
+  const initialZoom = zoom ?? (interactive ? 12 : 8);
 
+  // (Re)create the map only when wilaya / interactive / dark changes. We
+  // update the marker imperatively below to avoid recreating Leaflet on every
+  // pin drag.
   useEffect(() => {
     if (!mapRef.current || !coords) return;
+    let cancelled = false;
 
-    // Lazy load leaflet
     import("leaflet").then((L) => {
+      if (cancelled) return;
       // Fix default icon paths
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -60,48 +87,73 @@ export const OfferMap = ({ wilaya, className = "" }: OfferMapProps) => {
 
       const map = L.map(mapRef.current!, {
         center: coords,
-        zoom: 8,
-        zoomControl: false,
-        scrollWheelZoom: false,
-        dragging: false,
-        touchZoom: false,
-        doubleClickZoom: false,
+        zoom: initialZoom,
+        zoomControl: interactive,
+        scrollWheelZoom: interactive,
+        dragging: interactive,
+        touchZoom: interactive,
+        doubleClickZoom: interactive,
         attributionControl: false,
       });
 
-      // Dark/light tile
       const tileUrl = dark
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
       L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
 
-      // Pulsing red dot using divIcon
-      const pulsingIcon = L.divIcon({
-        className: "",
-        html: `<div style="
-          width:18px;height:18px;
-          background:rgba(239,68,68,0.9);
-          border-radius:50%;
-          border:2px solid white;
-          box-shadow:0 0 0 0 rgba(239,68,68,0.7);
-          animation:np-pulse 1.8s ease-out infinite;
-        "></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
-      });
-
-      L.marker(coords, { icon: pulsingIcon }).addTo(map);
+      // Pulsing red dot (display) OR draggable native pin (interactive).
+      if (interactive) {
+        const m = L.marker(coords, { draggable: true }).addTo(map);
+        m.on("dragend", () => {
+          const p = m.getLatLng();
+          onPinChangeRef.current?.(p.lat, p.lng);
+        });
+        // Click to set: tap anywhere on the map to move the pin there.
+        map.on("click", (e: any) => {
+          m.setLatLng(e.latlng);
+          onPinChangeRef.current?.(e.latlng.lat, e.latlng.lng);
+        });
+        markerRef.current = m;
+      } else {
+        const pulsingIcon = L.divIcon({
+          className: "",
+          html: `<div style="
+            width:18px;height:18px;
+            background:rgba(239,68,68,0.9);
+            border-radius:50%;
+            border:2px solid white;
+            box-shadow:0 0 0 0 rgba(239,68,68,0.7);
+            animation:np-pulse 1.8s ease-out infinite;
+          "></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        });
+        markerRef.current = L.marker(coords, { icon: pulsingIcon }).addTo(map);
+      }
       mapInstance.current = map;
     });
 
     return () => {
+      cancelled = true;
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
       }
+      markerRef.current = null;
     };
-  }, [coords, dark]);
+    // We intentionally exclude `coords`/`initialZoom` from deps — those are
+    // applied imperatively below so the map isn't recreated on every change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wilaya, interactive, dark]);
+
+  // Imperative marker update when lat/lng change from the parent.
+  useEffect(() => {
+    if (!mapInstance.current || !markerRef.current || !coords) return;
+    markerRef.current.setLatLng(coords);
+    if (!interactive) {
+      mapInstance.current.setView(coords, initialZoom, { animate: false });
+    }
+  }, [coords?.[0], coords?.[1], interactive, initialZoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!coords) return null;
 
@@ -115,7 +167,11 @@ export const OfferMap = ({ wilaya, className = "" }: OfferMapProps) => {
         }
         .leaflet-container { background: transparent !important; }
       `}</style>
-      <div ref={mapRef} className={`rounded-xl overflow-hidden ${className}`} style={{ height: 140 }} />
+      <div
+        ref={mapRef}
+        className={`rounded-xl overflow-hidden ${className}`}
+        style={{ height }}
+      />
     </>
   );
 };
