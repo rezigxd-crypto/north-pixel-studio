@@ -69,6 +69,12 @@ export type Bid = {
   deadlineNotifiedAt?: number;
   /** ms timestamp when the rating-reminder notification fired (idempotency). */
   ratingPromptedAt?: number;
+  /** Cached client phone, copied at acceptBid so the creator sees it
+   *  on their own bid card without needing a separate user-doc read. */
+  clientPhone?: string;
+  /** Cached client name + email mirrored at acceptBid. */
+  clientName?: string;
+  clientEmail?: string;
   createdAt: number;
 };
 
@@ -120,6 +126,21 @@ export type ClientOffer = {
   acceptedBidId?: string;
   /** ms timestamp when the offer-expired notification fired (idempotency). */
   expiredNotifiedAt?: number;
+  /** Precise pin lat/lng inside the wilaya (drag-and-drop on the wizard map). */
+  locationLat?: number;
+  locationLng?: number;
+  /** ms epoch — when bidding auto-closes. Stamped at admin approval
+   *  (createdAt of "open" status + 3h). The portal-mount sweeper picks
+   *  the lowest bid and auto-accepts it after this timestamp. */
+  autoCloseAt?: number;
+  /** Set true once the auto-close sweeper has run on this offer. Idempotent. */
+  autoClosed?: boolean;
+  /** Cached creator phone + BaridiMob, copied here at acceptBid so the
+   *  client can contact them directly without an extra Firestore read. */
+  acceptedCreatorPhone?: string;
+  acceptedCreatorBariMob?: string;
+  /** Cached creator name, mirrored for convenience in the client portal. */
+  acceptedCreatorName?: string;
   createdAt: number;
 };
 
@@ -255,8 +276,16 @@ export const addOffer = async (o: Omit<ClientOffer, "id" | "status" | "createdAt
   const ref = await addDoc(collection(db, "offers"), { ...o, bidMin, bidMax, status: "pending_admin", createdAt: serverTimestamp() });
   return ref.id;
 };
+/** 3 h auto-close window: bidding closes this long after admin approval. */
+export const AUTO_CLOSE_WINDOW_MS = 3 * 60 * 60 * 1000;
+
 export const setOfferStatus = async (id: string, status: ClientOffer["status"]) => {
-  await updateDoc(doc(db, "offers", id), { status });
+  // Stamp the auto-close timer when the offer goes live so creators have a
+  // hard deadline to bid against. The portal-mount sweeper picks the lowest
+  // bid after this timestamp and auto-accepts it.
+  const update: Record<string, unknown> = { status };
+  if (status === "open") update.autoCloseAt = Date.now() + AUTO_CLOSE_WINDOW_MS;
+  await updateDoc(doc(db, "offers", id), update);
   // Notify the client when admin approves or rejects their project.
   if (status === "open" || status === "rejected") {
     try {
@@ -496,6 +525,56 @@ export const checkRatingReminders = async (bids: Bid[], offers: ClientOffer[]) =
   }
 };
 
+/**
+ * Auto-close sweeper. After `autoCloseAt`, the lowest pending bid auto-wins.
+ *
+ * Rules:
+ *   - Multiple bids → cheapest amount wins (ties → earliest createdAt).
+ *   - Exactly 1 bid → that bid wins (still better than no answer).
+ *   - 0 bids → leave the offer as `open`; the existing 14-day expiry sweeper
+ *     will eventually fire `offer_expired` (handled in `checkExpiredOfferNotifications`).
+ *
+ * Idempotent — sets `autoClosed: true` on first sweep so we don't run twice.
+ */
+export const checkAutoCloseOffers = async (offers: ClientOffer[], bids: Bid[]) => {
+  const now = Date.now();
+  const due = offers.filter(
+    (o) => o.status === "open" && !o.autoClosed && o.autoCloseAt && now >= o.autoCloseAt,
+  );
+  for (const o of due) {
+    try {
+      const candidates = bids.filter((b) => b.offerId === o.id && b.status === "pending");
+      if (candidates.length === 0) {
+        // No bids at all — just stamp autoClosed so we don't re-evaluate every
+        // mount; the 14-day expiry sweeper still owns the "no bids" notification.
+        await updateDoc(doc(db, "offers", o.id), { autoClosed: true });
+        continue;
+      }
+      // Cheapest wins; ties broken by earliest bid.
+      const winner = [...candidates].sort(
+        (a, b) => a.amount - b.amount || a.createdAt - b.createdAt,
+      )[0];
+      await updateDoc(doc(db, "offers", o.id), { autoClosed: true });
+      await acceptBid(winner.id, o.id);
+      // Tell the client their offer was auto-assigned (they didn't pick).
+      if (o.clientUid) {
+        await addNotification({
+          recipientUid: o.clientUid,
+          type: "bid_accepted",
+          meta: {
+            serviceTitle: o.serviceTitle || "",
+            creatorName: winner.creatorName || "",
+            amount: String(winner.amount || 0),
+            offerId: o.id,
+            autoClosed: "1",
+          },
+          link: "/portal/client",
+        });
+      }
+    } catch { /* silent — sweeper retries next mount */ }
+  }
+};
+
 // ─── Bids ─────────────────────────────────────────────────────────────────
 export const addBid = async (b: Omit<Bid, "id" | "status" | "createdAt">) => {
   const ref = await addDoc(collection(db, "bids"), { ...b, status: "pending", createdAt: serverTimestamp() });
@@ -548,12 +627,59 @@ export const submitDeliverable = async (bidId: string, link: string) => {
 export const acceptBid = async (bidId: string, offerId: string) => {
   const acceptedAt = Date.now();
   const deliveryDeadline = acceptedAt + 24 * 60 * 60 * 1000; // 24h to deliver
+
+  // Auto-share contacts both ways: pull the creator's profile (phone +
+  // BaridiMob) and the client's profile (phone) and mirror them onto the
+  // offer + bid docs so each side sees the other's contact instantly.
+  const acceptedBidSnap = await getDoc(doc(db, "bids", bidId));
+  const acceptedBid = acceptedBidSnap.exists() ? (acceptedBidSnap.data() as Bid) : null;
+  const offerSnapEarly = await getDoc(doc(db, "offers", offerId));
+  const offerEarly = offerSnapEarly.exists() ? (offerSnapEarly.data() as ClientOffer) : null;
+
+  let creatorPhone = "";
+  let creatorBariMob = "";
+  let creatorName = acceptedBid?.creatorName || "";
+  let clientPhone = "";
+  let clientName = offerEarly?.clientName || "";
+  let clientEmail = offerEarly?.clientEmail || "";
+  try {
+    if (acceptedBid?.creatorId) {
+      const cuSnap = await getDoc(doc(db, "users", acceptedBid.creatorId));
+      if (cuSnap.exists()) {
+        const cu = cuSnap.data() as UserProfile;
+        creatorPhone = cu.phone || "";
+        creatorBariMob = cu.bariMobAccount || "";
+        creatorName = cu.name || creatorName;
+      }
+    }
+    if (offerEarly?.clientUid) {
+      const cuSnap = await getDoc(doc(db, "users", offerEarly.clientUid));
+      if (cuSnap.exists()) {
+        const cu = cuSnap.data() as UserProfile;
+        clientPhone = cu.phone || offerEarly.clientPhone || "";
+        clientName = cu.name || clientName;
+        clientEmail = cu.email || clientEmail;
+      }
+    } else if (offerEarly?.clientPhone) {
+      clientPhone = offerEarly.clientPhone;
+    }
+  } catch { /* silent — auto-share is a best-effort enhancement */ }
+
   await updateDoc(doc(db, "bids", bidId), {
     status: "accepted",
     acceptedAt,
     deliveryDeadline,
+    clientPhone,
+    clientName,
+    clientEmail,
   });
-  await updateDoc(doc(db, "offers", offerId), { status: "assigned", acceptedBidId: bidId });
+  await updateDoc(doc(db, "offers", offerId), {
+    status: "assigned",
+    acceptedBidId: bidId,
+    acceptedCreatorPhone: creatorPhone,
+    acceptedCreatorBariMob: creatorBariMob,
+    acceptedCreatorName: creatorName,
+  });
   const { getDocs, query: q, collection: col, where: w } = await import("firebase/firestore");
   const snap = await getDocs(q(col(db, "bids"), w("offerId", "==", offerId), w("status", "==", "pending")));
   await Promise.all(snap.docs.filter((d) => d.id !== bidId).map((d) => updateDoc(doc(db, "bids", d.id), { status: "rejected" })));

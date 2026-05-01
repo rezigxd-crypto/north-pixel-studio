@@ -4,6 +4,7 @@ import { AdminOverview } from "@/components/admin/AdminOverview";
 import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, releasePayment, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
+import { OfferMap } from "@/components/OfferMap";
 import { useAllSubscriptions } from "@/lib/bundles";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS, CLIENT_ADVANCE_PCT } from "@/lib/offers";
 import { toast } from "sonner";
@@ -89,6 +90,7 @@ const AdminPortal = () => {
   const allUsers = useAllUsers();
   const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators" | "clients" | "bundles">("overview");
   const [expandedCreator, setExpandedCreator] = useState<string | null>(null);
+  const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const subscriptions = useAllSubscriptions();
   const pendingBundleRequests = subscriptions.filter((s) => s.status === "pending").length;
@@ -234,7 +236,7 @@ const AdminPortal = () => {
                           {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
                         </div>
                         <p className="font-semibold">{o.clientName}</p>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{o.brief}</p>
+                        <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{o.brief}</p>
                         {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
                         {o.scriptUrl && (
                           <a href={o.scriptUrl} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 flex items-center gap-1">
@@ -248,6 +250,20 @@ const AdminPortal = () => {
                         )}
                         {o.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {o.deadline}</p>}
                         <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
+                        {o.shootAddress && <p className="text-xs text-muted-foreground mt-1">📍 <span className="text-foreground">{o.shootAddress}</span></p>}
+                        {o.clientPhone && <p className="text-xs text-muted-foreground mt-1">☎ <span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
+                        {o.clientWilaya && (
+                          <div className="mt-3">
+                            <OfferMap
+                              wilaya={o.clientWilaya}
+                              lat={o.locationLat}
+                              lng={o.locationLng}
+                              zoom={typeof o.locationLat === "number" ? 13 : undefined}
+                              height={140}
+                              className="border border-border/40"
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="glass rounded-xl p-3 bg-secondary/20 md:w-44 flex-shrink-0">
                         <div className="text-xs text-muted-foreground">{lang === "ar" ? "الإجمالي" : "Total"}</div>
@@ -280,33 +296,72 @@ const AdminPortal = () => {
             <div>
               <div className="flex items-center justify-between mb-4"><h2 className="font-serif text-xl font-bold">{lang === "ar" ? "مباشر" : "Live"}</h2><Pill color="green">{liveOffers.length}</Pill></div>
               <div className="space-y-2">
-                {liveOffers.map((o) => (
-                  <div key={o.id} className="glass rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm flex items-center gap-2 flex-wrap">
-                        <span>{o.serviceTitle} · {o.clientName}</span>
-                        {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
+                {liveOffers.map((o) => {
+                  const isExpanded = expandedOffer === o.id;
+                  return (
+                  <div key={o.id} className="glass rounded-xl">
+                    <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm flex items-center gap-2 flex-wrap">
+                          <span>{o.serviceTitle} · {o.clientName}</span>
+                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
+                          {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
+                          {o.autoCloseAt && !o.autoClosed && (
+                            <Pill color="yellow">
+                              {lang === "ar" ? "يغلق تلقائيًا" : "Auto-close"} {new Date(o.autoCloseAt).toLocaleTimeString(lang === "ar" ? "ar-DZ" : lang === "fr" ? "fr-DZ" : "en-DZ", { hour: "2-digit", minute: "2-digit" })}
+                            </Pill>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عروض" : "bids"}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">{pendingBids(o.id).length} {lang === "ar" ? "عروض" : "bids"}</div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
-                      {!o.advancePaid && (
-                        <Button size="sm" variant="ghost" onClick={() => handleMarkAdvancePaid(o.id, o.totalPrice)}>
-                          <BadgeCheck className="w-3.5 h-3.5 me-1" />
-                          {lang === "ar" ? "تأكيد الدفعة" : "Confirm advance"}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-accent font-semibold text-sm">{formatDZD(o.totalPrice)}</span>
+                        <Button size="sm" variant="ghost" onClick={() => setExpandedOffer(isExpanded ? null : o.id)}>
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5 me-1" /> : <ChevronDown className="w-3.5 h-3.5 me-1" />}
+                          {lang === "ar" ? "التفاصيل" : "Details"}
                         </Button>
-                      )}
-                      <Button size="sm" variant="ghost" asChild>
-                        <RouterLink to={`/contract/${o.id}/client`}>
-                          <FileText className="w-3.5 h-3.5 me-1" />
-                          {lang === "ar" ? "العقد" : "Contract"}
-                        </RouterLink>
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>{lang === "ar" ? "عروض" : "Bids"}</Button>
+                        {!o.advancePaid && (
+                          <Button size="sm" variant="ghost" onClick={() => handleMarkAdvancePaid(o.id, o.totalPrice)}>
+                            <BadgeCheck className="w-3.5 h-3.5 me-1" />
+                            {lang === "ar" ? "تأكيد الدفعة" : "Confirm advance"}
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" asChild>
+                          <RouterLink to={`/contract/${o.id}/client`}>
+                            <FileText className="w-3.5 h-3.5 me-1" />
+                            {lang === "ar" ? "العقد" : "Contract"}
+                          </RouterLink>
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setActiveTab("bids")}>{lang === "ar" ? "عروض" : "Bids"}</Button>
+                      </div>
                     </div>
+                    {isExpanded && (
+                      <div className="border-t border-border px-4 py-3 grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-xs uppercase tracking-widest text-muted-foreground">{lang === "ar" ? "ملخص المشروع" : "Brief"}</p>
+                          <p className="text-sm whitespace-pre-wrap">{o.brief}</p>
+                          <p className="text-xs text-muted-foreground">{lang === "ar" ? "للأدوار:" : "For roles:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
+                          <p className="text-xs text-muted-foreground">{lang === "ar" ? "النطاق:" : "Range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span></p>
+                          {o.shootAddress && <p className="text-xs text-muted-foreground">📍 <span className="text-foreground">{o.shootAddress}</span></p>}
+                          {o.clientPhone && <p className="text-xs text-muted-foreground">☎ <span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
+                          {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
+                          {o.deadline && <p className="text-xs text-muted-foreground">📅 {o.deadline}</p>}
+                        </div>
+                        {o.clientWilaya && (
+                          <OfferMap
+                            wilaya={o.clientWilaya}
+                            lat={o.locationLat}
+                            lng={o.locationLng}
+                            zoom={typeof o.locationLat === "number" ? 13 : undefined}
+                            height={200}
+                            className="border border-border/40"
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

@@ -14,6 +14,7 @@ import {
   useOffers, useBids, updateUserProfile,
   acceptDelivery, requestRevisions,
   checkDeadlineNotifications, checkExpiredOfferNotifications, checkRatingReminders,
+  checkAutoCloseOffers,
 } from "@/lib/store";
 import { useClientSubscriptions } from "@/lib/bundles";
 import { PostProjectWizard } from "@/components/PostProjectWizard";
@@ -96,6 +97,7 @@ const ClientPortal = () => {
     void checkDeadlineNotifications(bids, myOffers);
     void checkExpiredOfferNotifications(myOffers, bids);
     void checkRatingReminders(bids, myOffers);
+    void checkAutoCloseOffers(myOffers, bids);
   }, [auth.uid, auth.email, offers, bids]);
 
   const [revisionFor, setRevisionFor] = useState<string | null>(null);
@@ -322,6 +324,48 @@ const ClientPortal = () => {
                         )}
                       </div>
 
+                      {/* Auto-shared creator contact (revealed at acceptBid). */}
+                      {acceptedBid && (p.acceptedCreatorPhone || p.acceptedCreatorBariMob) && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <p className="text-xs font-semibold text-emerald-400 mb-2 flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5" />
+                            {lang === "ar" ? "بيانات المبدع" : lang === "fr" ? "Contact du créateur" : "Creator contact"}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="rounded-md border border-border/40 px-3 py-2">
+                              <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "الاسم" : "Name"}</div>
+                              <div className="font-medium">{p.acceptedCreatorName || acceptedBid.creatorName}</div>
+                            </div>
+                            {p.acceptedCreatorPhone && (
+                              <a
+                                href={`tel:${p.acceptedCreatorPhone}`}
+                                className="rounded-md border border-border/40 px-3 py-2 hover:border-emerald-400/40 transition-smooth"
+                              >
+                                <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "اتصال" : "Call"}</div>
+                                <div className="font-medium" dir="ltr">{p.acceptedCreatorPhone}</div>
+                              </a>
+                            )}
+                            {p.acceptedCreatorPhone && (
+                              <a
+                                href={`https://wa.me/${p.acceptedCreatorPhone.replace(/[^\d]/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-md border border-border/40 px-3 py-2 hover:border-emerald-400/40 transition-smooth"
+                              >
+                                <div className="text-muted-foreground text-[10px] mb-0.5">WhatsApp</div>
+                                <div className="font-medium text-emerald-400">{lang === "ar" ? "محادثة" : "Open chat"}</div>
+                              </a>
+                            )}
+                            {p.acceptedCreatorBariMob && (
+                              <div className="rounded-md border border-border/40 px-3 py-2">
+                                <div className="text-muted-foreground text-[10px] mb-0.5">BaridiMob</div>
+                                <div className="font-mono text-[11px]" dir="ltr">{p.acceptedCreatorBariMob}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Workspace — appears once a creator is assigned. */}
                       {acceptedBid && (
                         <ProjectWorkspace
@@ -340,7 +384,13 @@ const ClientPortal = () => {
                             <span>{lang === "ar" ? "الموقع:" : "Location:"}</span>
                             <span className="text-foreground font-medium">{p.clientWilaya}</span>
                           </div>
-                          <OfferMap wilaya={p.clientWilaya} className="border border-border/40" />
+                          <OfferMap
+                            wilaya={p.clientWilaya}
+                            lat={p.locationLat}
+                            lng={p.locationLng}
+                            zoom={typeof p.locationLat === "number" ? 13 : undefined}
+                            className="border border-border/40"
+                          />
                         </div>
                       )}
                     </div>

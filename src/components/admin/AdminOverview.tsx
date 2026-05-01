@@ -10,11 +10,13 @@ type Metric = "revenue" | "projects" | "bids" | "payouts";
 
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
 
+/** Compact full-DA formatter for chart axis ticks (no "k" / "M" shorthand —
+ *  user prefers explicit DA values everywhere on the platform). Uses spaces
+ *  as thousand separators to keep the tick narrow. */
 const fmtShort = (n: number): string => {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${Math.round(n / 1_000)}k`;
-  return String(Math.round(n));
+  const rounded = Math.round(n);
+  // Insert a thin no-break space between thousands so ticks stay tight.
+  return rounded.toLocaleString("fr-DZ").replace(/\u202f/g, " ");
 };
 
 const Delta = ({ pct, lang }: { pct: number | null; lang: string }) => {

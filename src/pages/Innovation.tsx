@@ -47,7 +47,7 @@ const CARDS: Card[] = [
     body: {
       ar: "متوافقة مباشرة مع توجيهات وزارة التعليم العالي للرقمنة (بودكاست، أرشفة المحاضرات، تغطية الفعاليات، أفلام ترويجية). ثلاث باقات شهرية (80,000 / 140,000 / 200,000 دج) تتيح للجامعات تخصيص ميزانية للمحتوى الإبداعي مثل ما تخصصه لخدمات تقنية المعلومات.",
       fr: "Directement alignée avec le mandat de digitalisation du MESRS (podcasts, archivage de cours, couverture d'événements, films promotionnels). Trois paliers mensuels (80 000 / 140 000 / 200 000 DA) permettent aux universités de budgétiser le contenu créatif comme un service IT.",
-      en: "Directly aligned with the MESRS digitalization mandate — podcasts, lecture archival, event coverage, promotional films. Three monthly tiers (80k / 140k / 200k DA) let universities budget for creative content the way they budget for IT services.",
+      en: "Directly aligned with the MESRS digitalization mandate — podcasts, lecture archival, event coverage, promotional films. Three monthly tiers (80,000 / 140,000 / 200,000 DA) let universities budget for creative content the way they budget for IT services.",
     },
   },
   {
