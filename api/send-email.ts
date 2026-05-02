@@ -9,8 +9,12 @@
  *   RESEND_API_KEY  — Resend API key (starts with `re_`)
  *   EMAIL_FROM      — sender address. Default: `onboarding@resend.dev`
  *                     (Resend's shared sandbox domain — works without DNS).
- *                     Switch to e.g. `noreply@northpixelstudio.dz` once your
- *                     domain is verified in the Resend dashboard.
+ *                     Switch to e.g. `noreply@thealgerianstudio.com` once
+ *                     your domain is verified in the Resend dashboard.
+ *   PUBLIC_APP_URL  — base URL used in the CTA buttons inside emails.
+ *                     Defaults to `https://thealgerianstudio.com`. On Vercel
+ *                     preview deployments, set this to the preview URL so
+ *                     test emails link back to the preview, not production.
  */
 
 type Lang = "ar" | "fr" | "en";
@@ -30,7 +34,7 @@ type TemplateRenderer = (
   recipientName: string,
 ) => Record<Lang, { subject: string; lines: string[]; cta?: { label: string; href: string } }>;
 
-const APP_URL = "https://north-pixel-studio.vercel.app";
+const APP_URL = (process.env.PUBLIC_APP_URL || "https://thealgerianstudio.com").replace(/\/+$/, "");
 
 const fmtDA = (raw: string): string => {
   const n = Number(raw || 0);
