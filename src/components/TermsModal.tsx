@@ -81,7 +81,7 @@ export const TermsModal = ({ onAgree, agreed, onChange }: {
 
                   <div className="glass rounded-xl p-4 border border-accent/20">
                     <p className="text-foreground font-semibold mb-2">💰 المعاملات المالية</p>
-                    <p>تخضع جميع المعاملات المالية على المنصة لقانون النقد والقرض الجزائري. تحتجز المنصة نسبة <strong className="text-foreground">20%</strong> كعمولة خدمة من كل صفقة.</p>
+                    <p>تخضع جميع المعاملات المالية على المنصة لقانون النقد والقرض الجزائري. تُطبَّق رسوم خدمة على كل صفقة وفق الاتفاق المُبرم عند انطلاق المشروع.</p>
                   </div>
 
                   <div className="glass rounded-xl p-4 border border-accent/20">
@@ -103,7 +103,7 @@ export const TermsModal = ({ onAgree, agreed, onChange }: {
                   </div>
                   <div className="glass rounded-xl p-4 border border-accent/20">
                     <p className="text-foreground font-semibold mb-2">💰 Transactions financières</p>
-                    <p>La plateforme retient <strong className="text-foreground">20%</strong> de commission sur chaque transaction, conformément à la loi algérienne sur la monnaie et le crédit.</p>
+                    <p>Des frais de service s'appliquent à chaque transaction selon les conditions convenues au démarrage du projet, conformément à la loi algérienne sur la monnaie et le crédit.</p>
                   </div>
                   <p className="text-xs text-muted-foreground border-t border-border pt-3">
                     En cochant cette case, vous acceptez l'ensemble des conditions d'utilisation.
@@ -119,7 +119,7 @@ export const TermsModal = ({ onAgree, agreed, onChange }: {
                   </div>
                   <div className="glass rounded-xl p-4 border border-accent/20">
                     <p className="text-foreground font-semibold mb-2">💰 Financial Transactions</p>
-                    <p>The platform retains <strong className="text-foreground">20%</strong> commission on each transaction, in compliance with Algerian monetary and credit law.</p>
+                    <p>Service fees apply to each transaction per the terms agreed at project start, in compliance with Algerian monetary and credit law.</p>
                   </div>
                   <p className="text-xs text-muted-foreground border-t border-border pt-3">
                     By checking this box, you confirm you have read, understood and accepted all terms and conditions above.

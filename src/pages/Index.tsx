@@ -300,7 +300,7 @@ const Index = () => {
 
             <div className="grid grid-cols-2 gap-3 self-stretch np-stagger">
               {[
-                { Icon: ShieldCheck, ar: { t: "رسوم شفّافة",     d: "عمولة واحدة واضحة منذ البداية." }, fr: { t: "Frais transparents", d: "Une seule commission claire d\u00E8s le d\u00E9part." }, en: { t: "Transparent fees", d: "One clear commission from the start." } },
+                { Icon: ShieldCheck, ar: { t: "أسعار شفّافة",     d: "سعر واحد واضح منذ البداية." }, fr: { t: "Tarifs transparents", d: "Un seul prix clair d\u00E8s le d\u00E9part." }, en: { t: "Transparent pricing", d: "One clear price from the start." } },
                 { Icon: Wallet,      ar: { t: "بريدي موب جاهز",  d: "دفع جزائري 100\u066A، بلا رسوم دولية." }, fr: { t: "Baridi Mob pr\u00EAt", d: "Paiement local, z\u00E9ro frais internationaux." }, en: { t: "Baridi-Mob ready", d: "100% local payment \u2014 no FX fees." } },
                 { Icon: Award,       ar: { t: "جودة استوديو",        d: "فريق داخلي\u00A0+\u00A0شبكة مختارة." },        fr: { t: "Qualit\u00E9 studio", d: "\u00C9quipe interne + r\u00E9seau s\u00E9lectionn\u00E9." }, en: { t: "Studio quality",   d: "In-house team + curated network." } },
                 { Icon: Globe,       ar: { t: "3 لغات\u060c كل الولايات", d: "عربي وفرنسي وإنجليزي، 58 ولاية." }, fr: { t: "3 langues, 58 wilayas", d: "AR\u00A0\u00B7\u00A0FR\u00A0\u00B7\u00A0EN, partout en Alg\u00E9rie." }, en: { t: "3 langs, 58 wilayas", d: "AR \u00B7 FR \u00B7 EN, everywhere in Algeria." } },
