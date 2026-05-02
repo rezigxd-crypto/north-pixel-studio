@@ -23,6 +23,29 @@
     <link rel="icon" type="image/png" href="/logonp.png" />
     <link rel="apple-touch-icon" href="/logonp.png" />
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Structured data: contact info shows up in Google Knowledge Panel + AI summaries -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "North Pixel Studio",
+        "alternateName": "نورث بيكسل ستوديو",
+        "url": "https://thealgerianstudio.com",
+        "logo": "https://thealgerianstudio.com/logonp.png",
+        "email": "contact@thealgerianstudio.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "DZ"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "contact@thealgerianstudio.com",
+          "contactType": "customer support",
+          "availableLanguage": ["Arabic", "French", "English"]
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

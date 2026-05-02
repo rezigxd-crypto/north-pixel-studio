@@ -427,7 +427,7 @@ const Index = () => {
                       {lang === "ar" ? "طلب العرض" : lang === "fr" ? "Demander l'offre" : "Request offer"} <ArrowRight className="ms-2 w-4 h-4" />
                     </Button>
                     <Button asChild variant="outline" size="lg">
-                      <a href="mailto:hello@thealgerianstudio.com">{lang === "ar" ? "تواصل معنا" : lang === "fr" ? "Nous contacter" : "Contact us"}</a>
+                      <a href="mailto:contact@thealgerianstudio.com">{lang === "ar" ? "تواصل معنا" : lang === "fr" ? "Nous contacter" : "Contact us"}</a>
                     </Button>
                   </div>
                 )}

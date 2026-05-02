@@ -36,7 +36,14 @@ export const SiteFooter = () => {
         </div>
         <div>
           <h4 className="font-semibold mb-3 text-accent">{lang === "ar" ? "تواصل" : "Contact"}</h4>
-          <p className="text-muted-foreground text-xs">hello@thealgerianstudio.com</p>
+          <p className="text-muted-foreground text-xs">
+            <a
+              href="mailto:contact@thealgerianstudio.com"
+              className="hover:text-foreground transition-smooth"
+            >
+              contact@thealgerianstudio.com
+            </a>
+          </p>
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-border text-xs text-muted-foreground flex flex-col sm:flex-row justify-between gap-2">
