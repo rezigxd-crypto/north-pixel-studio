@@ -279,7 +279,7 @@ const renderHtml = (
             </tr>
             <tr>
               <td style="padding:18px 32px 24px;border-top:1px solid #1f1f1f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#666;font-size:11px;line-height:1.6;">
-                <div>This is an automated transactional email from North Pixel Studio. You are receiving it because you have an active project or account with us.</div>
+                <div>This is an automated transactional email from North Pixel Studio. You are receiving it because you have an active project or account with us. Reply or write to <a href="mailto:contact@thealgerianstudio.com" style="color:#c9a14a;text-decoration:none;">contact@thealgerianstudio.com</a> if you need help.</div>
                 <div style="margin-top:6px;"><a href="${APP_URL}" style="color:#888;text-decoration:none;">${APP_URL.replace(/^https?:\/\//, "")}</a></div>
               </td>
             </tr>
@@ -349,6 +349,9 @@ export default async function handler(req: { method?: string; body?: unknown }, 
   const text = renderText(bundle);
 
   const from = process.env.EMAIL_FROM || "North Pixel Studio <onboarding@resend.dev>";
+  // Hitting "Reply" in any mail client routes back to the human-monitored inbox,
+  // not the noreply@ sender.
+  const replyTo = process.env.EMAIL_REPLY_TO || "contact@thealgerianstudio.com";
 
   try {
     const r = await fetch("https://api.resend.com/emails", {
@@ -357,7 +360,7 @@ export default async function handler(req: { method?: string; body?: unknown }, 
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to: [to], subject, html, text }),
+      body: JSON.stringify({ from, to: [to], reply_to: replyTo, subject, html, text }),
     });
     const out = await r.json().catch(() => ({}));
     if (!r.ok) {

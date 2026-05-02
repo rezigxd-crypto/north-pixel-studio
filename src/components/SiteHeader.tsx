@@ -317,11 +317,11 @@ export const SiteHeader = () => {
               {/* ── Footer ───────────────────────────────────────────────── */}
               <div className="mt-auto pt-5 border-t border-border/40">
                 <a
-                  href="mailto:hello@thealgerianstudio.com"
+                  href="mailto:contact@thealgerianstudio.com"
                   className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-accent transition-smooth"
                 >
                   <Mail className="w-3.5 h-3.5" />
-                  hello@thealgerianstudio.com
+                  contact@thealgerianstudio.com
                 </a>
                 <div className="text-[10px] text-muted-foreground/70 mt-2">
                   © {new Date().getFullYear()} North Pixel Studio · {lang === "ar" ? "صُنع لأجلك" : lang === "fr" ? "Créé pour vous" : "Created for you"}
