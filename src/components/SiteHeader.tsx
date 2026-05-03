@@ -48,7 +48,7 @@ export const SiteHeader = () => {
         {/* Logo */}
         <Link to={isLoggedIn ? `/portal/${auth.role}` : "/"} onClick={flipLogo} className="flex items-center gap-3 flex-shrink-0">
           <div ref={logoRef} className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0" style={{ perspective: "500px" }}>
-            <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-cover" onError={(e) => {
+            <img src="/logonp.png" alt="North Pixel Studio" className="w-full h-full object-contain" onError={(e) => {
               const t = e.target as HTMLImageElement;
               t.style.display = "none";
               t.parentElement!.classList.add("bg-gradient-royal", "flex", "items-center", "justify-center");
@@ -184,7 +184,7 @@ export const SiteHeader = () => {
                     <img
                       src="/logonp.png"
                       alt="NP"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         const t = e.target as HTMLImageElement;
                         t.style.display = "none";

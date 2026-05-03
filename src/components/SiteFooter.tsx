@@ -9,7 +9,7 @@ export const SiteFooter = () => {
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-              <img src="/logonp.png" alt="NP" className="w-full h-full object-cover" />
+              <img src="/logonp.png" alt="NP" className="w-full h-full object-contain" />
             </div>
             <span className="font-serif font-bold">North Pixel</span>
           </div>
