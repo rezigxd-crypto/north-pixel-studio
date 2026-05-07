@@ -152,20 +152,24 @@ const Contract = () => {
     !!bid && !!auth.uid && auth.uid === bid.creatorId;
 
   const allowed = useMemo(() => {
-    if (loading || !offer) return true; // don't bounce while loading
+    // Don't bounce while ANY of the inputs are still loading. The previous
+    // version only waited on the offer fetch; it could decide on a stale
+    // `auth.uid === ""` (before onAuthStateChanged fired) and redirect a
+    // legitimate client straight to the homepage.
+    if (loading || !offer || auth.loading) return true;
     if (isAdmin) return true;
     if (role === "client") return isClientOwner;
     if (role === "creator") return isAcceptedCreator;
     return false;
-  }, [loading, offer, isAdmin, isClientOwner, isAcceptedCreator, role]);
+  }, [loading, offer, auth.loading, isAdmin, isClientOwner, isAcceptedCreator, role]);
 
   useEffect(() => {
-    if (!loading && !allowed) {
+    if (!loading && !auth.loading && !allowed) {
       navigate("/", { replace: true });
     }
-  }, [loading, allowed, navigate]);
+  }, [loading, auth.loading, allowed, navigate]);
 
-  if (loading) {
+  if (loading || auth.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-accent" />
