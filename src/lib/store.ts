@@ -862,60 +862,46 @@ export function useAllUsers(): UserDoc[] {
 }
 
 
-// ─── Public stats — works for visitors + logged in users ─────────────────
-// Strategy:
-//   • Logged-in users read /users directly (live, accurate).
-//   • While reading, reconcile /public/stats so visitors see the same numbers.
-//     This is what backfills users that signed up before bumpPublicStats existed.
-//   • Anonymous visitors fall back to /public/stats (always readable).
+// ─── Public stats — homepage counter ─────────────────────────────────────
+// Reads the single mirror doc at /public/stats. Cheap (one document, one
+// listener) and works for anonymous visitors. The mirror is kept in sync
+// by bumpPublicStats() on every registration.
+//
+// We deliberately do NOT subscribe to the full /users collection here:
+// doing so meant every homepage visit pulled and re-pulled every user doc
+// (and re-wrote /public/stats), which dominated the page's runtime cost
+// and Firestore quota.
 export function usePublicStats(): { clients: number; creators: number } {
   const [stats, setStats] = useState({ clients: 0, creators: 0 });
   useEffect(() => {
-    let unsub: (() => void) | undefined;
-    let lastSync = "";
-    unsub = onSnapshot(
-      collection(db, "users"),
+    const unsub = onSnapshot(
+      doc(db, "public", "stats"),
       (snap) => {
-        const docs = snap.docs.map((d) => d.data());
-        const next = {
-          clients: docs.filter((d) => d.role === "client").length,
-          creators: docs.filter((d) => d.role === "creator").length,
-        };
-        setStats(next);
-        // Mirror the live count into /public/stats so anonymous visitors
-        // see the same numbers. Only write when the snapshot actually changed
-        // to avoid pointless churn.
-        const sig = `${next.clients}:${next.creators}`;
-        if (sig !== lastSync) {
-          lastSync = sig;
-          setDoc(doc(db, "public", "stats"), next, { merge: true }).catch(() => { /* silent */ });
+        if (snap.exists()) {
+          const d = snap.data();
+          setStats({ clients: d.clients || 0, creators: d.creators || 0 });
         }
       },
-      () => {
-        // Anonymous visitor — read the mirror doc.
-        unsub = onSnapshot(doc(db, "public", "stats"), (snap) => {
-          if (snap.exists()) {
-            const d = snap.data();
-            setStats({ clients: d.clients || 0, creators: d.creators || 0 });
-          }
-        }, () => { /* silent */ });
-      }
+      () => { /* silent — leave defaults */ }
     );
-    return () => { if (unsub) unsub(); };
+    return () => unsub();
   }, []);
   return stats;
 }
 
 // Call this after every successful registration to keep public stats in sync
 export const bumpPublicStats = async (role: "client" | "creator") => {
+  const statsRef = doc(db, "public", "stats");
   try {
     const { increment } = await import("firebase/firestore");
-    const statsRef = doc(db, "public", "stats");
     await updateDoc(statsRef, { [role === "client" ? "clients" : "creators"]: increment(1) });
   } catch {
-    // Doc might not exist yet — create it
+    // Doc didn't exist — seed it with this registration counted, not zero.
     try {
-      await setDoc(doc(db, "public", "stats"), { clients: 0, creators: 0 });
+      await setDoc(statsRef, {
+        clients:  role === "client"  ? 1 : 0,
+        creators: role === "creator" ? 1 : 0,
+      });
     } catch { /* silent */ }
   }
 };
