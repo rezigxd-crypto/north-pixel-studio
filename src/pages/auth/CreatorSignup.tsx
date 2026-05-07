@@ -59,7 +59,16 @@ const CreatorSignup = () => {
         toast.info("خطوة أخيرة لإكمال تسجيلك");
         navigate("/auth/signup/complete", { state: { role: "creator", email: res.email, name: res.name }, replace: true });
       } else {
-        navigate("/auth/pending", { state: { email: res.role === "creator" ? "" : "", name: "" }, replace: true });
+        // Existing user — route to the portal that matches their actual
+        // role. Previously this hard-coded `/auth/pending`, which froze
+        // already-approved creators on the "application under review" page
+        // and silently swallowed clients/admins who happened to use this
+        // signup screen.
+        const dest =
+          res.role === "admin"   ? "/portal/admin"   :
+          res.role === "creator" ? "/portal/creator" :
+                                   "/portal/client";
+        navigate(dest, { replace: true });
       }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }

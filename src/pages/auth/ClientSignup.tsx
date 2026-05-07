@@ -53,7 +53,13 @@ const ClientSignup = () => {
         toast.info("خطوة أخيرة لإكمال تسجيلك");
         navigate("/auth/signup/complete", { state: { role: "client", email: res.email, name: res.name }, replace: true });
       } else {
-        navigate("/portal/client", { replace: true });
+        // Existing user — route to the portal that matches their actual
+        // role rather than always /portal/client.
+        const dest =
+          res.role === "admin"   ? "/portal/admin"   :
+          res.role === "creator" ? "/portal/creator" :
+                                   "/portal/client";
+        navigate(dest, { replace: true });
       }
     } catch { toast.error("فشل التسجيل بجوجل."); }
     finally { setGLoading(false); }
