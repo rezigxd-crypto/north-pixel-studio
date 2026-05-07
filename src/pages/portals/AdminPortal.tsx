@@ -9,6 +9,7 @@ import { useAllSubscriptions } from "@/lib/bundles";
 import { formatDZD, CREATOR_ROLE_AR, getRank, RANK_LEVELS, CLIENT_ADVANCE_PCT } from "@/lib/offers";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
+import { auth as firebaseAuth } from "@/lib/firebase";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -127,6 +128,9 @@ const AdminPortal = () => {
   // missing. Treat it as unauthenticated and redirect to /auth/login.
   useEffect(() => {
     if (auth.loading) return;
+    // Defensive: Firebase has a user but our React context hasn't caught
+    // up yet (rare batching race right after sign-in). Wait, don't bounce.
+    if (!auth.uid && firebaseAuth.currentUser) return;
     if (!auth.uid || !auth.role) { navigate("/auth/login"); return; }
     if (auth.role !== "admin") navigate(`/portal/${auth.role}`);
   }, [auth.loading, auth.uid, auth.role, navigate]);
