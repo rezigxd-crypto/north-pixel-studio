@@ -113,9 +113,11 @@ export const SiteHeader = () => {
         <div className="md:hidden flex items-center ms-auto">
           {isLoggedIn && <NotificationBell />}
         </div>
+        {/* Hamburger menu — visible on every viewport so PC users can also
+            access language / theme switchers and full nav from one place. */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden"><Menu /></Button>
+            <Button variant="ghost" size="icon"><Menu /></Button>
           </SheetTrigger>
           <SheetContent
             side={lang === "ar" ? "left" : "right"}

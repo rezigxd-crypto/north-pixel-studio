@@ -11,7 +11,7 @@ import { OFFERS, BUNDLES, formatStartingPrice, formatDZD, type Bundle } from "@/
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
-import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart, FileText, Search, Send, ShieldCheck, Wallet, MapPin, Building2, Globe, Award } from "lucide-react";
+import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart, FileText, Search, Send, ShieldCheck, Wallet, MapPin, Globe, Award } from "lucide-react";
 import { useApp } from "@/lib/context";
 
 const AR_WORDS = ["احترافية", "إبداع", "براعة", "ابتكار", "تألّق", "جودة", "خبرة"];
@@ -65,10 +65,6 @@ const Index = () => {
         <div className="np-orb np-orb-royal pointer-events-none" style={{ width: 260, height: 260, bottom: "-80px", left: "-60px", opacity: 0.28, animationDelay: "-4s" }} />
 
         <div className="relative max-w-5xl mx-auto text-center">
-          <span className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-xs uppercase tracking-widest text-accent mb-8">
-            <Sparkles className="w-3.5 h-3.5" /> {lang === "ar" ? "استوديو صوتي بصري + شبكة مبدعين" : lang === "fr" ? "Studio Audio-Visuel + Réseau" : "Audio-Visual Studio + Network"}
-          </span>
-
           <div className="mb-5">
             <TrueFocus
               sentence={lang === "ar" ? "نورث بيكسل ستوديو" : "North Pixel Studio"}
@@ -112,7 +108,6 @@ const Index = () => {
               {[
                 { Icon: Wallet,      ar: "بريدي موب\u00A0—\u00A0دفع جزائري",      fr: "Baridi Mob\u00A0\u00B7 paiement local", en: "Baridi Mob\u00A0\u00B7 local payments" },
                 { Icon: ShieldCheck, ar: "مبدعون موثوقون",                          fr: "Cr\u00E9ateurs v\u00E9rifi\u00E9s",       en: "Verified creators" },
-                { Icon: Building2,   ar: "استوديو\u00A0+\u00A0شبكة",               fr: "Studio\u00A0+\u00A0r\u00E9seau",         en: "Studio + network" },
                 { Icon: Globe,       ar: "3 لغات\u00A0\u00B7\u00A0كل الولايات",   fr: "3 langues\u00A0\u00B7 toutes wilayas",   en: "3 languages \u00B7 all wilayas" },
               ].map((t, i) => (
                 <span key={i} className="glass rounded-full px-3 py-1.5 inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground border border-border/50">
