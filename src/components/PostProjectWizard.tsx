@@ -52,24 +52,68 @@ const SERVICES = [
     icon: "Mic",
     accent: "royal" as const,
     title: { ar: "بودكاست", en: "Podcast", fr: "Podcast" },
-    matchingRoles: ["Voice-Over Artist", "Sound Designer"],
+    matchingRoles: ["Voice-Over Artist", "Sound Designer", "Cinematographer", "Video Editor"],
     options: {
       format: {
         label: { ar: "شكل البودكاست", en: "Podcast Format", fr: "Format du podcast" },
         choices: [
-          { id: "audio-only", label: { ar: "صوتي فقط (MP3)", en: "Audio only (MP3)", fr: "Audio uniquement (MP3)" } },
-          { id: "video-podcast", label: { ar: "بودكاست مرئي (يوتيوب / TV)", en: "Video Podcast (YouTube / TV)", fr: "Podcast vidéo (YouTube / TV)" } },
-          { id: "studio-setup", label: { ar: "جلسة استوديو كاملة", en: "Full studio session", fr: "Session studio complète" } },
+          { id: "audio-only", label: { ar: "صوتي فقط (MP3)", en: "Audio only (MP3)", fr: "Audio uniquement (MP3)" }, multiplier: 0.7 },
+          { id: "video-podcast", label: { ar: "بودكاست مرئي (يوتيوب / TV)", en: "Video Podcast (YouTube / TV)", fr: "Podcast vidéo (YouTube / TV)" }, multiplier: 1 },
+          { id: "studio-setup", label: { ar: "جلسة استوديو كاملة", en: "Full studio session", fr: "Session studio complète" }, multiplier: 1.5 },
+        ],
+      },
+      subject: {
+        label: { ar: "موضوع البودكاست", en: "Podcast Subject", fr: "Sujet du podcast" },
+        choices: [
+          { id: "business", label: { ar: "ريادة أعمال / اقتصاد", en: "Business / Economics", fr: "Business / Économie" } },
+          { id: "culture", label: { ar: "ثقافة وفن", en: "Culture & Arts", fr: "Culture & Arts" } },
+          { id: "religion", label: { ar: "ديني / روحاني", en: "Religious / Spiritual", fr: "Religieux / Spirituel" } },
+          { id: "sports", label: { ar: "رياضة", en: "Sports", fr: "Sport" } },
+          { id: "tech", label: { ar: "تكنولوجيا / علوم", en: "Tech / Science", fr: "Tech / Sciences" } },
+          { id: "society", label: { ar: "مجتمع / سياسة", en: "Society / Politics", fr: "Société / Politique" } },
+          { id: "education", label: { ar: "تعليم / تطوير ذات", en: "Education / Self-development", fr: "Éducation / Développement personnel" } },
+          { id: "comedy", label: { ar: "كوميديا / ترفيه", en: "Comedy / Entertainment", fr: "Comédie / Divertissement" } },
+          { id: "interview", label: { ar: "حوارات / مقابلات", en: "Interviews / Talk show", fr: "Entretiens / Talk-show" } },
+          { id: "other", label: { ar: "أخرى", en: "Other (specify in brief)", fr: "Autre (à préciser)" } },
         ],
       },
       episodeLength: {
         label: { ar: "مدة الحلقة", en: "Episode Length", fr: "Durée de l'épisode" },
         choices: [
-          { id: "15min", label: { ar: "15 دقيقة", en: "15 min", fr: "15 min" }, price: 3000 },
-          { id: "30min", label: { ar: "30 دقيقة", en: "30 min", fr: "30 min" }, price: 5000 },
-          { id: "45min", label: { ar: "45 دقيقة", en: "45 min", fr: "45 min" }, price: 7000 },
-          { id: "60min", label: { ar: "ساعة كاملة", en: "1 hour", fr: "1 heure" }, price: 9000 },
-          { id: "90min", label: { ar: "ساعة ونصف", en: "90 min", fr: "90 min" }, price: 13000 },
+          { id: "15min", label: { ar: "15 دقيقة", en: "15 min", fr: "15 min" }, price: 10000 },
+          { id: "30min", label: { ar: "30 دقيقة", en: "30 min", fr: "30 min" }, price: 15000 },
+          { id: "45min", label: { ar: "45 دقيقة", en: "45 min", fr: "45 min" }, price: 22000 },
+          { id: "60min", label: { ar: "ساعة كاملة", en: "1 hour", fr: "1 heure" }, price: 30000 },
+          { id: "90min", label: { ar: "ساعة ونصف", en: "90 min", fr: "90 min" }, price: 42000 },
+        ],
+      },
+      // Studio-only extras: shown ONLY when format = studio-setup
+      cameras: {
+        label: { ar: "عدد الكاميرات", en: "Number of cameras", fr: "Nombre de caméras" },
+        showWhen: { format: "studio-setup" },
+        choices: [
+          { id: "2cam", label: { ar: "كاميرتان", en: "2 cameras", fr: "2 caméras" }, multiplier: 1 },
+          { id: "3cam", label: { ar: "3 كاميرات (مولتي-كام)", en: "3 cameras (multi-cam)", fr: "3 caméras (multi-cam)" }, multiplier: 1.15 },
+          { id: "4cam", label: { ar: "4 كاميرات + لووبر", en: "4 cameras + b-roll", fr: "4 caméras + b-roll" }, multiplier: 1.3 },
+        ],
+      },
+      guests: {
+        label: { ar: "عدد الضيوف", en: "Number of guests", fr: "Nombre d'invités" },
+        showWhen: { format: "studio-setup" },
+        choices: [
+          { id: "solo", label: { ar: "مقدّم وحده", en: "Host only", fr: "Hôte seul" }, multiplier: 1 },
+          { id: "1guest", label: { ar: "مقدّم + ضيف", en: "Host + 1 guest", fr: "Hôte + 1 invité" }, multiplier: 1.1 },
+          { id: "2guest", label: { ar: "مقدّم + ضيفان", en: "Host + 2 guests", fr: "Hôte + 2 invités" }, multiplier: 1.2 },
+          { id: "panel", label: { ar: "حلقة نقاش (3+ ضيوف)", en: "Panel (3+ guests)", fr: "Panel (3+ invités)" }, multiplier: 1.35 },
+        ],
+      },
+      socialCutdowns: {
+        label: { ar: "مقاطع سوشيال من الحلقة", en: "Social cutdowns from each episode", fr: "Extraits réseaux par épisode" },
+        showWhen: { format: "studio-setup" },
+        choices: [
+          { id: "none", label: { ar: "بدون", en: "None", fr: "Aucun" }, multiplier: 1 },
+          { id: "3clips", label: { ar: "3 مقاطع رأسية", en: "3 vertical clips", fr: "3 clips verticaux" }, multiplier: 1.1 },
+          { id: "6clips", label: { ar: "6 مقاطع رأسية", en: "6 vertical clips", fr: "6 clips verticaux" }, multiplier: 1.2 },
         ],
       },
       episodes: {
@@ -160,12 +204,12 @@ const SERVICES = [
       photoType: {
         label: { ar: "نوع التصوير", en: "Photography Type", fr: "Type de photo" },
         choices: [
-          { id: "product", label: { ar: "تصوير منتجات", en: "Product Photography", fr: "Photo produit" } },
-          { id: "portrait", label: { ar: "بورتريه / شخصي", en: "Portrait / Personal", fr: "Portrait / Personnel" } },
-          { id: "real-estate", label: { ar: "عقارات / ديكور", en: "Real Estate / Interior", fr: "Immobilier / Intérieur" } },
-          { id: "editorial", label: { ar: "تحريري / فني", en: "Editorial / Art", fr: "Éditorial / Art" } },
-          { id: "event-photo", label: { ar: "تصوير فعالية", en: "Event Photography", fr: "Photo événement" } },
-          { id: "corporate", label: { ar: "مؤسسي / شركات", en: "Corporate / Business", fr: "Corporate / Entreprise" } },
+          { id: "event-photo", label: { ar: "تصوير فعالية", en: "Event Photography", fr: "Photo événement" }, price: 1500 },
+          { id: "portrait", label: { ar: "بورتريه / شخصي", en: "Portrait / Personal", fr: "Portrait / Personnel" }, price: 1800 },
+          { id: "product", label: { ar: "تصوير منتجات", en: "Product Photography", fr: "Photo produit" }, price: 2000 },
+          { id: "corporate", label: { ar: "مؤسسي / شركات", en: "Corporate / Business", fr: "Corporate / Entreprise" }, price: 2500 },
+          { id: "real-estate", label: { ar: "عقارات / ديكور", en: "Real Estate / Interior", fr: "Immobilier / Intérieur" }, price: 2800 },
+          { id: "editorial", label: { ar: "تحريري / فني", en: "Editorial / Art", fr: "Éditorial / Art" }, price: 3500 },
         ],
       },
       quantity: {
@@ -505,28 +549,62 @@ export const PostProjectWizard = ({
   };
 
   // ── Calculate price from selections ──────────────────────────────────────
+  // - Each non-number option may carry a `price` (the base of the line item)
+  //   or a `multiplier` (a percentage uplift on the chosen base).
+  // - The biggest priced choice becomes the base; multipliers stack on top.
+  // - Number fields (e.g. # episodes, # photos) multiply at the very end so
+  //   "more episodes = more price" mirrors the user's expectation.
+  const isOptVisible = (opt: any): boolean => {
+    if (!opt?.showWhen) return true;
+    return Object.entries(opt.showWhen).every(([k, v]) => selections[k] === v);
+  };
+
+  // Service-specific base fallback used only when no priced choice has been
+  // picked yet — gives a realistic "from X DA" preview per service instead of
+  // the same 5,000 DA placeholder across the board.
+  const SERVICE_FALLBACK_BASE: Record<string, number> = {
+    "cinematic-ad": 8000,
+    "podcast": 10000,
+    "event-coverage": 8000,
+    "social-content": 2000,
+    "photography": 1500,
+    "short-film": 20000,
+    "voice-over": 1000,
+    "wedding": 35000,
+    "real-estate-360": 12000,
+    "government-institutional": 25000,
+    "elearning-production": 25000,
+    "live-streaming": 12000,
+  };
+
   const calcTotal = (): number => {
     if (!selectedService) return 0;
     let base = 0;
+    let multiplier = 1;
     const opts = selectedService.options as Record<string, any>;
 
     for (const [key, opt] of Object.entries(opts)) {
       if (opt.isNumber) continue;
+      if (!isOptVisible(opt)) continue;
       const chosen = selections[key] as string;
       if (!chosen) continue;
       const found = opt.choices?.find((c: any) => c.id === chosen);
       if (found?.price) base = Math.max(base, found.price);
+      if (found?.multiplier) multiplier *= found.multiplier;
     }
-    if (base === 0) base = 5000; // fallback minimum
+    if (base === 0) base = SERVICE_FALLBACK_BASE[selectedService.slug] ?? 5000;
 
-    // Multiply by quantity fields
+    let total = base * multiplier;
+
+    // Multiply by quantity fields (e.g. number of episodes / photos).
     for (const [key, opt] of Object.entries(opts)) {
       if (!opt.isNumber) continue;
+      if (!isOptVisible(opt)) continue;
       const qty = (selections[key] as number) || opt.defaultVal || 1;
-      base = base * qty;
+      total = total * qty;
     }
 
-    return base;
+    return Math.round(total);
   };
 
   const total = calcTotal();
@@ -540,6 +618,7 @@ export const PostProjectWizard = ({
     const opts = selectedService.options as Record<string, any>;
     const parts: string[] = [];
     for (const [key, opt] of Object.entries(opts)) {
+      if (!isOptVisible(opt)) continue;
       if (opt.isNumber) {
         const qty = (selections[key] as number) || opt.defaultVal || 1;
         parts.push(`${qty} ${lang === "ar" ? opt.unitAr : opt.unitEn}`);
@@ -609,7 +688,13 @@ export const PostProjectWizard = ({
 
   const l = (obj: any) => obj?.[lang] ?? obj?.en ?? "";
   const opts = selectedService?.options as Record<string, any> | undefined;
-  const allSelected = opts ? Object.entries(opts).every(([k, opt]) => opt.isNumber ? true : !!selections[k]) : false;
+  const allSelected = opts
+    ? Object.entries(opts).every(([k, opt]) => {
+        if (!isOptVisible(opt)) return true; // hidden by showWhen → not required
+        if (opt.isNumber) return true;
+        return !!selections[k];
+      })
+    : false;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
@@ -656,7 +741,9 @@ export const PostProjectWizard = ({
         {/* ── STEP 2: Configure options ─────────────────────────────────── */}
         {step === "configure" && selectedService && opts && (
           <div className="space-y-6">
-            {Object.entries(opts).map(([key, opt]: [string, any]) => (
+            {Object.entries(opts).map(([key, opt]: [string, any]) => {
+              if (!isOptVisible(opt)) return null;
+              return (
               <div key={key}>
                 <Label className="font-semibold mb-3 block">{l(opt.label)}</Label>
 
@@ -678,6 +765,12 @@ export const PostProjectWizard = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {opt.choices.map((c: any) => {
                       const active = selections[key] === c.id;
+                      // Surface percentage uplift on multiplier-only choices
+                      // so users see how each option affects the price.
+                      const upliftPct =
+                        c.multiplier && c.multiplier !== 1
+                          ? `${c.multiplier > 1 ? "+" : ""}${Math.round((c.multiplier - 1) * 100)}%`
+                          : null;
                       return (
                         <button key={c.id}
                           onClick={() => setSelections(p => ({ ...p, [key]: c.id }))}
@@ -685,6 +778,7 @@ export const PostProjectWizard = ({
                           <span>{l(c.label)}</span>
                           <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                             {c.price > 0 && <span className={`text-xs font-semibold ${active ? "text-accent" : "text-muted-foreground"}`}>{formatDZD(c.price)}</span>}
+                            {!c.price && upliftPct && <span className={`text-xs font-semibold ${active ? "text-accent" : "text-muted-foreground"}`}>{upliftPct}</span>}
                             {active && <Check className="w-4 h-4 text-accent" />}
                           </div>
                         </button>
@@ -693,7 +787,8 @@ export const PostProjectWizard = ({
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
 
             {/* Price preview */}
             {total > 0 && (
