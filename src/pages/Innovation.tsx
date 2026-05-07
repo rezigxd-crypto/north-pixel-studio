@@ -360,7 +360,7 @@ const Innovation = () => {
                 <Link to="/#offers">{ar ? "تصفّح الخدمات" : fr ? "Voir les services" : "Browse services"}</Link>
               </Button>
               <Button asChild variant="gold" size="lg">
-                <Link to="/#bundles">{ar ? "الباقات الشهرية" : fr ? "Bundles mensuels" : "Monthly bundles"}</Link>
+                <Link to="/bundles">{ar ? "الباقات الشهرية" : fr ? "Bundles mensuels" : "Monthly bundles"}</Link>
               </Button>
             </div>
           </div>

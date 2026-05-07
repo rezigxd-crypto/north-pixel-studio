@@ -1,17 +1,15 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/spotlight-card";
 import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { BundleRequestModal } from "@/components/BundleRequestModal";
-import { OFFERS, BUNDLES, formatStartingPrice, formatDZD, type Bundle } from "@/lib/offers";
+import { OFFERS, formatStartingPrice } from "@/lib/offers";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
-import { ArrowRight, Sparkles, Users, UserCheck, GraduationCap, Check, Clapperboard, Vote, Heart, FileText, Search, Send, ShieldCheck, Wallet, MapPin, Globe, Award } from "lucide-react";
+import { ArrowRight, Sparkles, Users, UserCheck, Briefcase, Clapperboard, FileText, Search, Send, ShieldCheck, Wallet, MapPin, Globe, Award } from "lucide-react";
 import { useApp } from "@/lib/context";
 
 const AR_WORDS = ["احترافية", "إبداع", "براعة", "ابتكار", "تألّق", "جودة", "خبرة"];
@@ -20,29 +18,8 @@ const EN_WORDS = ["professionalism", "creativity", "expertise", "innovation", "e
 
 const Index = () => {
   const { lang, auth } = useApp();
-  const navigate = useNavigate();
   const userCounts = usePublicStats();
   const isLoggedIn = !!auth.role && !auth.loading;
-
-  // Bundle request modal state — opens when a client clicks "Request" on
-  // any tier card. Unauthenticated visitors are redirected to signup first.
-  const [bundleModalOpen, setBundleModalOpen] = useState(false);
-  const [bundleModalBundle, setBundleModalBundle] = useState<Bundle | null>(null);
-  const [bundleModalTier, setBundleModalTier] = useState<string>("");
-  const openBundleRequest = (bundle: Bundle, tierId: string) => {
-    if (!isLoggedIn) {
-      navigate(`/auth/signup?role=client&next=/#${bundle.slug}`);
-      return;
-    }
-    if (auth.role && auth.role !== "client") {
-      // Creators / admins can't subscribe to bundles — they're for clients only.
-      navigate("/portal/" + auth.role);
-      return;
-    }
-    setBundleModalBundle(bundle);
-    setBundleModalTier(tierId);
-    setBundleModalOpen(true);
-  };
 
   const animatedWords = lang === "ar" ? AR_WORDS : lang === "fr" ? FR_WORDS : EN_WORDS;
   const heroPrefix =
@@ -317,179 +294,89 @@ const Index = () => {
         </div>
       </section>
 
-      {/* MONTHLY PARTNERSHIP BUNDLES (university, hospitality, SME) */}
-      {BUNDLES.map((bundle) => {
-        const BundleIcon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[bundle.icon] ?? GraduationCap;
-        return (
-          <section key={bundle.slug} id={bundle.slug} className="px-4 sm:px-6 py-12 max-w-6xl mx-auto">
-            <div className="relative glass rounded-3xl overflow-hidden">
-              <div className="absolute inset-0">
-                <img src={bundle.image} alt="" loading="lazy" className="w-full h-full object-cover opacity-10" />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-background/85 to-accent/15" />
-              </div>
-              <div className="relative p-6 sm:p-10 md:p-14">
-                <div className="inline-flex items-center gap-2 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-royal flex items-center justify-center flex-shrink-0">
-                    <BundleIcon className="w-5 h-5 text-primary-foreground" />
-                  </div>
-                  <span className="glass px-4 py-1.5 rounded-full text-sm font-bold text-primary-foreground bg-gradient-royal">{bundle.badge[lang]}</span>
-                </div>
-                <p className="text-accent text-xs uppercase tracking-widest mb-2 font-semibold">{bundle.slogan[lang]}</p>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-6 max-w-3xl leading-snug">{bundle.headline[lang]}</h2>
-                <div className="grid sm:grid-cols-2 gap-3 mb-8 max-w-2xl">
-                  {bundle.includes[lang].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 glass rounded-xl p-3">
-                      <div className="w-6 h-6 rounded-full bg-gradient-royal flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-primary-foreground" />
-                      </div>
-                      <span className="text-sm leading-snug">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* Monthly partnership tiers */}
-                <div className="mt-2 mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-accent font-semibold">
-                      {lang === "ar" ? "عقد شهري" : lang === "fr" ? "Contrat mensuel" : "Monthly partnership"}
-                    </span>
-                    <div className="flex-1 h-px bg-accent/20" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {bundle.monthlyTiers.map((tier, idx) => (
-                      <div
-                        key={tier.id}
-                        className={`relative glass rounded-2xl p-5 transition-smooth hover:-translate-y-0.5 hover:shadow-[0_0_30px_-12px_hsl(41_67%_60%/0.4)] ${
-                          idx === 1 ? "border-2 border-accent/60 ring-1 ring-accent/20" : "border border-border/50"
-                        }`}
-                      >
-                        {idx === 1 && (
-                          <span className="absolute -top-3 start-4 text-[10px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full bg-gradient-gold text-accent-foreground">
-                            {lang === "ar" ? "الأكثر طلبًا" : lang === "fr" ? "Populaire" : "Most popular"}
-                          </span>
-                        )}
-                        <div className="font-serif text-lg font-bold mb-1">{tier.title[lang]}</div>
-                        <div className="text-[11px] text-muted-foreground mb-3">{tier.tagline[lang]}</div>
-                        <div className="flex items-baseline gap-1 mb-4">
-                          <span className="font-serif text-2xl font-bold text-accent">{formatDZD(tier.monthlyPrice, lang)}</span>
-                          <span className="text-[11px] text-muted-foreground">/ {lang === "ar" ? "شهر" : lang === "fr" ? "mois" : "month"}</span>
-                        </div>
-                        <ul className="space-y-2 mb-4">
-                          {tier.includes[lang].map((line, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs">
-                              <Check className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                              <span className="leading-snug">{line}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {(!isLoggedIn || auth.role === "client") && (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={idx === 1 ? "royal" : "outline"}
-                            className="w-full"
-                            onClick={() => openBundleRequest(bundle, tier.id)}
-                          >
-                            {lang === "ar" ? "اطلب هذه الباقة" : lang === "fr" ? "Demander cette formule" : "Request this tier"}
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-2 mt-4">
-                    {bundle.contractTerms[lang].map((term, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
-                        <Check className="w-3 h-3 text-accent flex-shrink-0 mt-0.5" />
-                        <span>{term}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hide CTA when logged in as non-client */}
-                {(!isLoggedIn || auth.role === "client") && (
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant="royal"
-                      size="lg"
-                      onClick={() =>
-                        openBundleRequest(
-                          bundle,
-                          bundle.monthlyTiers[Math.floor(bundle.monthlyTiers.length / 2)]?.id || bundle.monthlyTiers[0]?.id || "",
-                        )
-                      }
-                    >
-                      {lang === "ar" ? "طلب العرض" : lang === "fr" ? "Demander l'offre" : "Request offer"} <ArrowRight className="ms-2 w-4 h-4" />
-                    </Button>
-                    <Button asChild variant="outline" size="lg">
-                      <a href="mailto:contact@thealgerianstudio.com">{lang === "ar" ? "تواصل معنا" : lang === "fr" ? "Nous contacter" : "Contact us"}</a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        );
-      })}
-
-      {/* MOVIECOLLAB QUEST */}
-      <section id="quest" className="px-4 sm:px-6 py-16 max-w-6xl mx-auto">
-        <div className="relative glass rounded-3xl overflow-hidden border border-accent/30">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background/85 to-primary/15 pointer-events-none" />
-          <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-
-          <div className="relative p-6 sm:p-10 md:p-14">
-            <div className="flex flex-wrap items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center flex-shrink-0">
-                <Clapperboard className="w-5 h-5 text-accent-foreground" />
+      {/* MONTHLY PARTNERSHIP BUNDLES — compact teaser. Full pricing tables
+          live on /bundles and /university to keep the homepage light. */}
+      <section id="bundles" className="px-4 sm:px-6 py-12 max-w-6xl mx-auto">
+        <div className="relative glass rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-background/85 to-accent/15 pointer-events-none" />
+          <div className="relative p-6 sm:p-10">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-royal flex items-center justify-center flex-shrink-0">
+                <Briefcase className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="glass px-4 py-1.5 rounded-full text-xs uppercase tracking-widest text-accent">
-                {lang === "ar" ? "MovieCollab — مجانًا" : "MovieCollab — Free Quest"}
+                {lang === "ar" ? "باقات شهرية B2B" : lang === "fr" ? "Formules mensuelles B2B" : "Monthly B2B bundles"}
               </span>
             </div>
-
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold mb-4 max-w-3xl leading-snug">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-3 max-w-3xl leading-snug">
               {lang === "ar"
-                ? "نجمع مبدعي الجزائر، نصنع فيلمًا قصيرًا في 40 يومًا — ونثبت أنّ السينما الجزائرية تستحقّ."
-                : "We gather Algeria's creators and make a short film in 40 days — proving Algerian cinema is great."}
+                ? "عقد شهري واحد للجامعات والفنادق والشركات الصغيرة. ميزانية واضحة، تسليم منتظم."
+                : lang === "fr"
+                  ? "Un contrat mensuel pour universités, hôtels et PME. Budget clair, livraisons régulières."
+                  : "One monthly contract for universities, hotels and SMEs. Clear budget, steady deliveries."}
             </h2>
-
-            <p className="text-muted-foreground text-sm mb-6 max-w-2xl leading-relaxed">
+            <p className="text-sm text-muted-foreground mb-6 max-w-2xl leading-relaxed">
               {lang === "ar"
-                ? "كلّ شهر تبدأ مهمّة جديدة: 10 أيام لتكوين الفريق، 30 يومًا للصنع. ممثلون، أصوات، مونتيرون، كتّاب — كلّ من يحبّ الفنّ مكانه هنا. الجمهور يصوّت على العنوان، ثم نبيع الفيلم — والعائد يُعيد تمويل المهمّة القادمة."
-                : "Each month a new quest opens: 10 days to gather the crew, 30 days to make the film. Actors, voices, editors, writers — everyone who lives for art belongs. The public votes on the title, then we sell the film — and revenue funds the next quest."}
+                ? "بدلًا من المساومة على كلّ مشروع، اختر باقة شهرية ثابتة وافتح الصفحة المخصّصة لرؤية كلّ التفاصيل والمستويات والأسعار."
+                : lang === "fr"
+                  ? "Au lieu de négocier projet par projet, choisissez une formule mensuelle fixe — ouvrez la page dédiée pour voir toutes les formules, niveaux et tarifs."
+                  : "Instead of negotiating project by project, pick a fixed monthly bundle — open the dedicated page to see every tier and price."}
             </p>
-
-            <div className="grid sm:grid-cols-3 gap-3 mb-7 max-w-3xl">
-              {[
-                { Icon: Users, ar: "10 أيام تجميع", en: "10 days gather" },
-                { Icon: Vote, ar: "تصويت على العنوان", en: "Public title vote" },
-                { Icon: Heart, ar: "كلّ المبدعين مرحَّب بهم", en: "Every creator welcome" },
-              ].map((p) => (
-                <div key={p.en} className="glass rounded-xl p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center flex-shrink-0">
-                    <p.Icon className="w-4 h-4 text-accent-foreground" />
-                  </div>
-                  <span className="text-sm">{lang === "ar" ? p.ar : p.en}</span>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-sm italic text-accent mb-6 max-w-2xl">
-              {lang === "ar"
-                ? "«قد لا أكون كبيرًا مثلك… لكن الجمهور يعرف أنّني أفضل.»"
-                : "“I might not be as big as you — but the public knows I'm better.”"}
-            </p>
-
             <div className="flex flex-wrap gap-3">
-              <Button asChild variant="gold" size="lg">
-                <Link to="/quest#join">
-                  {lang === "ar" ? "انضمّ لطاقمنا الآن!" : "Join our crew now!"} <ArrowRight className="ms-2 w-4 h-4" />
+              <Button asChild variant="royal" size="lg">
+                <Link to="/bundles">
+                  {lang === "ar" ? "اكتشف الباقات" : lang === "fr" ? "Découvrir les formules" : "Explore bundles"}{" "}
+                  <ArrowRight className="ms-2 w-4 h-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/quest">{lang === "ar" ? "اعرف أكثر" : "Learn more"}</Link>
+                <Link to="/university">
+                  {lang === "ar" ? "للجامعات تحديدًا" : lang === "fr" ? "Pour les universités" : "For universities"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MOVIECOLLAB QUEST — compact teaser. Full description on /quest. */}
+      <section id="quest" className="px-4 sm:px-6 py-12 max-w-6xl mx-auto">
+        <div className="relative glass rounded-3xl overflow-hidden border border-accent/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-background/85 to-primary/15 pointer-events-none" />
+          <div className="relative p-6 sm:p-10 flex flex-wrap items-center gap-6 justify-between">
+            <div className="flex-1 min-w-[260px]">
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center flex-shrink-0">
+                  <Clapperboard className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <span className="glass px-4 py-1.5 rounded-full text-xs uppercase tracking-widest text-accent">
+                  {lang === "ar" ? "MovieCollab — مجانًا" : lang === "fr" ? "MovieCollab — Quête gratuite" : "MovieCollab — Free Quest"}
+                </span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-2 leading-snug">
+                {lang === "ar"
+                  ? "فيلم جماعي جديد كلّ 40 يومًا."
+                  : lang === "fr"
+                    ? "Un nouveau film collectif tous les 40 jours."
+                    : "A new collective short film every 40 days."}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+                {lang === "ar"
+                  ? "ممثلون، أصوات، مونتيرون، كتّاب — كلّ من يحبّ الفنّ مكانه هنا. اقرأ التفاصيل الكاملة وانضمّ للطاقم."
+                  : lang === "fr"
+                    ? "Acteurs, voix, monteurs, auteurs — chaque créateur a sa place. Lisez les détails complets et rejoignez l'équipe."
+                    : "Actors, voices, editors, writers — every creator belongs. Read the full details and join the crew."}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="gold" size="lg">
+                <Link to="/quest">
+                  {lang === "ar" ? "اكتشف Quest" : lang === "fr" ? "Découvrir la Quête" : "Discover the Quest"}{" "}
+                  <ArrowRight className="ms-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/quest#join">{lang === "ar" ? "انضمّ للطاقم" : lang === "fr" ? "Rejoindre" : "Join the crew"}</Link>
               </Button>
             </div>
           </div>
@@ -519,13 +406,6 @@ const Index = () => {
       )}
 
       <SiteFooter />
-
-      <BundleRequestModal
-        bundle={bundleModalBundle}
-        initialTierId={bundleModalTier}
-        open={bundleModalOpen}
-        onOpenChange={setBundleModalOpen}
-      />
     </div>
   );
 };

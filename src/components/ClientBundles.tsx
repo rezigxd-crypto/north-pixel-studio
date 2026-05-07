@@ -186,7 +186,7 @@ export const ClientBundles = ({ clientUid }: { clientUid: string }) => {
             : "Request a monthly bundle from the home page — we'll be in touch within 24h."}
         </p>
         <Button asChild variant="royal">
-          <a href="/#bundles">{ar ? "اكتشف الباقات" : fr ? "Voir les bundles" : "Explore bundles"}</a>
+          <a href="/bundles">{ar ? "اكتشف الباقات" : fr ? "Voir les bundles" : "Explore bundles"}</a>
         </Button>
       </div>
     );

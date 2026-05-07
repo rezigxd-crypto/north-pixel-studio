@@ -214,7 +214,7 @@ export const SiteHeader = () => {
                     { Icon: Home,         to: "/",                                   ar: "الرئيسية",     fr: "Accueil",         en: "Home" },
                     { Icon: Compass,      to: "/about",                              ar: "من نحن",        fr: "À propos",        en: "About" },
                     { Icon: Sparkles,     to: "/#offers",                            ar: "الخدمات",      fr: "Services",        en: "Services" },
-                    { Icon: GraduationCap, to: "/#university",                       ar: "عرض الجامعات", fr: "Universités",     en: "University" },
+                    { Icon: GraduationCap, to: "/university",                        ar: "عرض الجامعات", fr: "Universités",     en: "University" },
                     { Icon: Clapperboard, to: "/quest",                              ar: "MovieCollab",  fr: "MovieCollab",     en: "MovieCollab" },
                     { Icon: Lightbulb,    to: "/innovation",                         ar: "الابتكار",     fr: "Innovation",      en: "Innovation" },
                     { Icon: Users,        to: "/clients",                            ar: "العملاء",      fr: "Clients",         en: "Clients" },

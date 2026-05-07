@@ -21,7 +21,9 @@ export const SiteFooter = () => {
           <h4 className="font-semibold mb-3 text-accent">{lang === "ar" ? "الخدمات" : lang === "fr" ? "Services" : "Services"}</h4>
           <ul className="space-y-2 text-muted-foreground text-xs">
             <li><Link to="/#offers" className="hover:text-foreground transition-smooth">{lang === "ar" ? "جميع الخدمات" : "All services"}</Link></li>
-            <li><Link to="/#university" className="hover:text-foreground transition-smooth">{lang === "ar" ? "عرض الجامعات" : "University offer"}</Link></li>
+            <li><Link to="/university" className="hover:text-foreground transition-smooth">{lang === "ar" ? "عرض الجامعات" : "University offer"}</Link></li>
+            <li><Link to="/bundles" className="hover:text-foreground transition-smooth">{lang === "ar" ? "الباقات الشهرية" : lang === "fr" ? "Formules mensuelles" : "Monthly bundles"}</Link></li>
+            <li><Link to="/ai" className="hover:text-foreground transition-smooth">{lang === "ar" ? "مختبر الذكاء الاصطناعي" : lang === "fr" ? "Laboratoire IA" : "AI Lab"}</Link></li>
             <li><Link to="/about" className="hover:text-foreground transition-smooth">{lang === "ar" ? "من نحن" : lang === "fr" ? "À propos" : "About us"}</Link></li>
             <li><Link to="/innovation" className="hover:text-foreground transition-smooth">{lang === "ar" ? "الابتكار" : lang === "fr" ? "Innovation" : "Innovation"}</Link></li>
             <li><Link to="/quest" className="hover:text-foreground transition-smooth">MovieCollab</Link></li>
