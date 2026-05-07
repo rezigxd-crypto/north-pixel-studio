@@ -155,12 +155,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginWithEmail = async (email: string, password: string): Promise<UserRole> => {
+    // Flip auth.loading=true synchronously so any portal that mounts while
+    // sign-in is in flight reads `loading: true` and waits — instead of
+    // reading the pre-sign-in `{role:null, uid:"", loading:false}` and
+    // bouncing the user back to /auth/login.
+    setAuthState((s) => ({ ...s, loading: true }));
     const cred = await signInWithEmailAndPassword(auth, email, password);
     // Populate the shared auth state BEFORE returning so the caller can
     // safely `navigate("/portal/...")` without racing the onAuthStateChanged
-    // callback (which also calls loadUser). Without this, a slow first
-    // paint or pending React batch can let the portal mount with stale
-    // `{role:null, uid:""}` and redirect straight back to /auth/login.
+    // callback (which also calls loadUser).
     await loadUser(cred.user);
     if (cred.user.email === ADMIN_EMAIL) return "admin";
     const snap = await getDoc(doc(db, "users", cred.user.uid));
@@ -169,7 +172,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const loginWithGoogle = async (role: "client" | "creator"): Promise<GoogleSignupResult> => {
     void role; // role is kept in the API for forward compatibility; actual role is collected on the complete-signup page
-    const result = await signInWithPopup(auth, googleProvider);
+    // Flip auth.loading=true synchronously so portals don't see the
+    // pre-sign-in `{role:null, uid:"", loading:false}` after we navigate
+    // away from /auth/login. See loginWithEmail for the full reasoning.
+    setAuthState((s) => ({ ...s, loading: true }));
+    let result;
+    try {
+      result = await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      // Sign-in failed (popup closed, blocked, unauthorized domain, …).
+      // Drop the loading flag so the login form is interactive again.
+      setAuthState((s) => ({ ...s, loading: false }));
+      throw e;
+    }
     const user = result.user;
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
@@ -196,6 +211,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }: { role: "client" | "creator"; name: string; password: string; wilaya: string; extra?: Record<string, unknown> }): Promise<UserRole> => {
     const user = auth.currentUser;
     if (!user || !user.email) throw new Error("no-google-user");
+    setAuthState((s) => ({ ...s, loading: true }));
 
     // Try linking email/password credential so the user can log in with password too.
     try {
@@ -251,13 +267,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const registerClient = async (email: string, password: string, name: string, wilaya: string, phone: string): Promise<string> => {
+    setAuthState((s) => ({ ...s, loading: true }));
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, "users", cred.user.uid), { name, email, wilaya, phone, role: "client", createdAt: new Date().toISOString() });
     bumpPublicStats("client").catch(() => {});
+    await loadUser(cred.user);
     return cred.user.uid;
   };
 
   const registerCreator = async (email: string, password: string, name: string, wilaya: string, phone: string): Promise<string> => {
+    setAuthState((s) => ({ ...s, loading: true }));
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const taken = await fetchTakenUsernames();
     const username = generateUniqueUsername(name, taken);
@@ -266,6 +285,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date().toISOString(),
     });
     bumpPublicStats("creator").catch(() => {});
+    await loadUser(cred.user);
     return cred.user.uid;
   };
 

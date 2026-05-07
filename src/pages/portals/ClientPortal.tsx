@@ -22,6 +22,7 @@ import { ProfilePicUpload } from "@/components/ProfilePicUpload";
 import { Countdown } from "@/components/Countdown";
 import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { useApp } from "@/lib/context";
+import { auth as firebaseAuth } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -80,6 +81,9 @@ const ClientPortal = () => {
   // missing. Treat it as unauthenticated and redirect to /auth/login.
   useEffect(() => {
     if (auth.loading) return;
+    // Defensive: Firebase has a user but our React context hasn't caught
+    // up yet (rare batching race right after sign-in). Wait, don't bounce.
+    if (!auth.uid && firebaseAuth.currentUser) return;
     if (!auth.uid || !auth.role) { navigate("/auth/login"); return; }
     if (auth.role !== "client") navigate(`/portal/${auth.role}`);
   }, [auth.loading, auth.uid, auth.role, navigate]);

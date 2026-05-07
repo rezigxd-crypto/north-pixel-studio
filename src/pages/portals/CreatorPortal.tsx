@@ -28,7 +28,7 @@ import { ProfileCompletionRing } from "@/components/ProfileCompletionRing";
 import { Countdown } from "@/components/Countdown";
 import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth as firebaseAuth } from "@/lib/firebase";
 
 const ROLE_AVATARS: Record<string, string> = {
   "Cinematographer": "🎥", "Video Editor": "✂️", "Motion Designer": "🎨",
@@ -64,6 +64,11 @@ const CreatorPortal = () => {
   // missing. Treat it as unauthenticated and redirect to /auth/login.
   useEffect(() => {
     if (auth.loading) return;
+    // Defensive: if Firebase actually has a signed-in user but our React
+    // context hasn't caught up yet (rare batching/timing race right after
+    // signInWithPopup resolves), wait for the next tick instead of
+    // bouncing the user back to /auth/login.
+    if (!auth.uid && firebaseAuth.currentUser) return;
     if (!auth.uid || !auth.role) { navigate("/auth/login"); return; }
     if (auth.role !== "creator") navigate(`/portal/${auth.role}`);
   }, [auth.loading, auth.uid, auth.role, navigate]);
