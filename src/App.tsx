@@ -16,6 +16,9 @@ const ServiceDetail   = lazy(() => import("./pages/ServiceDetail.tsx"));
 const Quest           = lazy(() => import("./pages/Quest.tsx"));
 const Innovation      = lazy(() => import("./pages/Innovation.tsx"));
 const About           = lazy(() => import("./pages/About.tsx"));
+const AILab           = lazy(() => import("./pages/AILab.tsx"));
+const Bundles         = lazy(() => import("./pages/Bundles.tsx"));
+const University      = lazy(() => import("./pages/University.tsx"));
 const Members         = lazy(() => import("./pages/Members.tsx"));
 const Login           = lazy(() => import("./pages/auth/Login.tsx"));
 const SignupChoice    = lazy(() => import("./pages/auth/SignupChoice.tsx"));
@@ -52,6 +55,9 @@ const App = () => (
             <Route path="/quest" element={<Quest />} />
             <Route path="/innovation" element={<Innovation />} />
             <Route path="/about" element={<About />} />
+            <Route path="/ai" element={<AILab />} />
+            <Route path="/bundles" element={<Bundles />} />
+            <Route path="/university" element={<University />} />
             <Route path="/clients" element={<Members mode="clients" />} />
             <Route path="/freelancers" element={<Members mode="freelancers" />} />
             <Route path="/auth/login" element={<Login />} />

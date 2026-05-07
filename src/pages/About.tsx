@@ -76,14 +76,14 @@ const PROBLEMS: { Icon: typeof AlertTriangle; title: Trio; body: Trio }[] = [
   {
     Icon: Users,
     title: {
-      ar: "الجامعات والمؤسّسات بلا حلّ مُنظَّم",
-      fr: "Universités et institutions sans solution structurée",
-      en: "Universities and institutions with no structured solution",
+      ar: "المؤسّسات والشركات بلا مورِّد مُنظَّم",
+      fr: "Organisations & entreprises sans fournisseur structuré",
+      en: "Organisations & businesses with no structured supplier",
     },
     body: {
-      ar: "تحتاج الجامعات إلى تغطية فعاليات، أرشفة محاضرات، إنتاج بودكاست — لكن لا توجد منصّة B2B تتيح لها التعاقد شهريًا مثل أيّ خدمة تقنية معلومات.",
-      fr: "Les universités ont besoin de couvrir des événements, archiver des cours, produire des podcasts — mais aucune plateforme B2B ne leur permet de contracter mensuellement comme un service IT.",
-      en: "Universities need event coverage, lecture archival, podcast production — but no B2B platform lets them contract monthly the way they would for IT services.",
+      ar: "الجامعات، المتاجر، الفنادق، الشركات الناشئة، الجمعيات والمؤسّسات الحكومية كلّها تحتاج إلى تغطية فعاليات، أرشفة، بودكاست ومحتوى السوشيال — لكن لا توجد منصّة B2B جزائرية تتيح لها التعاقد شهريًا مثل أيّ خدمة تقنية معلومات.",
+      fr: "Universités, commerces, hôtels, startups, associations et institutions publiques ont tous besoin de couverture d'événements, d'archivage, de podcasts et de contenu social — mais aucune plateforme B2B algérienne ne leur permet de contracter mensuellement comme un service IT.",
+      en: "Universities, stores, hotels, startups, NGOs and public institutions all need event coverage, archival, podcasts and social content — but no Algerian B2B platform lets them contract monthly the way they would for IT services.",
     },
   },
 ];
@@ -175,12 +175,12 @@ const TRACKS: { Icon: typeof Sparkles; title: Trio; body: Trio; cta: Trio; href:
       en: "Monthly B2B bundles",
     },
     body: {
-      ar: "الجامعات، الفنادق، المؤسّسات الصغيرة. اشتراك شهري ثابت، تنفيذ من فريق الاستوديو + الحرّيين عند الحاجة. ميزانية واضحة، تسليم منتظم.",
-      fr: "Universités, hôtellerie, PME. Abonnement mensuel fixe, exécution par l'équipe studio + freelances en renfort. Budget lisible, livraisons régulières.",
-      en: "Universities, hospitality, SMEs. Fixed monthly subscription, executed by the studio team + freelancers as needed. Clear budget, regular deliveries.",
+      ar: "للجامعات، المتاجر، الفنادق، الشركات الناشئة، الجمعيات وكلّ مؤسّسة تحتاج محتوى منتظمًا. اشتراك شهري ثابت، تنفيذ من فريق الاستوديو + الحرّيين عند الحاجة. ميزانية واضحة، تسليم منتظم.",
+      fr: "Pour universités, commerces, hôtels, startups, associations et toute organisation ayant besoin de contenu régulier. Abonnement mensuel fixe, exécution par l'équipe studio + freelances en renfort. Budget lisible, livraisons régulières.",
+      en: "For universities, stores, hotels, startups, NGOs and any organisation that needs regular content. Fixed monthly subscription, executed by the studio team + freelancers as needed. Clear budget, regular deliveries.",
     },
     cta: { ar: "اطّلع على الباقات", fr: "Voir les bundles", en: "View bundles" },
-    href: "/#bundles",
+    href: "/bundles",
   },
   {
     Icon: Heart,
@@ -498,6 +498,14 @@ const About = () => {
                 ? "Ces interfaces sont des aperçus. L'activation réelle démarre une fois l'infrastructure locale des modèles IA en place. Le financement ministériel accélère cette phase."
                 : "These are preview interfaces. Actual activation starts once the local AI-model infrastructure is in place. Ministerial funding accelerates this phase."}
             </p>
+          </div>
+          <div className="mt-8 text-center">
+            <Button asChild variant="gold" size="lg">
+              <Link to="/ai">
+                {ar ? "اقرأ صفحة الذكاء الاصطناعي كاملةً" : fr ? "Lire la page IA complète" : "Read the full AI page"}{" "}
+                <ArrowRight className={`ms-2 w-4 h-4 ${ar ? "rotate-180" : ""}`} />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

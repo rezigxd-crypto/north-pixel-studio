@@ -451,8 +451,8 @@ export type Bundle = {
 };
 
 export const UNIVERSITY_BUNDLE: Bundle = {
-  // Slug kept as "university" so existing /#university nav links in
-  // SiteHeader and SiteFooter continue to anchor here after the refactor.
+  // Slug used as bundle identifier and anchor on the /bundles page.
+  // The dedicated /university page also embeds this bundle.
   slug: "university",
   icon: "GraduationCap",
   badge: { ar: "عرض خاص للجامعات", en: "Special University Offer", fr: "Offre Spéciale Universités" },
