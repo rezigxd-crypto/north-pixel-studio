@@ -158,12 +158,6 @@ const Innovation = () => {
     }
   };
 
-  const SUMMARY = {
-    ar: "North Pixel Studio هي أوّل سوق إبداعي مُصمَّم بشكل أصيل للجزائر. تجمع بين واجهة عربية أوّلًا ثلاثية اللغات، ومطابقة قائمة على الولاية بين المبدعين والعملاء عبر الـ 58 ولاية، وطبقة ثقة مُنظَّمة من الإدارة تُلغي مشكلة الحسابات الوهمية في المنصّات الأجنبية، ونظام ضمان يدوي عبر بريدي موب يتجاوز غياب معالجي الدفع الدوليين. تُقدّم باقة الجامعات شراكة شهرية مُنظَّمة (80,000–200,000 دج) متوافقة مع توجيهات وزارة التعليم العالي للرقمنة — تغطية فعاليات، أرشفة محاضرات، إنتاج بودكاست — عرض B2B لا تُقدّمه أيّ منصّة أخرى. تعمل المنظومة بالكامل على الطبقات المجانية، ممّا يثبت أنّ بإمكان مؤسس جزائري فردي التوسّع لآلاف المستخدمين بصفر تكلفة متكرّرة، فتغدو المنصّة رافعةً ذات كفاءة رأسمالية لخلق فرص عمل في القطاع الإبداعي وتشغيل الشباب.",
-    fr: "North Pixel Studio est la première marketplace créative conçue nativement pour l'Algérie. Elle combine une interface trilingue arabe-en-premier, un matching basé sur la wilaya entre créateurs et clients à travers les 58 provinces, une couche de confiance curée par l'admin qui élimine le problème des faux profils des plateformes étrangères, et un système d'escrow manuel via Baridi-Mob qui contourne l'absence de processeurs de paiement internationaux. Son Bundle Universités fournit un partenariat mensuel structuré (80 000–200 000 DA) aligné avec le mandat de digitalisation du MESRS — couverture d'événements, archivage de cours, production de podcasts — une offre B2B qu'aucune plateforme existante ne propose. L'ensemble du système tourne sur des infrastructures gratuites, prouvant qu'un fondateur algérien solo peut atteindre des milliers d'utilisateurs sans coût récurrent, faisant de la plateforme un levier capital-efficient pour la création d'emplois dans le secteur créatif et l'emploi des jeunes.",
-    en: "North Pixel Studio is the first creative marketplace designed natively for Algeria. It combines an Arabic-first trilingual interface, wilaya-aware matching of creators to clients across all 58 provinces, an admin-curated trust layer that eliminates the fake-profile problem of foreign platforms, and a manual Baridi-Mob escrow system that sidesteps the absence of international payment processors. Its University Bundle delivers a structured monthly partnership (80,000–200,000 DA) aligned with the MESRS digitalization mandate — event coverage, lecture archival, podcast production — a B2B offer no existing platform provides. The entire system runs on free-tier infrastructure, proving that a solo Algerian founder can scale to thousands of users with zero recurring cost, making the platform a capital-efficient lever for creative-sector job creation and youth employment.",
-  };
-
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -218,32 +212,6 @@ const Innovation = () => {
               </div>
             </article>
           ))}
-        </div>
-      </section>
-
-      {/* GRANT-READY SUMMARY */}
-      <section className="px-4 sm:px-6 py-16 max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <span className="text-xs uppercase tracking-[0.3em] text-accent">
-            {ar ? "ملخّص للمراجعة" : fr ? "Résumé synthèse" : "Application-ready summary"}
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold mt-3">
-            {ar ? "فقرة جاهزة للنسخ في ملفّ الدعم" : fr ? "Paragraphe prêt-à-coller pour le dossier" : "One paragraph, ready to paste into your application"}
-          </h2>
-        </div>
-        <div className="glass rounded-3xl p-6 sm:p-8 relative">
-          <p className="text-sm sm:text-base leading-relaxed whitespace-pre-line">
-            {SUMMARY[lang as keyof typeof SUMMARY]}
-          </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-3 end-3"
-            onClick={() => copy(SUMMARY[lang as keyof typeof SUMMARY])}
-          >
-            <Copy className="w-3.5 h-3.5" />
-            <span className="ms-1.5">{ar ? "نسخ" : fr ? "Copier" : "Copy"}</span>
-          </Button>
         </div>
       </section>
 
