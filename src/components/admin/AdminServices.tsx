@@ -86,17 +86,37 @@ export const AdminServices = ({ lang }: { lang: string }) => {
     if (!draft.title.trim()) { toast.error(t("أدخل اسم الخدمة", "Enter a service name")); return; }
     setBusy(true);
     try {
-      // Smart translation: fan the single source-language text out to all three.
-      const [title, tagline, description] = await Promise.all([
-        translateTri(draft.title, draft.src),
-        translateTri(draft.tagline, draft.src),
-        translateTri(draft.description, draft.src),
+      const orig = editing !== "new" && editing ? editing : null;
+      const src = draft.src;
+      // Smart translation — but NEVER clobber curated translations the admin
+      // didn't touch. A text field is only re-translated when its
+      // source-language value actually CHANGED in this edit session, so a
+      // pure price edit keeps all existing AR/EN/FR copy byte-identical.
+      const triField = (text: string, origTri?: { ar: string; en: string; fr: string }) =>
+        orig && origTri && text.trim() === (origTri[src] || "").trim()
+          ? Promise.resolve(origTri)
+          : translateTri(text, src);
+      const triArrField = (text: string, origArr?: { ar: string[]; en: string[]; fr: string[] }) => {
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        return orig && origArr && lines.join("\n") === (origArr[src] || []).map((l) => l.trim()).join("\n")
+          ? Promise.resolve(origArr)
+          : translateTriArray(lines, src);
+      };
+      const [title, tagline, description, features, process] = await Promise.all([
+        triField(draft.title, orig?.title),
+        triField(draft.tagline, orig?.tagline),
+        triField(draft.description, orig?.description),
+        triArrField(draft.features, orig?.features),
+        triArrField(draft.process, orig?.process),
       ]);
-      const [features, process] = await Promise.all([
-        translateTriArray(draft.features.split("\n"), draft.src),
-        translateTriArray(draft.process.split("\n"), draft.src),
-      ]);
-      const unitTri = await translateTri(draft.unitLabel || title.en || "unit", draft.src);
+      const origUnitSrc = orig ? (src === "ar" ? orig.pricing.unitLabelAr : orig.pricing.unitLabel) : null;
+      const unitUnchanged = !!orig && draft.unitLabel.trim() === (origUnitSrc || "").trim();
+      const unitLabels = unitUnchanged
+        ? { unit: orig!.pricing.unit, unitLabel: orig!.pricing.unitLabel, unitLabelPlural: orig!.pricing.unitLabelPlural, unitLabelAr: orig!.pricing.unitLabelAr }
+        : await (async () => {
+            const u = await translateTri(draft.unitLabel || title.en || "unit", src);
+            return { unit: u.ar || draft.unitLabel, unitLabel: u.en || draft.unitLabel, unitLabelPlural: u.en || draft.unitLabel, unitLabelAr: u.ar || draft.unitLabel };
+          })();
       const price = Number(draft.startingPrice) || 0;
       const payload = {
         slug: draft.slug.trim() || slugify(title.en || draft.title),
@@ -106,13 +126,10 @@ export const AdminServices = ({ lang }: { lang: string }) => {
         accent: draft.accent,
         image: draft.image.trim(),
         pricing: {
-          unit: unitTri.ar || draft.unitLabel,
+          ...unitLabels,
           pricePerUnit: Number(draft.pricePerUnit) || price,
           minUnits: Number(draft.minUnits) || 1,
           maxUnits: Number(draft.maxUnits) || 10,
-          unitLabel: unitTri.en || draft.unitLabel,
-          unitLabelPlural: unitTri.en || draft.unitLabel,
-          unitLabelAr: unitTri.ar || draft.unitLabel,
         },
         matchingRoles: draft.matchingRoles,
       };
