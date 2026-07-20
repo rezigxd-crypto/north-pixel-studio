@@ -30,6 +30,7 @@ const ClientPortal    = lazy(() => import("./pages/portals/ClientPortal.tsx"));
 const CreatorPortal   = lazy(() => import("./pages/portals/CreatorPortal.tsx"));
 const AdminPortal     = lazy(() => import("./pages/portals/AdminPortal.tsx"));
 const Contract        = lazy(() => import("./pages/Contract.tsx"));
+const Explainer       = lazy(() => import("./pages/Explainer.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,8 @@ const App = () => (
             <Route path="/portal/creator" element={<CreatorPortal />} />
             <Route path="/portal/admin" element={<AdminPortal />} />
             <Route path="/contract/:offerId/:role" element={<Contract />} />
+            {/* Hidden route — intentionally unlinked; direct URL access only. */}
+            <Route path="/explainer" element={<Explainer />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
