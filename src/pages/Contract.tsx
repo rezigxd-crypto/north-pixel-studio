@@ -69,6 +69,7 @@ const Contract = () => {
 
   const [offer, setOffer] = useState<ClientOffer | null>(null);
   const [bid, setBid] = useState<Bid | null>(null);
+  const [bidResolved, setBidResolved] = useState(false);
   const [client, setClient] = useState<UserDoc | null>(null);
   const [creator, setCreator] = useState<UserDoc | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,26 +98,33 @@ const Contract = () => {
     return unsub;
   }, [offerId]);
 
-  // Load the accepted bid + the creator user doc, if any.
+  // Load the accepted bid + the creator user doc, if any. `bidResolved`
+  // flips true once the fetch settles (found, missing, or errored) so the
+  // auth gate below never judges a creator before the bid has been loaded.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!offer?.acceptedBidId) {
         setBid(null);
         setCreator(null);
+        if (offer) setBidResolved(true); // offer loaded, nothing to wait for
         return;
       }
+      setBidResolved(false);
       try {
         const bidSnap = await getDoc(doc(db, "bids", offer.acceptedBidId));
-        if (!bidSnap.exists() || cancelled) return;
-        const b = { id: bidSnap.id, ...bidSnap.data() } as Bid;
-        setBid(b);
-        if (b.creatorId) {
-          const cu = await getUserProfile(b.creatorId);
-          if (!cancelled) setCreator(cu);
+        if (!cancelled && bidSnap.exists()) {
+          const b = { id: bidSnap.id, ...bidSnap.data() } as Bid;
+          setBid(b);
+          if (b.creatorId) {
+            const cu = await getUserProfile(b.creatorId);
+            if (!cancelled) setCreator(cu);
+          }
         }
       } catch {
         /* silent — contract still renders without creator details */
+      } finally {
+        if (!cancelled) setBidResolved(true);
       }
     })();
     return () => {
@@ -159,9 +167,16 @@ const Contract = () => {
     if (loading || !offer || auth.loading) return true;
     if (isAdmin) return true;
     if (role === "client") return isClientOwner;
-    if (role === "creator") return isAcceptedCreator;
+    if (role === "creator") {
+      // The accepted bid loads in its own async effect AFTER the offer
+      // arrives. Until that fetch settles we must not bounce the viewer —
+      // otherwise the legitimate creator gets redirected in the race window
+      // between offer-load and bid-load.
+      if (!bidResolved) return true;
+      return isAcceptedCreator;
+    }
     return false;
-  }, [loading, offer, auth.loading, isAdmin, isClientOwner, isAcceptedCreator, role]);
+  }, [loading, offer, auth.loading, isAdmin, isClientOwner, isAcceptedCreator, role, bidResolved]);
 
   useEffect(() => {
     if (!loading && !auth.loading && !allowed) {
@@ -215,23 +230,53 @@ const Contract = () => {
       {/* Print-only stylesheet sets A4 paper + clean margins. */}
       <style>{`
         @media print {
-          /* Single-page A4: tighter margins + reduced font scale + force page
-             breaks off of cards so the signature block can't orphan onto a
-             second sheet. */
-          @page { size: A4; margin: 8mm 10mm 10mm 10mm; }
-          body { background: white !important; }
+          /* Own the page box completely: zero out the browser's @page
+             margins and make the sheet EXACTLY the A4 paper (210mm) with
+             its own inner padding. With %-widths + @page margins, engines
+             (especially with an RTL document root) can compute a content
+             box wider than the printable area and silently clip one side —
+             the "contract cut off on the side" bug. A fixed 210mm sheet on
+             a 210mm page cannot overhang, in LTR or RTL, screen or mobile.
+             Zero margins also suppress the browser's URL/date header-footer. */
+          @page { size: A4 portrait; margin: 0; }
+          html, body {
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            overflow: visible !important;
+          }
+          .contract-page {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+            background: white !important;
+          }
           .contract-toolbar { display: none !important; }
           .contract-sheet {
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 6mm 6mm 8mm 6mm !important;
-            width: 100% !important;
+            box-sizing: border-box !important;
+            width: 210mm !important;
+            max-width: 210mm !important;
             min-height: auto !important;
+            margin: 0 !important;
+            /* Inner padding IS the print margin now. 12mm sides clear every
+               printer's hardware dead-zone; 26mm bottom leaves room for the
+               absolutely-positioned footer without overlapping signatures. */
+            padding: 12mm 12mm 26mm 12mm !important;
+            box-shadow: none !important;
             border: none !important;
             font-size: 9.5pt !important;
             line-height: 1.32 !important;
             page-break-after: avoid;
+            overflow: visible !important;
           }
+          /* Keep the parchment background, table fills and gold rules in the
+             printed PDF instead of letting the browser strip them. */
+          .contract-sheet, .contract-sheet * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .contract-sheet::before { inset: 5mm !important; }
           .contract-sheet h1 { font-size: 13pt !important; }
           .contract-sheet h2 { font-size: 11pt !important; }
           .contract-sheet header { margin-bottom: 4mm !important; }
@@ -239,6 +284,13 @@ const Contract = () => {
           .contract-sheet table,
           .contract-sheet article > div {
             page-break-inside: avoid;
+          }
+          /* Footer insets were tuned for the 18mm screen padding; align them
+             with the 12mm print padding so the rule sits inside the frame. */
+          .contract-sheet footer {
+            bottom: 8mm !important;
+            left: 12mm !important;
+            right: 12mm !important;
           }
           .contract-watermark { font-size: 70pt !important; }
         }
