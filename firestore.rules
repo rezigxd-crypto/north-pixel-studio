@@ -15,6 +15,14 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Services catalog — the public marketing services (homepage grid +
+    // /services/:slug). Read is public (visitors browse services); writes are
+    // ADMIN ONLY so only the studio can add / edit / delete services + prices.
+    match /services/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Users — any authenticated user can read (admin needs to LIST clients);
     // each user can only write their own document.
     // NOTE: this rule covers BOTH `get` (single doc) AND `list` (collection query).

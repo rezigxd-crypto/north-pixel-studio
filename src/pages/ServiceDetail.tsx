@@ -1,5 +1,6 @@
 import { Link, useParams, Navigate } from "react-router-dom";
-import { OFFERS, formatStartingPrice } from "@/lib/offers";
+import { formatStartingPrice } from "@/lib/offers";
+import { useServices } from "@/lib/services";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ import { useApp } from "@/lib/context";
 const ServiceDetail = () => {
   const { slug } = useParams();
   const { lang, auth } = useApp();
-  const offer = OFFERS.find((o) => o.slug === slug);
+  const { services, loading } = useServices();
+  const offer = services.find((o) => o.slug === slug);
 
   // Scroll to top on mount — fixes landing at bottom of page
   useEffect(() => {
@@ -22,6 +24,15 @@ const ServiceDetail = () => {
     if (offer) document.title = `${offer.title[lang]} — North Pixel Studio`;
   }, [offer, lang]);
 
+  // Don't bounce to 404 while the live catalog is still loading — a
+  // freshly-added service isn't in the fallback list until Firestore responds.
+  if (!offer && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+      </div>
+    );
+  }
   if (!offer) return <Navigate to="/" replace />;
   const Icon = (Icons as any)[offer.icon] ?? Icons.Sparkles;
   const isGold = offer.accent === "gold";

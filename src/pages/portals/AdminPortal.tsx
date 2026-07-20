@@ -1,6 +1,7 @@
 import { PortalShell } from "@/components/PortalShell";
 import { AdminBundles } from "@/components/AdminBundles";
 import { AdminOverview } from "@/components/admin/AdminOverview";
+import { AdminServices } from "@/components/admin/AdminServices";
 import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck, Mic, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, releasePayment, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
@@ -89,7 +90,7 @@ const AdminPortal = () => {
   const bids = useBids();
   const userCounts = useUserCounts();
   const allUsers = useAllUsers();
-  const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators" | "clients" | "bundles">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "offers" | "bids" | "creators" | "clients" | "bundles" | "services">("overview");
   const [expandedCreator, setExpandedCreator] = useState<string | null>(null);
   const [expandedOffer, setExpandedOffer] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -113,7 +114,7 @@ const AdminPortal = () => {
   // Allow deep-linking to a tab via ?tab=bundles (from notifications).
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "bundles" || tab === "offers" || tab === "bids" || tab === "creators" || tab === "clients") {
+    if (tab === "bundles" || tab === "offers" || tab === "bids" || tab === "creators" || tab === "clients" || tab === "services") {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -174,6 +175,7 @@ const AdminPortal = () => {
     { id: "bundles",   label: lang === "ar" ? `الباقات${pendingBundleRequests > 0 ? ` (${pendingBundleRequests})` : ""}` : `Bundles${pendingBundleRequests > 0 ? ` (${pendingBundleRequests})` : ""}` },
     { id: "creators",  label: lang === "ar" ? `العمال${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` : `Creators${pendingCreators.length > 0 ? ` (${pendingCreators.length})` : ""}` },
     { id: "clients",   label: lang === "ar" ? `العملاء (${clients.length})` : `Clients (${clients.length})` },
+    { id: "services",  label: lang === "ar" ? "الخدمات" : "Services" },
   ] as const;
 
   return (
@@ -476,6 +478,9 @@ const AdminPortal = () => {
           <AdminBundles adminUid={auth.uid} />
         </div>
       )}
+
+      {/* SERVICES */}
+      {activeTab === "services" && <AdminServices lang={lang} />}
 
       {/* CREATORS */}
       {activeTab === "creators" && (

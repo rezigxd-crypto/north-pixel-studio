@@ -5,7 +5,8 @@ import TrueFocus from "@/components/ui/true-focus";
 import { AnimatedHeroText } from "@/components/AnimatedHeroText";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { OFFERS, formatStartingPrice } from "@/lib/offers";
+import { formatStartingPrice } from "@/lib/offers";
+import { useServices } from "@/lib/services";
 import { usePublicStats } from "@/lib/store";
 import * as Icons from "lucide-react";
 import hero from "@/assets/hero-cinematic.jpg";
@@ -19,6 +20,7 @@ const EN_WORDS = ["professionalism", "creativity", "expertise", "innovation", "e
 const Index = () => {
   const { lang, auth } = useApp();
   const userCounts = usePublicStats();
+  const { services } = useServices();
   const isLoggedIn = !!auth.role && !auth.loading;
 
   const animatedWords = lang === "ar" ? AR_WORDS : lang === "fr" ? FR_WORDS : EN_WORDS;
@@ -124,7 +126,7 @@ const Index = () => {
             {/* Static premium stats — Services live + Wilayas covered */}
             <div className="glass rounded-2xl p-4 text-center border border-border/50">
               <Sparkles className="w-5 h-5 text-accent mx-auto mb-2" />
-              <div className="font-serif text-3xl font-bold">{OFFERS.length}</div>
+              <div className="font-serif text-3xl font-bold">{services.length}</div>
               <div className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "خدمة احترافية" : lang === "fr" ? "Services pro" : "Services live"}</div>
               <div className="text-[10px] uppercase tracking-widest text-accent/80 mt-2">
                 {lang === "ar" ? "متاحة الآن" : lang === "fr" ? "Disponible" : "Available"}
@@ -202,7 +204,7 @@ const Index = () => {
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-sm">{lang === "ar" ? "انقر على أي خدمة لاستكشاف التفاصيل." : "Click any service to explore."}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {OFFERS.map((o) => {
+          {services.map((o) => {
             const Icon = (Icons as any)[o.icon] ?? Icons.Sparkles;
             const title = o.title[lang];
             const tagline = o.tagline[lang];
@@ -404,32 +406,6 @@ const Index = () => {
           </div>
         </section>
       )}
-
-
-      {/* PARTNERS — endless marquee (left to right) */}
-      <section className="py-14 overflow-hidden">
-        <div className="text-center mb-8">
-          <span className="text-xs uppercase tracking-[0.35em] text-accent">
-            {lang === "ar" ? "بدعم و شراكة" : lang === "fr" ? "Nos partenaires" : "Our Partners"}
-          </span>
-        </div>
-        <div className="partners-marquee" dir="ltr">
-          <div className="partners-track">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="partners-set" aria-hidden={i > 0}>
-                <div className="partner-card">
-                  <img src="/partners/universite-medea.svg" alt="Université Yahia Farès de Médéa" loading="lazy" />
-                  <span>{lang === "ar" ? "جامعة يحيى فارس — المدية" : "University of Medea — Yahia Farès"}</span>
-                </div>
-                <div className="partner-card">
-                  <img src="/partners/incubateur-medea.svg" alt="Medea University Incubator" loading="lazy" />
-                  <span>{lang === "ar" ? "حاضنة جامعة المدية" : "Medea University Incubator"}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <SiteFooter />
     </div>
