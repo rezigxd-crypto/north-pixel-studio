@@ -7,6 +7,10 @@ import {
   Gavel, TrendingUp, MapPin, Edit2, Save,
   Phone, CreditCard, Upload, Star, Trophy,
   ChevronRight, Briefcase, DollarSign, X, Check, Plus, FileText,
+  Video, Scissors, Sparkles, Mic, Headphones, Camera, Clapperboard,
+  Palette, PenLine, Smartphone, Wand2, Search, Inbox, PartyPopper,
+  Link2, CalendarClock, Package, Banknote, Undo2,
+  type LucideIcon,
 } from "lucide-react";
 import {
   useOffers, useBids, useCreators, useAllUsers,
@@ -15,7 +19,7 @@ import {
   checkAutoCloseOffers,
 } from "@/lib/store";
 import { generateUniqueUsername } from "@/lib/username";
-import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD } from "@/lib/offers";
+import { CREATOR_ROLES, CREATOR_ROLE_AR, RANK_LEVELS, getRank, formatDZD, canonicalRole, canonicalRoles } from "@/lib/offers";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/context";
@@ -30,11 +34,16 @@ import { ProjectWorkspace } from "@/components/ProjectWorkspace";
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth as firebaseAuth } from "@/lib/firebase";
 
-const ROLE_AVATARS: Record<string, string> = {
-  "Cinematographer": "🎥", "Video Editor": "✂️", "Motion Designer": "🎨",
-  "Voice-Over Artist": "🎙️", "Sound Designer": "🎧", "Photographer": "📸",
-  "Director": "🎬", "Colorist": "🎨", "VFX Artist": "✨",
-  "Ghost Writer": "✍️", "UGC Creator": "📱",
+// Premium line-icon per speciality (replaces the old emoji avatars).
+const ROLE_ICON: Record<string, LucideIcon> = {
+  "Cinematographer": Video, "Video Editor": Scissors, "Motion Designer": Sparkles,
+  "Voice-Over Artist": Mic, "Sound Designer": Headphones, "Photographer": Camera,
+  "Director": Clapperboard, "Colorist": Palette, "VFX Artist": Wand2,
+  "Ghost Writer": PenLine, "UGC Creator": Smartphone,
+};
+const RoleGlyph = ({ role, className }: { role: string; className?: string }) => {
+  const I = ROLE_ICON[role] || Clapperboard;
+  return <I className={className} />;
 };
 
 const RankBadge = ({ jobs, lang }: { jobs: number; lang: string }) => {
@@ -180,6 +189,28 @@ const CreatorPortal = () => {
     setProfileBariMob(myUserDoc?.bariMobAccount || "");
   }, [myUserDoc?.phone, myUserDoc?.bariMobAccount, auth.phone, editMode]);
 
+  // Hydrate the creator's saved specialities into `profileRoles` so BOTH the
+  // offer-matching filter and the edit form start from real data. Without
+  // this, profileRoles stayed [""] on every mount → the matcher ran against
+  // an empty role set → NO offers ever appeared until the creator manually
+  // re-ticked their chips (and even then it was never persisted). Source of
+  // truth: the user doc `roles` (editable by the creator) with a fallback to
+  // the signup application role. Everything is canonicalised to the English
+  // key so a profile saved in Arabic still matches English offer roles.
+  useEffect(() => {
+    if (editMode) return;
+    const saved = (myUserDoc?.roles && myUserDoc.roles.length)
+      ? myUserDoc.roles
+      : (myApp?.role ? [myApp.role] : []);
+    const canon = canonicalRoles(saved);
+    if (canon.length === 0) return;
+    setProfileRoles((prev) => {
+      const prevCanon = canonicalRoles(prev);
+      const same = prevCanon.length === canon.length && prevCanon.every((r) => canon.includes(r));
+      return same ? prev : canon;
+    });
+  }, [myUserDoc?.roles?.join("|"), myApp?.role, editMode]);
+
   // ── Computed
   const creatorEmail = auth.email;
   const creatorWilaya = auth.wilaya || "";
@@ -188,13 +219,15 @@ const CreatorPortal = () => {
   const earned = myBids.filter((b) => b.status === "accepted").reduce((s, b) => s + b.amount, 0);
   const rank = getRank(completedJobs);
 
-  // ── Available offers — filter by wilaya and role match
+  // ── Available offers — filter by wilaya and role match.
+  // Both sides are canonicalised so English/Arabic/French labels intersect.
+  const myCanonRoles = canonicalRoles(profileRoles);
   const primaryRole = profileRoles[0] || CREATOR_ROLES[0];
-  const allRoles = profileRoles.filter(Boolean);
 
   const availableOffers = offers.filter((o) => {
     if (o.status !== "open") return false;
-    const roleMatch = allRoles.some((r) => o.matchingRoles.includes(r));
+    const offerRoles = (o.matchingRoles || []).map(canonicalRole);
+    const roleMatch = offerRoles.some((r) => myCanonRoles.includes(r));
     if (!roleMatch) return false;
     if (filterWilaya && creatorWilaya && o.clientWilaya && o.clientWilaya !== creatorWilaya) return false;
     return true;
@@ -236,6 +269,9 @@ const CreatorPortal = () => {
         name: profileName || auth.name,
         phone: profilePhone,
         bariMobAccount: profileBariMob,
+        // Persist specialities (canonical English keys) on the user doc so the
+        // offer-matching filter has a durable source and survives reloads.
+        roles: canonicalRoles(profileRoles),
       });
       // Update Firebase Auth display name
       const fbUser = (await import("@/lib/firebase")).auth.currentUser;
@@ -279,10 +315,10 @@ const CreatorPortal = () => {
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-4">
           <ProfileCompletionRing pct={completion.pct} size={64} stroke={3}>
-            <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-2xl">
+            <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-accent-foreground">
               {auth.profilePic
                 ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
-                : (ROLE_AVATARS[primaryRole] || "🎬")}
+                : <RoleGlyph role={primaryRole} className="w-7 h-7" />}
             </div>
           </ProfileCompletionRing>
           <div className="min-w-0">
@@ -342,7 +378,7 @@ const CreatorPortal = () => {
 
           {availableOffers.length === 0 ? (
             <div className="glass rounded-3xl p-16 text-center">
-              <div className="text-5xl mb-4">🔍</div>
+              <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
               <h3 className="font-serif text-xl font-bold mb-2">
                 {lang === "ar" ? "لا توجد عروض متاحة حاليًا" : "No offers available right now"}
               </h3>
@@ -386,23 +422,21 @@ const CreatorPortal = () => {
                         </div>
                         <p className="font-semibold mt-1">{offer.brief.slice(0, 120)}{offer.brief.length > 120 ? "…" : ""}</p>
                         {offer.voiceGender && offer.voiceGender !== "any" && (
-                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent mt-2">
-                            🎙️ {offer.voiceGender === "male"
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent mt-2"><Mic className="w-3 h-3" /> {offer.voiceGender === "male"
                               ? (lang === "ar" ? "صوت ذكوري" : lang === "fr" ? "Voix masculine" : "Male voice")
                               : (lang === "ar" ? "صوت أنثوي" : lang === "fr" ? "Voix féminine" : "Female voice")}
                           </span>
                         )}
                         {offer.scriptUrl && (
-                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground mt-2 ms-2">
-                            📄 {lang === "ar" ? "السيناريو متوفر للمختار" : lang === "fr" ? "Script fourni à l'élu" : "Script provided after pick"}
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground mt-2 ms-2"><FileText className="w-3 h-3" /> {lang === "ar" ? "السيناريو متوفر للمختار" : lang === "fr" ? "Script fourni à l'élu" : "Script provided after pick"}
                           </span>
                         )}
                         {offer.referenceLink && (
                           <a href={offer.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline mt-1 block">
-                            🔗 {lang === "ar" ? "رابط مرجعي" : "Reference"}
+                            <Link2 className="w-3 h-3 inline" /> {lang === "ar" ? "رابط مرجعي" : "Reference"}
                           </a>
                         )}
-                        {offer.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {offer.deadline}</p>}
+                        {offer.deadline && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><CalendarClock className="w-3 h-3" />{offer.deadline}</p>}
                       </div>
                     </div>
 
@@ -492,7 +526,7 @@ const CreatorPortal = () => {
         <div className="space-y-3">
           {myBids.length === 0 ? (
             <div className="glass rounded-2xl p-12 text-center">
-              <div className="text-4xl mb-3">📭</div>
+              <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-muted-foreground">{lang === "ar" ? "لم تقدّم أي عرض بعد." : "No bids submitted yet."}</p>
             </div>
           ) : (
@@ -566,6 +600,24 @@ const CreatorPortal = () => {
                             <div className="font-medium flex items-center gap-1"><MapPin className="w-3 h-3 text-accent" />{offer.clientWilaya}</div>
                           </div>
                         )}
+                        {offer?.shootAddress && (
+                          <div className="rounded-md border border-border/40 px-3 py-2">
+                            <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "عنوان التصوير" : "Shoot address"}</div>
+                            <div className="font-medium flex items-center gap-1"><MapPin className="w-3 h-3 text-accent" />{offer.shootAddress}</div>
+                          </div>
+                        )}
+                        {offer?.preferredShootDate && (
+                          <div className="rounded-md border border-border/40 px-3 py-2">
+                            <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "تاريخ التصوير" : "Shoot date"}</div>
+                            <div className="font-medium" dir="ltr">{offer.preferredShootDate}</div>
+                          </div>
+                        )}
+                        {offer?.meetingAt && (
+                          <div className="rounded-md border border-border/40 px-3 py-2">
+                            <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "موعد الاجتماع" : "Meeting time"}</div>
+                            <div className="font-medium" dir="ltr">{new Date(offer.meetingAt).toLocaleString()}</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -578,8 +630,8 @@ const CreatorPortal = () => {
                   {/* Revision request banner (client sent it back) */}
                   {bid.revisionRequestedAt && bid.revisionNote && (
                     <div className="mt-3 pt-3 border-t border-border">
-                      <p className="text-xs text-yellow-400 font-semibold mb-1">
-                        ↩ {lang === "ar" ? "العميل طلب تعديلات:" : "Client requested revisions:"}
+                      <p className="text-xs text-yellow-400 font-semibold mb-1 flex items-center gap-1.5">
+                        <Undo2 className="w-3.5 h-3.5" /> {lang === "ar" ? "العميل طلب تعديلات:" : "Client requested revisions:"}
                       </p>
                       <p className="text-xs text-foreground bg-yellow-500/10 border border-yellow-500/30 rounded-md p-2">
                         “{bid.revisionNote}”
@@ -594,13 +646,13 @@ const CreatorPortal = () => {
                   )}
                   {bid.paymentReleasedAt && (
                     <p className="mt-3 text-xs text-emerald-400 font-semibold">
-                      💸 {lang === "ar" ? "تم إرسال أجرك عبر بريدي موب." : "Payout sent via BaridiMob."}
+                      <Banknote className="w-3.5 h-3.5 inline" /> {lang === "ar" ? "تم إرسال أجرك عبر بريدي موب." : "Payout sent via BaridiMob."}
                     </p>
                   )}
                   {/* Deliverable upload for accepted bids */}
                   {bid.status === "accepted" && !bid.deliverableLink && (
                     <div className="mt-3 pt-3 border-t border-border">
-                      <p className="text-xs text-emerald-400 mb-2">🎉 {lang === "ar" ? "عرضك مقبول! ارفع رابط التسليم عند الانتهاء." : "Your bid was accepted! Upload deliverable when done."}</p>
+                      <p className="text-xs text-emerald-400 mb-2 flex items-center gap-1.5"><PartyPopper className="w-3.5 h-3.5" /> {lang === "ar" ? "عرضك مقبول! ارفع رابط التسليم عند الانتهاء." : "Your bid was accepted! Upload deliverable when done."}</p>
                       <div className="flex gap-2">
                         <Input type="url" placeholder={lang === "ar" ? "https://drive.google.com/..." : "https://drive.google.com/..."}
                           value={deliverableLinks[bid.id] || ""}
@@ -614,7 +666,7 @@ const CreatorPortal = () => {
                   )}
                   {bid.deliverableLink && (
                     <a href={bid.deliverableLink} target="_blank" rel="noreferrer" className="text-xs text-purple-400 underline mt-2 block">
-                      📦 {bid.deliverableLink}
+                      <Package className="w-3 h-3 inline" /> {bid.deliverableLink}
                     </a>
                   )}
                   {(bid.status === "accepted" || bid.status === "delivered") && (
@@ -644,10 +696,10 @@ const CreatorPortal = () => {
           {/* Avatar + name header */}
           <div className="glass rounded-2xl p-5 flex items-center gap-4">
             <ProfileCompletionRing pct={completion.pct} size={72} stroke={3} showLabel>
-              <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-3xl">
+              <div className="w-full h-full bg-gradient-gold flex items-center justify-center text-accent-foreground">
                 {auth.profilePic
                   ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
-                  : (ROLE_AVATARS[primaryRole] || "🎬")}
+                  : <RoleGlyph role={primaryRole} className="w-8 h-8" />}
               </div>
             </ProfileCompletionRing>
             <div className="flex-1 min-w-0">
@@ -700,7 +752,7 @@ const CreatorPortal = () => {
             <ProfilePicUpload
               uid={auth.uid}
               currentUrl={auth.profilePic}
-              fallback={<span>{ROLE_AVATARS[primaryRole] || "🎬"}</span>}
+              fallback={<RoleGlyph role={primaryRole} className="w-7 h-7 text-accent-foreground" />}
               onChange={refreshAuth}
               lang={lang}
               accent="gold"
@@ -759,7 +811,7 @@ const CreatorPortal = () => {
                           selected ? prev.filter(x => x !== r) : [...prev, r]
                         )}
                         className={`px-3 py-1.5 rounded-full text-xs border transition-smooth flex items-center gap-1 ${selected ? "bg-gradient-gold text-accent-foreground border-transparent" : "border-border text-muted-foreground hover:border-accent/40"}`}>
-                        {ROLE_AVATARS[r]} {lang === "ar" ? CREATOR_ROLE_AR[r] : r}
+                        <RoleGlyph role={r} className="w-3.5 h-3.5" /> {lang === "ar" ? CREATOR_ROLE_AR[r] : r}
                         {selected && <Check className="w-3 h-3" />}
                       </button>
                     );

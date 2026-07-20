@@ -324,6 +324,39 @@ export const CREATOR_ROLE_AR: Record<string, string> = {
   "UGC Creator": "منشئ محتوى UGC",
 };
 
+// Reverse lookup: Arabic label → canonical English key.
+const ROLE_AR_TO_EN: Record<string, string> = Object.fromEntries(
+  Object.entries(CREATOR_ROLE_AR).map(([en, ar]) => [ar, en]),
+);
+
+/**
+ * Normalise ANY role label — canonical English key, Arabic label, or a
+ * case/spacing variant — down to the single canonical English key used for
+ * offer↔creator matching. Makes matching language-proof: a photographer who
+ * registered in Arabic ("مصور فوتوغرافي") still matches an offer whose
+ * matchingRoles are the English "Photographer", and vice-versa. Unknown
+ * strings are returned trimmed (never dropped) so nothing silently disappears.
+ */
+export const canonicalRole = (label: string | undefined | null): string => {
+  if (!label) return "";
+  const s = String(label).trim();
+  if ((CREATOR_ROLES as readonly string[]).includes(s)) return s;      // already canonical
+  if (ROLE_AR_TO_EN[s]) return ROLE_AR_TO_EN[s];                        // exact Arabic label
+  const lc = s.toLowerCase();
+  const en = (CREATOR_ROLES as readonly string[]).find((r) => r.toLowerCase() === lc);
+  return en || s;                                                      // case-insensitive EN, else as-is
+};
+
+/** Canonicalise a list of role labels, dropping blanks + de-duping. */
+export const canonicalRoles = (labels: (string | undefined | null)[]): string[] => {
+  const out: string[] = [];
+  for (const l of labels || []) {
+    const c = canonicalRole(l);
+    if (c && !out.includes(c)) out.push(c);
+  }
+  return out;
+};
+
 export const RANK_LEVELS = [
   { id: "bronze", label: "Bronze", labelAr: "برونزي", min: 0, max: 2, color: "#cd7f32" },
   { id: "silver", label: "Silver", labelAr: "فضي", min: 3, max: 9, color: "#c0c0c0" },

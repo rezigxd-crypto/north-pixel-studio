@@ -1,7 +1,7 @@
 import { PortalShell } from "@/components/PortalShell";
 import { AdminBundles } from "@/components/AdminBundles";
 import { AdminOverview } from "@/components/admin/AdminOverview";
-import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck } from "lucide-react";
+import { Users, Camera, FolderKanban, DollarSign, Check, X, Bell, Clock, Gavel, Link2, UserSquare2, Eye, ChevronDown, ChevronUp, MapPin, Phone, Wallet, ExternalLink, FileText, BadgeCheck, Mic, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreators, useOffers, useBids, useUserCounts, useAllUsers, setCreatorStatus, setOfferStatus, acceptBid, markAdvancePaid, releasePayment, useClientTags, setClientTag, type ClientTagType } from "@/lib/store";
 import { OfferMap } from "@/components/OfferMap";
@@ -236,7 +236,7 @@ const AdminPortal = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="text-xs font-bold uppercase tracking-widest text-accent">{o.serviceTitle}</span>
-                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
+                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{o.clientWilaya}</span>}
                           {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
                         </div>
                         <p className="font-semibold">{o.clientName}</p>
@@ -250,12 +250,12 @@ const AdminPortal = () => {
                           </a>
                         )}
                         {o.voiceGender && o.voiceGender !== "any" && (
-                          <p className="text-xs text-muted-foreground mt-1">🎙️ <span className="text-foreground">{o.voiceGender === "male" ? (lang === "ar" ? "صوت ذكوري" : lang === "fr" ? "Voix masculine" : "Male voice") : (lang === "ar" ? "صوت أنثوي" : lang === "fr" ? "Voix féminine" : "Female voice")}</span></p>
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Mic className="w-3 h-3" /><span className="text-foreground">{o.voiceGender === "male" ? (lang === "ar" ? "صوت ذكوري" : lang === "fr" ? "Voix masculine" : "Male voice") : (lang === "ar" ? "صوت أنثوي" : lang === "fr" ? "Voix féminine" : "Female voice")}</span></p>
                         )}
-                        {o.deadline && <p className="text-xs text-muted-foreground mt-1">📅 {o.deadline}</p>}
+                        {o.deadline && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><CalendarClock className="w-3 h-3" />{o.deadline}</p>}
                         <p className="text-xs text-muted-foreground mt-1">{lang === "ar" ? "للأدوار:" : "For:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
-                        {o.shootAddress && <p className="text-xs text-muted-foreground mt-1">📍 <span className="text-foreground">{o.shootAddress}</span></p>}
-                        {o.clientPhone && <p className="text-xs text-muted-foreground mt-1">☎ <span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
+                        {o.shootAddress && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3" /><span className="text-foreground">{o.shootAddress}</span></p>}
+                        {o.clientPhone && <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Phone className="w-3 h-3" /><span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
                         {o.clientWilaya && (
                           <div className="mt-3">
                             <OfferMap
@@ -308,7 +308,7 @@ const AdminPortal = () => {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm flex items-center gap-2 flex-wrap">
                           <span>{o.serviceTitle} · {o.clientName}</span>
-                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
+                          {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{o.clientWilaya}</span>}
                           {o.advancePaid && <Pill color="green">{lang === "ar" ? "دفع مسبق" : "Advance paid"}</Pill>}
                           {o.autoCloseAt && !o.autoClosed && (
                             <Pill color="yellow">
@@ -346,10 +346,10 @@ const AdminPortal = () => {
                           <p className="text-sm whitespace-pre-wrap">{o.brief}</p>
                           <p className="text-xs text-muted-foreground">{lang === "ar" ? "للأدوار:" : "For roles:"} <span className="text-foreground">{o.matchingRoles.join(", ")}</span></p>
                           <p className="text-xs text-muted-foreground">{lang === "ar" ? "النطاق:" : "Range:"} <span className="text-foreground font-medium">{formatDZD(o.bidMin)} – {formatDZD(o.bidMax)}</span></p>
-                          {o.shootAddress && <p className="text-xs text-muted-foreground">📍 <span className="text-foreground">{o.shootAddress}</span></p>}
-                          {o.clientPhone && <p className="text-xs text-muted-foreground">☎ <span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
+                          {o.shootAddress && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" /><span className="text-foreground">{o.shootAddress}</span></p>}
+                          {o.clientPhone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /><span className="text-foreground" dir="ltr">{o.clientPhone}</span></p>}
                           {o.referenceLink && <a href={o.referenceLink} target="_blank" rel="noreferrer" className="text-xs text-accent underline flex items-center gap-1"><Link2 className="w-3 h-3" />{lang === "ar" ? "رابط مرجعي" : "Reference"}</a>}
-                          {o.deadline && <p className="text-xs text-muted-foreground">📅 {o.deadline}</p>}
+                          {o.deadline && <p className="text-xs text-muted-foreground flex items-center gap-1"><CalendarClock className="w-3 h-3" />{o.deadline}</p>}
                         </div>
                         {o.clientWilaya && (
                           <OfferMap
@@ -385,7 +385,7 @@ const AdminPortal = () => {
                     <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center flex-shrink-0"><Gavel className="w-4 h-4 text-accent" /></div>
                     <span className="font-semibold">{o.serviceTitle}</span>
                     <span className="text-xs text-muted-foreground">· {o.clientName}</span>
-                    {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {o.clientWilaya}</span>}
+                    {o.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{o.clientWilaya}</span>}
                     <span className="ms-auto text-accent font-bold text-sm">{formatDZD(o.totalPrice)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2 flex-wrap mb-3">

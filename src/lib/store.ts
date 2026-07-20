@@ -142,6 +142,9 @@ export type ClientOffer = {
   acceptedCreatorBariMob?: string;
   /** Cached creator name, mirrored for convenience in the client portal. */
   acceptedCreatorName?: string;
+  /** Cached creator wilaya, mirrored at acceptBid so the client sees where
+   *  the assigned creator is based without a separate user-doc read. */
+  acceptedCreatorWilaya?: string;
   createdAt: number;
 };
 
@@ -680,6 +683,7 @@ export const acceptBid = async (bidId: string, offerId: string) => {
   let creatorPhone = "";
   let creatorBariMob = "";
   let creatorName = acceptedBid?.creatorName || "";
+  let creatorWilaya = "";
   let clientPhone = "";
   let clientName = offerEarly?.clientName || "";
   let clientEmail = offerEarly?.clientEmail || "";
@@ -691,6 +695,7 @@ export const acceptBid = async (bidId: string, offerId: string) => {
         creatorPhone = cu.phone || "";
         creatorBariMob = cu.bariMobAccount || "";
         creatorName = cu.name || creatorName;
+        creatorWilaya = cu.wilaya || "";
       }
     }
     if (offerEarly?.clientUid) {
@@ -720,6 +725,7 @@ export const acceptBid = async (bidId: string, offerId: string) => {
     acceptedCreatorPhone: creatorPhone,
     acceptedCreatorBariMob: creatorBariMob,
     acceptedCreatorName: creatorName,
+    acceptedCreatorWilaya: creatorWilaya,
   });
   const { getDocs, query: q, collection: col, where: w } = await import("firebase/firestore");
   const snap = await getDocs(q(col(db, "bids"), w("offerId", "==", offerId), w("status", "==", "pending")));

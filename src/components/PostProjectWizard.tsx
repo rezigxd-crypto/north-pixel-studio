@@ -16,6 +16,59 @@ import { useApp } from "@/lib/context";
 
 type Step = "service" | "configure" | "brief" | "payment" | "done";
 
+// ─── Masked date field ──────────────────────────────────────────────────────
+// A single free-typing text field (DD/MM/YYYY) that replaces the native
+// <input type="date">. The native segmented control auto-jumps from the day
+// to the month segment mid-typing (e.g. typing "17" leaps to the month),
+// which users found disruptive. This is one plain text field: you type the
+// full date without any segment jumping. It STORES the canonical YYYY-MM-DD
+// (via onChange) so everything downstream — payload, contract, portals —
+// is unchanged; only the input UX differs.
+const toISO = (ddmmyyyy: string): string => {
+  const m = ddmmyyyy.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return "";
+  const [, dd, mm, yyyy] = m;
+  const d = +dd, mo = +mm, y = +yyyy;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 2020 || y > 2100) return "";
+  const dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return ""; // real calendar day
+  return `${yyyy}-${mm}-${dd}`;
+};
+const isoToDisplay = (iso: string): string => {
+  const m = (iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+};
+const MaskedDateInput = ({ id, value, onChange, className }: {
+  id?: string; value: string; onChange: (iso: string) => void; className?: string;
+}) => {
+  const [display, setDisplay] = useState(isoToDisplay(value));
+  // Re-sync if the parent value changes externally (e.g. form reset).
+  const externalDisplay = isoToDisplay(value);
+  if (value === "" && display !== "" && externalDisplay === "") { /* keep user's partial typing */ }
+  const handle = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 8); // DDMMYYYY
+    let out = digits;
+    if (digits.length > 4) out = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    else if (digits.length > 2) out = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    setDisplay(out);
+    onChange(digits.length === 8 ? toISO(out) : "");
+  };
+  return (
+    <Input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="DD/MM/YYYY"
+      dir="ltr"
+      value={display}
+      onChange={(e) => handle(e.target.value)}
+      className={className}
+      maxLength={10}
+    />
+  );
+};
+
 // ─── Service definitions with professional options ─────────────────────────
 
 const SERVICES = [
@@ -930,11 +983,11 @@ export const PostProjectWizard = ({
                   <CalendarClock className="w-3.5 h-3.5" />
                   {lang === "ar" ? "تاريخ التصوير المقترح" : "Preferred shoot date"}
                 </Label>
-                <Input id="shootDate" type="date" value={preferredShootDate} onChange={(e) => setPreferredShootDate(e.target.value)} className="mt-1" />
+                <MaskedDateInput id="shootDate" value={preferredShootDate} onChange={setPreferredShootDate} className="mt-1" />
               </div>
               <div>
                 <Label htmlFor="deadline">{lang === "ar" ? "الموعد النهائي للتسليم" : "Final delivery deadline"}</Label>
-                <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1" />
+                <MaskedDateInput id="deadline" value={deadline} onChange={setDeadline} className="mt-1" />
               </div>
             </div>
 

@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Plus, FolderKanban, Clock, CheckCircle2, XCircle,
-  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2, FileText, BadgeCheck, Lock
+  Gavel, MapPin, Edit2, Save, Phone, CreditCard, Link2, FileText, BadgeCheck, Lock,
+  Building2, GraduationCap, ShoppingBag, Home, Clapperboard, Tv, ClipboardList,
+  Package, CalendarClock, type LucideIcon,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { OfferMap } from "@/components/OfferMap";
@@ -26,11 +28,16 @@ import { auth as firebaseAuth } from "@/lib/firebase";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const CLIENT_AVATARS = [
-  { id: "brand", emoji: "🏢" }, { id: "university", emoji: "🎓" },
-  { id: "store", emoji: "🛍️" }, { id: "realestate", emoji: "🏠" },
-  { id: "film", emoji: "🎬" }, { id: "media", emoji: "📺" },
+const CLIENT_AVATARS: { id: string; Icon: LucideIcon }[] = [
+  { id: "brand", Icon: Building2 }, { id: "university", Icon: GraduationCap },
+  { id: "store", Icon: ShoppingBag }, { id: "realestate", Icon: Home },
+  { id: "film", Icon: Clapperboard }, { id: "media", Icon: Tv },
 ];
+const ClientGlyph = ({ id, className }: { id: string; className?: string }) => {
+  const found = CLIENT_AVATARS.find((a) => a.id === id);
+  const I = found ? found.Icon : Building2;
+  return <I className={className} />;
+};
 
 const StatusBadge = ({ status, lang }: { status: string; lang: string }) => {
   const map: Record<string, { label: string; labelAr: string; cls: string; Icon: any }> = {
@@ -160,7 +167,7 @@ const ClientPortal = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-royal flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
             {auth.profilePic
               ? <img src={auth.profilePic} alt="" className="w-full h-full object-cover" />
-              : (CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢")}
+              : <ClientGlyph id={selectedAvatar} className="w-7 h-7 text-primary-foreground" />}
           </div>
           <div>
             <h1 className="font-serif text-xl font-bold">{auth.name}</h1>
@@ -216,7 +223,7 @@ const ClientPortal = () => {
         <div className="space-y-3">
           {myOffers.length === 0 ? (
             <div className="glass rounded-3xl p-12 text-center">
-              <div className="text-4xl mb-3">📋</div>
+              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-muted-foreground mb-4">{lang === "ar" ? "لم تنشر أي مشروع بعد." : "No projects posted yet."}</p>
               <PostProjectWizard
                 trigger={<Button variant="gold"><Plus className="w-4 h-4 me-1" />{lang === "ar" ? "انشر مشروعك الأول" : "Post first project"}</Button>}
@@ -235,7 +242,7 @@ const ClientPortal = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="font-semibold">{p.serviceTitle}</span>
-                        {p.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground">📍 {p.clientWilaya}</span>}
+                        {p.clientWilaya && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/60 text-muted-foreground inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{p.clientWilaya}</span>}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">{p.brief}</p>
 
@@ -272,7 +279,7 @@ const ClientPortal = () => {
                         {deliveredBid?.deliverableLink && (
                           <a href={deliveredBid.deliverableLink} target="_blank" rel="noreferrer"
                             className="text-xs text-purple-400 underline flex items-center gap-1">
-                            📦 {lang === "ar" ? "عرض التسليم" : "View deliverable"}
+                            <Package className="w-3 h-3" /> {lang === "ar" ? "عرض التسليم" : "View deliverable"}
                           </a>
                         )}
                         {deliveredBid && !deliveredBid.deliveryAcceptedAt && (
@@ -366,6 +373,12 @@ const ClientPortal = () => {
                                 <div className="font-mono text-[11px]" dir="ltr">{p.acceptedCreatorBariMob}</div>
                               </div>
                             )}
+                            {p.acceptedCreatorWilaya && (
+                              <div className="rounded-md border border-border/40 px-3 py-2">
+                                <div className="text-muted-foreground text-[10px] mb-0.5">{lang === "ar" ? "الولاية" : "Wilaya"}</div>
+                                <div className="font-medium flex items-center gap-1"><MapPin className="w-3 h-3 text-accent" />{p.acceptedCreatorWilaya}</div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -401,8 +414,10 @@ const ClientPortal = () => {
                     <div className="text-right flex-shrink-0">
                       {/* Only show total price — no cut breakdown */}
                       <div className="text-accent font-bold">{formatDZD(p.totalPrice)}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        {p.deadline ? `📅 ${p.deadline}` : lang === "ar" ? "بلا موعد" : "No deadline"}
+                      <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 justify-end">
+                        {p.deadline
+                          ? <><CalendarClock className="w-3 h-3" /> {p.deadline}</>
+                          : (lang === "ar" ? "بلا موعد" : "No deadline")}
                       </div>
                       {(() => {
                         const advanceAmount = p.advanceAmount || Math.round(p.totalPrice * 0.10);
@@ -474,7 +489,7 @@ const ClientPortal = () => {
             <ProfilePicUpload
               uid={auth.uid}
               currentUrl={auth.profilePic}
-              fallback={<span>{CLIENT_AVATARS.find(a => a.id === selectedAvatar)?.emoji || "🏢"}</span>}
+              fallback={<ClientGlyph id={selectedAvatar} className="w-7 h-7 text-primary-foreground" />}
               onChange={refreshAuth}
               lang={lang}
               accent="royal"
@@ -496,8 +511,8 @@ const ClientPortal = () => {
             <div className="flex gap-3 flex-wrap">
               {CLIENT_AVATARS.map((a) => (
                 <button key={a.id} onClick={() => editMode && setSelectedAvatar(a.id)}
-                  className={`w-12 h-12 rounded-xl text-2xl transition-smooth ${selectedAvatar === a.id ? "ring-2 ring-accent bg-accent/10 scale-110" : "bg-secondary/40"} ${!editMode ? "cursor-default" : "hover:scale-105"}`}>
-                  {a.emoji}
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-smooth ${selectedAvatar === a.id ? "ring-2 ring-accent bg-accent/10 scale-110 text-accent" : "bg-secondary/40 text-muted-foreground"} ${!editMode ? "cursor-default" : "hover:scale-105"}`}>
+                  <a.Icon className="w-5 h-5" />
                 </button>
               ))}
             </div>
