@@ -377,3 +377,23 @@ select { color-scheme: dark; }
   .np-stagger > * { animation: none !important; }
   .np-stagger > * { opacity: 1; }
 }
+
+
+/* ── Partners marquee (endless, left → right) ── */
+.partners-marquee { position: relative; overflow: hidden; }
+.partners-marquee::before,
+.partners-marquee::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 130px; z-index: 2; pointer-events: none;
+}
+.partners-marquee::before { left: 0; background: linear-gradient(90deg, hsl(var(--background)), transparent); }
+.partners-marquee::after { right: 0; background: linear-gradient(270deg, hsl(var(--background)), transparent); }
+.partners-track { display: flex; width: max-content; animation: partners-scroll 30s linear infinite; will-change: transform; }
+.partners-set { display: flex; align-items: center; gap: 64px; padding-inline: 32px; }
+.partner-card {
+  display: flex; align-items: center; gap: 18px;
+  background: rgba(246, 246, 246, 0.97); border-radius: 18px; padding: 14px 28px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+}
+.partner-card img { height: 64px; width: auto; display: block; }
+.partner-card span { color: #0d1b29; font-weight: 700; font-size: 14px; white-space: nowrap; }
+@keyframes partners-scroll { from { transform: translateX(-50%); } to { transform: translateX(0); } }

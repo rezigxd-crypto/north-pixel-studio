@@ -405,6 +405,32 @@ const Index = () => {
         </section>
       )}
 
+
+      {/* PARTNERS — endless marquee (left to right) */}
+      <section className="py-14 overflow-hidden">
+        <div className="text-center mb-8">
+          <span className="text-xs uppercase tracking-[0.35em] text-accent">
+            {lang === "ar" ? "بدعم و شراكة" : lang === "fr" ? "Nos partenaires" : "Our Partners"}
+          </span>
+        </div>
+        <div className="partners-marquee" dir="ltr">
+          <div className="partners-track">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="partners-set" aria-hidden={i > 0}>
+                <div className="partner-card">
+                  <img src="/partners/universite-medea.svg" alt="Université Yahia Farès de Médéa" loading="lazy" />
+                  <span>{lang === "ar" ? "جامعة يحيى فارس — المدية" : "University of Medea — Yahia Farès"}</span>
+                </div>
+                <div className="partner-card">
+                  <img src="/partners/incubateur-medea.svg" alt="Medea University Incubator" loading="lazy" />
+                  <span>{lang === "ar" ? "حاضنة جامعة المدية" : "Medea University Incubator"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <SiteFooter />
     </div>
   );

@@ -46,6 +46,19 @@ export const SiteFooter = () => {
               contact@thealgerianstudio.com
             </a>
           </p>
+          <p className="text-muted-foreground text-xs mt-2">
+            <a
+              href="https://wa.me/213795031350"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-smooth"
+              dir="ltr"
+              title={lang === "ar" ? "راسلنا على واتساب" : "Chat on WhatsApp"}
+            >
+              +213 795 031 350
+            </a>
+            <span className="text-accent"> · WhatsApp</span>
+          </p>
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-border text-xs text-muted-foreground flex flex-col sm:flex-row justify-between gap-2">
