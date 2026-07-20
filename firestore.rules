@@ -2,6 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Admin identity — verified by the auth token's email claim. Mirrors the
+    // pattern already used by /publicConfig and /clientTags below.
+    function isAdmin() {
+      return request.auth != null
+             && request.auth.token.email == "rezig@admin.np";
+    }
+
     // Public stats — readable by anyone (visitors too), writable only by auth users
     match /public/{docId} {
       allow read: if true;
@@ -19,23 +26,56 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == uid;
     }
 
-    // Creators (freelancer applications)
+    // Creators (freelancer applications = the admin moderation queue).
+    //   • create: any authed user MAY apply, but the application MUST start
+    //     `pending`. This blocks a creator from self-approving at creation
+    //     time by writing `status: "approved"` directly.
+    //   • read: any authed user (admin lists the queue; portals resolve status).
+    //   • update: ADMIN ONLY. Approval / rejection is an admin-only moderation
+    //     action (setCreatorStatus). No legitimate creator-side write exists —
+    //     profile edits live on the /users/{uid} doc. This is what enforces the
+    //     "human review before anything goes live" trust guarantee.
     match /creators/{docId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.status == "pending";
       allow read: if request.auth != null;
-      allow update: if request.auth != null;
+      allow update, delete: if isAdmin();
     }
 
-    // Offers (client projects)
+    // Offers (client projects).
+    //   • create: any authed user, but the offer MUST start `pending_admin`
+    //     so nobody can post a project that is already `open`/`assigned` and
+    //     skip the admin review gate.
+    //   • read: any authed user.
+    //   • update: any authed user. NOTE (phase-2 hardening): updates remain
+    //     open because the client-side auto-close sweeper (checkAutoCloseOffers
+    //     → acceptBid) runs on ordinary users' portal mounts and legitimately
+    //     writes offers they don't own (status→assigned, acceptedBidId, cached
+    //     contacts). Locking this to owner/admin requires first moving the
+    //     sweeper to an admin-only / server context. Tracked separately.
     match /offers/{docId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.status == "pending_admin";
       allow read: if request.auth != null;
       allow update: if request.auth != null;
     }
 
-    // Bids (creator offers on projects)
+    // Bids (creator offers on projects).
+    //   • create: any authed user, but the bid MUST start `pending` AND be
+    //     bound to the creator's own uid (creatorId == auth.uid). This stops a
+    //     user from planting a pre-`accepted` bid or bidding as someone else.
+    //   • read: any authed user.
+    //   • update: any authed user. NOTE (phase-2 hardening): bids are written
+    //     by three parties — the owning creator (submitDeliverable), the owning
+    //     client (acceptDelivery / requestRevisions), and admin (acceptBid,
+    //     releasePayment, plus rejecting the losing bids). The auto-close
+    //     sweeper also rejects losing bids from a non-owner context. Safe
+    //     lock-down needs field-pinned, per-transition rules + the sweeper move
+    //     above. Tracked separately.
     match /bids/{docId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.creatorId == request.auth.uid;
       allow read: if request.auth != null;
       allow update: if request.auth != null;
     }
