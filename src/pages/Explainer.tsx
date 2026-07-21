@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
  * pitch decks, jury reviews, and partner conversations.
  */
 const VIDEO_URL =
-  "https://pub.hyperagent.com/api/published/pbf01KXYXZ1RQ_HXFQ2J2KR4859F9M/north_pixel_full_film_ar_v3.mp4";
+  "https://pub.hyperagent.com/api/published/pbf01KY2VHQ24_M1JZJCS19JSBGTXX/np_film_v3.mp4";
 
 const Explainer = () => {
   useEffect(() => {
